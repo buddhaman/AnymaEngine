@@ -1,0 +1,12 @@
+{
+  "name": "your-project-name",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "sdl2",
+    "glew",
+    {
+      "name": "imgui",
+      "features": ["docking-experimental", "sdl2-binding", "opengl3-binding"]
+    }
+  ]
+}
