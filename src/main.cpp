@@ -5,12 +5,18 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
 
+#include "TimVectorMath.h"
+
+#include "Render2D.h"
+
 const char* vertexShaderSource = R"glsl(
     #version 330 core
-    layout (location = 0) in vec3 position;
+    layout (location = 0) in vec2 position;
+    layout (location = 1) in vec2 texture;
+    layout (location = 2) in vec4 color;
     void main() 
     {
-        gl_Position = vec4(position, 1.0);
+        gl_Position = vec4(position, 0.0, 1.0);
     }
 )glsl";
 
@@ -23,12 +29,28 @@ const char* fragmentShaderSource = R"glsl(
     }
 )glsl";
 
+void GLAPIENTRY MessageCallback(GLenum source,
+                                GLenum type,
+                                GLuint id,
+                                GLenum severity,
+                                GLsizei length,
+                                const GLchar* message,
+                                const void* userParam) {
+    // Ignore non-significant error/warning codes
+    if (type == GL_DEBUG_TYPE_ERROR) {
+        std::cerr << "GL CALLBACK: " << (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "") 
+                  << " type = " << type 
+                  << ", severity = " << severity 
+                  << ", message = " << message << std::endl;
+    }
+}
+
 int main(int argc, char** argv) 
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
     // Use OpenGL 3.3 core profile
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
@@ -43,6 +65,14 @@ int main(int argc, char** argv)
         SDL_Quit();
         return -1;
     }
+
+    // Enable debug output
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
+    // Additionally, you can control the amount and types of messages you receive
+    // For example, to only receive notifications of errors:
+    // glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 
     // Setup ImGui
     ImGui::CreateContext();
@@ -64,20 +94,21 @@ int main(int argc, char** argv)
     glCompileShader(vertexShader);
 
     // Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragment_shader);
 
     // Shader program
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, fragment_shader);
     glLinkProgram(shaderProgram);
 
     // Clean up shaders
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(fragment_shader);
 
+#if 0
     // Triangle vertices
     GLfloat vertices[] = 
     {
@@ -106,6 +137,13 @@ int main(int argc, char** argv)
     // Unbind VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+#endif
+
+    Mesh2D mesh;
+    PushVertex(mesh, V2(-0.5f,-0.5f), V2(0,0), V4(0,0,0,0));
+    PushVertex(mesh, V2( 0.5f,-0.5f), V2(0,0), V4(0,0,0,0));
+    PushVertex(mesh, V2( 0.0f, 0.5f), V2(0,0), V4(0,0,0,0));
+    BufferData(mesh);
 
     // Main loop
     bool running = true;
@@ -150,17 +188,22 @@ int main(int argc, char** argv)
 
         ImGuiID dockspace_id = ImGui::GetID("FullScreenDockSpace_");
         ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+        ImGui::DockSpace(dockspace_id, V2(0.0f, 0.0f), dockspace_flags);
         ImGui::End();
 
-        ImGui::Begin("HEllow i set it  up agian");
+        ImGui::Begin("Hellow i set it  up agian");
         ImGui::Text("I just setup imgui");
         ImGui::End();
 
         // Draw the triangle
+        #if 0
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        #else
+        glUseProgram(shaderProgram);
+        Draw(mesh);
+        #endif
 
         // End ImGui frame
         ImGui::Render();
@@ -171,9 +214,6 @@ int main(int argc, char** argv)
     }
 
     // Cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
