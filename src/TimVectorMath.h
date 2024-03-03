@@ -145,6 +145,7 @@ static inline Mat4 M4Scaling(Vec3 scale);
 static inline Mat4 M4RotationX(float angle_in_rad);
 static inline Mat4 M4RotationY(float angle_in_rad);
 static inline Mat4 M4RotationZ(float angle_in_rad);
+
 Mat4 M4Rotation(float angle_in_rad, Vec3 axis);
 
 Mat4 M4Ortho(float left, float right, float bottom, float top, float back, float front);
@@ -161,6 +162,13 @@ void M4Print(Mat4 matrix);
 void M4PrintP(Mat4 matrix, int width, int precision);
 void M4FPrint(FILE *stream, Mat4 matrix);
 void M4FPrintP(FILE *stream, Mat4 matrix, int width, int precision);
+
+// Mat3 functions
+
+Mat3 M3Translation(Vec2 translation);
+Mat3 M3TranslationAndScale(Vec2 translation, float scaleX, float scaleY);
+Vec2 M3MulPos(Mat3 matrix, Vec2 position);
+void M3FPrintP(FILE *stream, Mat3 matrix, int width, int precision);
 
 // 2D Functions
 
@@ -467,5 +475,34 @@ M4Mul(Mat4 a, Mat4 b)
 
 	return result;
 }
+
+#ifdef __cplusplus
+static inline Vec2 operator-(Vec2 a)
+{
+	return V2(-a.x, -a.y);
+}
+
+static inline Vec2 operator+(Vec2 a, Vec2 b) { return V2Add(a, b); }
+static inline Vec2 operator-(Vec2 a, Vec2 b) { return V2Sub(a, b); }
+
+static inline Vec2 operator*(Vec2 a, Vec2 b) { return V2Mul(a, b); }
+static inline Vec2 operator*(Vec2 a, float b) { return V2MulS(a, b); }
+static inline Vec2 operator*(float a, Vec2 b) { return V2MulS(b, a); }
+
+static inline Vec2 operator+=(Vec2 &left, Vec2 right) { return left = V2Add(left, right); }
+static inline Vec2 operator-=(Vec2 &left, Vec2 right) { return left = V2Sub(left, right); }
+
+// Vec3
+static inline Vec3 operator+(Vec3 a, Vec3 b) { return V3Add(a, b); }
+static inline Vec3 operator-(Vec3 a, Vec3 b) { return V3Sub(a, b); }
+
+static inline Vec3 operator*(Vec3 a, Vec3 b) { return V3Mul(a, b); }
+static inline Vec3 operator*(Vec3 a, float b) { return V3MulS(a, b); }
+static inline Vec3 operator*(float a, Vec3 b) { return V3MulS(b, a); }
+
+static inline Vec3 operator+=(Vec3 &left, Vec3 right) { return left = V3Add(left, right); }
+static inline Vec3 operator-=(Vec3 &left, Vec3 right) { return left = V3Sub(left, right); }
+
+#endif
 
 #endif // MATH_3D_HEADER

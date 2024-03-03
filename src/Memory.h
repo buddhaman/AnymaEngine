@@ -28,6 +28,10 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
 #define PushStruct(arena, type)               \
     (type *)PushMemory_(arena, sizeof(type)); 
 
+// Placement new
+#define PushNewStruct(arena, type)               \
+    new (PushMemory_(arena, sizeof(type))) type;
+
 #define PushArray(arena, type, nElements)                 \
     (type *)PushMemory_(arena, sizeof(type) * nElements); 
 

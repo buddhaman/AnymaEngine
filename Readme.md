@@ -8,11 +8,15 @@ Parallel Processing: Efficient simulation handling with parallel updates for phy
 Flexible Update Rates: Configurable update frequencies for world dynamics and AI processing.
 
 #### TODO
+- Make a 2D camera.
+- Handle user input.
+- Move the 2D camera with the mouse.
+- Move the 2D camera with WASD.
+- Implement scrolling.
 - Render a creature.
 - Fix at user specified FPS with SDL_Delay
 - Render eyes.
 - Make creature struct.
-- Make eyes.
 - Do simple collision detection.
 - Do raycast;
 - Update creature sensor info based on raycast (seeing).

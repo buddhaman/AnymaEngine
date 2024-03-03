@@ -3,28 +3,28 @@
 #include "Render2D.h"
 
 void
-PushVertex(Mesh2D& mesh, Vec2 pos, Vec2 texture_coords, U32 color)
+PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color)
 {
-    Vertex2D* vert = mesh.vertex_buffer.PushBack();
+    Vertex2D* vert = mesh->vertex_buffer.PushBack();
     vert->pos = pos;
     vert->texture_coords = texture_coords;
     vert->color = color;
 }
 
 void
-PushIndex(Mesh2D& mesh, U32 index)
+PushIndex(Mesh2D* mesh, U32 index)
 {
-    mesh.index_buffer.PushBack(index);
+    mesh->index_buffer.PushBack(index);
 }
 
 void
-PushQuad(Mesh2D& mesh, 
+PushQuad(Mesh2D* mesh, 
          Vec2 p0, Vec2 uv0, 
          Vec2 p1, Vec2 uv1, 
          Vec2 p2, Vec2 uv2, 
          Vec2 p3, Vec2 uv3, U32 color)
 {
-    U32 lastIndex = mesh.vertex_buffer.size;
+    U32 lastIndex = mesh->vertex_buffer.size;
 
     PushVertex(mesh, p0, uv0, color);
     PushVertex(mesh, p1, uv1, color);
@@ -40,31 +40,42 @@ PushQuad(Mesh2D& mesh,
 }
 
 void
-BufferData(Mesh2D& mesh, GLenum drawMode)
+PushRect(Mesh2D* mesh, Vec2 pos, Vec2 extent, Vec2 tex_pos, Vec2 tex_extent, U32 color)
 {
-    glBindVertexArray(mesh.vertex_array_handle);
+    PushQuad(mesh, 
+             pos, tex_pos,
+             V2(extent.x, pos.y), V2(tex_extent.x, tex_pos.y),
+             V2(extent.x, extent.y), V2(tex_extent.x, tex_extent.y),
+             V2(pos.x, extent.y), V2(tex_pos.x, tex_extent.y),
+             color);
+}
 
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer_handle);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex2D)*mesh.vertex_buffer.size, mesh.vertex_buffer.data, drawMode);
+void
+BufferData(Mesh2D* mesh, GLenum drawMode)
+{
+    glBindVertexArray(mesh->vertex_array_handle);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer_handle);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex2D)*mesh->vertex_buffer.size, mesh->vertex_buffer.data, drawMode);
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.element_buffer_handle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Vertex2D)*mesh.index_buffer.size, mesh.index_buffer.data, drawMode);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer_handle);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Vertex2D)*mesh->index_buffer.size, mesh->index_buffer.data, drawMode);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void
-Draw(Mesh2D& mesh)
+Draw(Mesh2D* mesh)
 {
-    glBindVertexArray(mesh.vertex_array_handle);
-    glDrawElements(GL_TRIANGLES, mesh.index_buffer.size, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(mesh->vertex_array_handle);
+    glDrawElements(GL_TRIANGLES, mesh->index_buffer.size, GL_UNSIGNED_INT, nullptr);
 }
 
 void
-Clear(Mesh2D& mesh)
+Clear(Mesh2D* mesh)
 {
-    mesh.index_buffer.Clear();
-    mesh.vertex_buffer.Clear();
+    mesh->index_buffer.Clear();
+    mesh->vertex_buffer.Clear();
 }
 
 Mesh2D::Mesh2D()
@@ -80,7 +91,7 @@ Mesh2D::Mesh2D()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_handle);
     
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)offsetof(Vertex2D, pos));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)offsetof(Vertex2D, pos));
     glEnableVertexAttribArray(0);
 
     // Texture attribute
@@ -88,7 +99,7 @@ Mesh2D::Mesh2D()
     glEnableVertexAttribArray(1);
 
     // Color attribute
-    glVertexAttribPointer(2, 4, GL_BYTE, GL_TRUE, stride, (GLvoid*)offsetof(Vertex2D, color));
+    glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, (GLvoid*)offsetof(Vertex2D, color));
     glEnableVertexAttribArray(2);
 
     // Unbind

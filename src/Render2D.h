@@ -26,23 +26,26 @@ struct Mesh2D
 };
 
 void
-PushQuad(Mesh2D& mesh, 
+PushQuad(Mesh2D* mesh, 
          Vec2 p0, Vec2 uv0, 
          Vec2 p1, Vec2 uv1, 
          Vec2 p2, Vec2 uv2, 
          Vec2 p3, Vec2 uv3, U32 color);
 
 void
-PushVertex(Mesh2D& mesh, Vec2 pos, Vec2 texture_coords, U32 color);
+PushRect(Mesh2D* mesh, Vec2 pos, Vec2 extent, Vec2 tex_offset, Vec2 tex_extent, U32 color);
 
 void
-PushIndex(Mesh2D& mesh, U32 index);
+PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color);
 
 void
-BufferData(Mesh2D& mesh, GLenum drawMode);
+PushIndex(Mesh2D* mesh, U32 index);
 
 void
-Draw(Mesh2D& mesh);
+BufferData(Mesh2D* mesh, GLenum drawMode);
 
 void
-Clear(Mesh2D& mesh);
+Draw(Mesh2D* mesh);
+
+void
+Clear(Mesh2D* mesh);

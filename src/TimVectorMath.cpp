@@ -477,32 +477,3 @@ void V4FPrintP(FILE *stream, Vec4 v, int width, int precision)
 			width, precision, v.z,
 			width, precision, v.w);
 }
-
-#ifdef __cplusplus
-static inline Vec2 operator-(Vec2 a)
-{
-	return V2(-a.x, -a.y);
-}
-
-static inline Vec2 operator+(Vec2 a, Vec2 b) { return V2Add(a, b); }
-static inline Vec2 operator-(Vec2 a, Vec2 b) { return V2Sub(a, b); }
-
-static inline Vec2 operator*(Vec2 a, Vec2 b) { return V2Mul(a, b); }
-static inline Vec2 operator*(Vec2 a, float b) { return V2MulS(a, b); }
-static inline Vec2 operator*(float a, Vec2 b) { return V2MulS(b, a); }
-
-static inline Vec2 operator+=(Vec2 &left, Vec2 right) { return left = V2Add(left, right); }
-static inline Vec2 operator-=(Vec2 &left, Vec2 right) { return left = V2Sub(left, right); }
-
-// Vec3
-static inline Vec3 operator+(Vec3 a, Vec3 b) { return V3Add(a, b); }
-static inline Vec3 operator-(Vec3 a, Vec3 b) { return V3Sub(a, b); }
-
-static inline Vec3 operator*(Vec3 a, Vec3 b) { return V3Mul(a, b); }
-static inline Vec3 operator*(Vec3 a, float b) { return V3MulS(a, b); }
-static inline Vec3 operator*(float a, Vec3 b) { return V3MulS(b, a); }
-
-static inline Vec3 operator+=(Vec3 &left, Vec3 right) { return left = V3Add(left, right); }
-static inline Vec3 operator-=(Vec3 &left, Vec3 right) { return left = V3Sub(left, right); }
-
-#endif
