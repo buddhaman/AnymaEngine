@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "Camera2D.h"
 
 void
 UpdateCamera(Camera2D *camera, int screenWidth, int screenHeight)

@@ -5,12 +5,12 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
 
+#include "AnymUtil.h"
+#include "Array.h"
 #include "TimVectorMath.h"
 
 #include "Render2D.h"
-
-#include "AnymUtil.h"
-#include "Array.h"
+#include "Camera2D.h"
 
 const char* vertexShaderSource = R"glsl(
     #version 330 core
@@ -18,10 +18,13 @@ const char* vertexShaderSource = R"glsl(
     layout (location = 1) in vec2 a_texture;
     layout (location = 2) in vec4 a_color;
 
+    uniform Mat3 transform;
+
     out vec4 v_color;
 
     void main() 
     {
+        vec3 pos = transform * vec3(a_position, 1.0);
         v_color = a_color;
         gl_Position = vec4(a_position, 0.0, 1.0);
     }
