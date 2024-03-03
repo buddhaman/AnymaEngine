@@ -9,6 +9,9 @@
 
 #include "Render2D.h"
 
+#include "AnymUtil.h"
+#include "Array.h"
+
 const char* vertexShaderSource = R"glsl(
     #version 330 core
     layout (location = 0) in vec2 position;
@@ -99,10 +102,10 @@ int main(int argc, char** argv)
     glCompileShader(fragment_shader);
 
     // Shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragment_shader);
-    glLinkProgram(shaderProgram);
+    GLuint shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertexShader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
 
     // Clean up shaders
     glDeleteShader(vertexShader);
@@ -140,11 +143,7 @@ int main(int argc, char** argv)
 #endif
 
     Mesh2D mesh;
-    PushVertex(mesh, V2(-0.5f,-0.5f), V2(0,0), V4(0,0,0,0));
-    PushVertex(mesh, V2( 0.5f,-0.5f), V2(0,0), V4(0,0,0,0));
-    PushVertex(mesh, V2( 0.0f, 0.5f), V2(0,0), V4(0,0,0,0));
-    BufferData(mesh);
-
+    Vec2 uv = V2(0,0);
     // Main loop
     bool running = true;
     SDL_Event event;
@@ -161,7 +160,7 @@ int main(int argc, char** argv)
 
         // Clear the screen
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Start ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -196,14 +195,21 @@ int main(int argc, char** argv)
         ImGui::End();
 
         // Draw the triangle
-        #if 0
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        #else
-        glUseProgram(shaderProgram);
+        glUseProgram(shader_program);
+
+        static float time = 0.0f;
+        time += 0.016f;
+
+        PushQuad(mesh, 
+            V2(0,0), uv,
+            V2(1,0), uv,
+            V2(1,1), uv,
+            V2(0,sinf(time)), uv, 
+            0xffffffff);
+        BufferData(mesh, GL_DYNAMIC_DRAW);
+
         Draw(mesh);
-        #endif
+        Clear(mesh);
 
         // End ImGui frame
         ImGui::Render();

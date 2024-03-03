@@ -8,8 +8,16 @@ Parallel Processing: Efficient simulation handling with parallel updates for phy
 Flexible Update Rates: Configurable update frequencies for world dynamics and AI processing.
 
 #### TODO
-- Make a basic 2D renderer.
 - Render a creature.
+- Fix at user specified FPS with SDL_Delay
+- Render eyes.
+- Make creature struct.
+- Make eyes.
+- Do simple collision detection.
+- Do raycast;
+- Update creature sensor info based on raycast (seeing).
+- Make creature respond to sensor in a simple way.
 
 #### Done
+- Make a basic 2D renderer.
 - Import imgui with docking.

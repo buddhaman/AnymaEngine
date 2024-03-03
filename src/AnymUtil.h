@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+// TODO: Remove all dependencies on stl.
+#include <stdint.h>
 #include <iostream>
 #include <cassert>
 
@@ -24,6 +25,15 @@
                          "\nLine: " << __LINE__ << std::endl; \
             assert(cond); \
         } \
+    } while (0)
+
+#define InvalidCodePath() \
+    do { \
+        std::cerr << "Invalid code path reached: " << \
+                        "\nFile: " << __FILE__ << \
+                        "\nLine: " << __LINE__ << std::endl; \
+        assert(false); \
+         \
     } while (0)
 
 typedef int8_t I8;
