@@ -50,6 +50,14 @@ void GLAPIENTRY MessageCallback(GLenum source,
 
 int main(int argc, char** argv) 
 {
+     // Initialize random seed once. This will be removed by my own rng.
+    static bool initialized = false;
+    if (!initialized) {
+        srand((time(nullptr))); // Seed the random number generator
+        initialized = true;
+    }
+
+
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
     // Use OpenGL 3.3 core profile

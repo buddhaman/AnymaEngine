@@ -5,7 +5,11 @@
 #include <iostream>
 #include <cassert>
 
+// Includes
+
 #include "TimVectorMath.h"
+
+// Macros
 
 #define AssertMsg(cond, msg) \
     do { \
@@ -36,6 +40,8 @@
          \
     } while (0)
 
+// Typedefs
+
 typedef int8_t I8;
 typedef uint8_t U8;
 typedef int16_t I16;
@@ -47,3 +53,11 @@ typedef uint64_t U64;
 
 typedef float R32;
 typedef double R64;
+
+// Functions
+
+static float GetRandomR32Debug(float min, float max)
+{
+    float randFloat = (float)(rand()) / (float)(RAND_MAX);
+    return randFloat * (max + min) - min;
+}
