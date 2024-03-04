@@ -160,6 +160,7 @@ int main(int argc, char** argv)
     {
 
         input->mouseDelta = V2(0,0);
+        input->mouseScroll = 0;
         while (SDL_PollEvent(&event)) 
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -172,6 +173,11 @@ int main(int argc, char** argv)
                 running = false;
             } break;
 
+             case SDL_MOUSEWHEEL:
+             {
+                input->mouseScroll = 5*event.wheel.y; // Adjust zoom level based on scroll
+             } break;
+
             case SDL_MOUSEMOTION:
             {
                 // SDL reports mouse position and motion
@@ -181,13 +187,12 @@ int main(int argc, char** argv)
 
             }
 
-            // We cheat and read input info from imgui. Why not.
-            input->mouseScroll = io.MouseWheel;
-
-            input->prevMouseDown[0] = input->mouseDown[0];
-            input->mouseDown[0] = io.MouseDown[0];
-            std::cout << io.MouseDelta.x << " " << io.MouseDelta.y << std::endl;
         }
+
+        // We cheat and read input info from imgui. Why not.
+        input->prevMouseDown[0] = input->mouseDown[0];
+        input->mouseDown[0] = io.MouseDown[0];
+        std::cout << input->mouseScroll << std::endl;
 
         // Clear the screen
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -240,6 +245,8 @@ int main(int argc, char** argv)
         {
             cam.pos -= input->mouseDelta / (cam.scale);
         }
+
+        cam.scale = cam.scale *= powf(1.05f, input->mouseScroll);
 
         Vec2 dims = V2(0.5, 0.5);
         Vec2 pos = V2(-0.5, -0.5);
