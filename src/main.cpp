@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 
     // Camera
     Camera2D cam;
-    cam.scale = 200.0f;
+    cam.scale = 50.0f;
 
     Mesh2D mesh;
     Vec2 uv = V2(0,0);
@@ -158,6 +158,8 @@ int main(int argc, char** argv)
     InputHandler* input = new InputHandler();
     while (running) 
     {
+
+        input->mouseDelta = V2(0,0);
         while (SDL_PollEvent(&event)) 
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -170,15 +172,21 @@ int main(int argc, char** argv)
                 running = false;
             } break;
 
+            case SDL_MOUSEMOTION:
+            {
+                // SDL reports mouse position and motion
+                input->mousePos = V2(event.motion.x, event.motion.y);
+                input->mouseDelta = V2(event.motion.xrel, event.motion.yrel);
+            } break;
+
             }
 
             // We cheat and read input info from imgui. Why not.
-            input->mousePos = io.MousePos;
-            input->mouseDelta = io.MouseDelta;
             input->mouseScroll = io.MouseWheel;
 
             input->prevMouseDown[0] = input->mouseDown[0];
             input->mouseDown[0] = io.MouseDown[0];
+            std::cout << io.MouseDelta.x << " " << io.MouseDelta.y << std::endl;
         }
 
         // Clear the screen
@@ -230,7 +238,7 @@ int main(int argc, char** argv)
 
         if(input->mouseDown[0])
         {
-            cam.pos += input->mouseDelta*(1.0f/cam.scale);
+            cam.pos -= input->mouseDelta / (cam.scale);
         }
 
         Vec2 dims = V2(0.5, 0.5);
