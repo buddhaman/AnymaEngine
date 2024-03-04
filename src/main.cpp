@@ -11,26 +11,29 @@
 
 #include "Render2D.h"
 #include "Camera2D.h"
+#include "Window.h"
+#include "InputHandler.h"
+#include "Shader.h"
 
-const char* vertexShaderSource = R"glsl(
+const char* vertex_shader_source = R"glsl(
     #version 330 core
     layout (location = 0) in vec2 a_position;
     layout (location = 1) in vec2 a_texture;
     layout (location = 2) in vec4 a_color;
 
-    uniform Mat3 transform;
+    uniform mat3 u_transform;
 
     out vec4 v_color;
 
     void main() 
     {
-        vec3 pos = transform * vec3(a_position, 1.0);
+        vec3 pos = u_transform * vec3(a_position, 1.0);
         v_color = a_color;
-        gl_Position = vec4(a_position, 0.0, 1.0);
+        gl_Position = vec4(pos.xy, 0.0, 1.0);
     }
 )glsl";
 
-const char* fragmentShaderSource = R"glsl(
+const char* fragment_shader_source = R"glsl(
     #version 330 core
 
     in vec4 v_color;
@@ -69,7 +72,6 @@ int main(int argc, char** argv)
         initialized = true;
     }
 
-
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
     // Use OpenGL 3.3 core profile
@@ -77,14 +79,22 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_Window* window = SDL_CreateWindow("New evolution simulation", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL);
-    SDL_GLContext context = SDL_GL_CreateContext(window);
+    Window window = {0};
+    window.width = 1280;
+    window.height = 720;
 
-    SDL_GL_MakeCurrent(window, context);
+    window.window = SDL_CreateWindow("New evolution simulation", 
+                                     SDL_WINDOWPOS_CENTERED, 
+                                     SDL_WINDOWPOS_CENTERED, 
+                                     window.width, window.height, 
+                                     SDL_WINDOW_OPENGL);
+    window.context = SDL_GL_CreateContext(window.window);
+
+    SDL_GL_MakeCurrent(window.window, window.context);
 
     if (glewInit() != GLEW_OK) 
     {
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(window.window);
         SDL_Quit();
         return -1;
     }
@@ -105,9 +115,10 @@ int main(int argc, char** argv)
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
 
-    ImGui_ImplSDL2_InitForOpenGL(window, context);
+    ImGui_ImplSDL2_InitForOpenGL(window.window, window.context);
     ImGui_ImplOpenGL3_Init("#version 130");
 
+#if 0
     // Vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -127,21 +138,47 @@ int main(int argc, char** argv)
     // Clean up shaders
     glDeleteShader(vertexShader);
     glDeleteShader(fragment_shader);
+#endif
+
+    Shader shader = CreateShader(vertex_shader_source, fragment_shader_source);
+
+    // Find uniforms
+    U32 transform_loc = glGetUniformLocation(shader.program_handle, "u_transform");
+
+    // Camera
+    Camera2D cam;
+    cam.scale = 200.0f;
 
     Mesh2D mesh;
     Vec2 uv = V2(0,0);
     // Main loop
     bool running = true;
     SDL_Event event;
+
+    InputHandler* input = new InputHandler();
     while (running) 
     {
         while (SDL_PollEvent(&event)) 
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT) 
+
+            switch(event.type)
+            {
+
+            case SDL_QUIT:
             {
                 running = false;
+            } break;
+
             }
+
+            // We cheat and read input info from imgui. Why not.
+            input->mousePos = io.MousePos;
+            input->mouseDelta = io.MouseDelta;
+            input->mouseScroll = io.MouseWheel;
+
+            input->prevMouseDown[0] = input->mouseDown[0];
+            input->mouseDown[0] = io.MouseDown[0];
         }
 
         // Clear the screen
@@ -150,7 +187,7 @@ int main(int argc, char** argv)
 
         // Start ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(window);
+        ImGui_ImplSDL2_NewFrame(window.window);
         ImGui::NewFrame();
 
         // Create central dockspace for imgui.
@@ -181,23 +218,24 @@ int main(int argc, char** argv)
         ImGui::End();
 
         // Draw the triangle
-        glUseProgram(shader_program);
+        glUseProgram(shader.program_handle);
 
         static float time = 0.0f;
         time += 0.016f;
 
-#if 0
-        PushQuad(&mesh, 
-            V2(0,0), uv,
-            V2(1,0), uv,
-            V2(1,1), uv,
-            V2(0,sinf(time)), uv, 
-            0xffff88aa);
-#else
+        //cam.pos = V2(sinf(time), 0);
+        UpdateCamera(&cam, window.width, window.height);
+
+        glUniformMatrix3fv(transform_loc, 1, GL_FALSE, &cam.transform.m[0][0]);
+
+        if(input->mouseDown[0])
+        {
+            cam.pos += input->mouseDelta*(1.0f/cam.scale);
+        }
+
         Vec2 dims = V2(0.5, 0.5);
-        Vec2 pos = V2(-0.5, -0.5+sinf(time)*0.2f);
+        Vec2 pos = V2(-0.5, -0.5);
         PushRect(&mesh, pos, pos+dims, V2(0,0), V2(0,0), 0xffaa77ff);
-#endif
         BufferData(&mesh, GL_DYNAMIC_DRAW);
 
         Draw(&mesh);
@@ -208,12 +246,12 @@ int main(int argc, char** argv)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Swap the screen buffers
-        SDL_GL_SwapWindow(window);
+        SDL_GL_SwapWindow(window.window);
     }
 
     // Cleanup
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
+    SDL_GL_DeleteContext(window.context);
+    SDL_DestroyWindow(window.window);
     SDL_Quit();
 
     return 0;

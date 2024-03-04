@@ -1,14 +1,10 @@
 # AnymaEngine 
 
-Features
-Physics-Based Dynamics: Realistic simulation of physical interactions within the environment.
-Genetic Evolution Simulation: Creatures evolve over time using principles inspired by Karl Sims' genetic algorithms.
-Neural Network AI: Creatures' brains are modeled with matrices, allowing for sophisticated behavior patterns.
-Parallel Processing: Efficient simulation handling with parallel updates for physics and AI.
-Flexible Update Rates: Configurable update frequencies for world dynamics and AI processing.
+This will be the most large scale and fastest evolution simulation out there. 
+
+Brain update rate will be 1 / 6 of the 
 
 #### TODO
-- Make a 2D camera.
 - Handle user input.
 - Move the 2D camera with the mouse.
 - Move the 2D camera with WASD.
@@ -23,5 +19,6 @@ Flexible Update Rates: Configurable update frequencies for world dynamics and AI
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Make a 2D camera.
 - Make a basic 2D renderer.
 - Import imgui with docking.

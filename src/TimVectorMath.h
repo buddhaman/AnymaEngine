@@ -205,6 +205,13 @@ V2Mul(Vec2 a, Vec2 b)
 }
 
 static inline Vec2
+V2Div(Vec2 a, Vec2 b)
+{
+	return {{a.x / b.x, a.y / b.y}};
+}
+
+
+static inline Vec2
 V2AddS(Vec2 a, float s)
 {
 	return {{a.x + s, a.y + s}};
@@ -220,6 +227,12 @@ static inline Vec2
 V2MulS(Vec2 a, float s)
 {
 	return {{a.x * s, a.y * s}};
+}
+
+static inline Vec2
+V2DivS(Vec2 a, float s)
+{
+	return {{a.x / s, a.y / s}};
 }
 
 static inline float
@@ -488,6 +501,10 @@ static inline Vec2 operator-(Vec2 a, Vec2 b) { return V2Sub(a, b); }
 static inline Vec2 operator*(Vec2 a, Vec2 b) { return V2Mul(a, b); }
 static inline Vec2 operator*(Vec2 a, float b) { return V2MulS(a, b); }
 static inline Vec2 operator*(float a, Vec2 b) { return V2MulS(b, a); }
+
+static inline Vec2 operator/(Vec2 a, Vec2 b) { return V2Div(a, b); }
+static inline Vec2 operator/(Vec2 a, float b) { return V2DivS(a, b); }
+static inline Vec2 operator/(float a, Vec2 b) { return V2DivS(b, 1.0f/a); }
 
 static inline Vec2 operator+=(Vec2 &left, Vec2 right) { return left = V2Add(left, right); }
 static inline Vec2 operator-=(Vec2 &left, Vec2 right) { return left = V2Sub(left, right); }

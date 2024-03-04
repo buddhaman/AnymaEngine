@@ -18,7 +18,7 @@ UpdateCameraScrollInput(Camera2D *camera)
 void
 UpdateCameraDragInput(Camera2D *camera)
 {
-
+    
 }
 
 void
