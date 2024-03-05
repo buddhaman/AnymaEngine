@@ -61,3 +61,9 @@ static float GetRandomR32Debug(float min, float max)
     float randFloat = (float)(rand()) / (float)(RAND_MAX);
     return randFloat * (max + min) - min;
 }
+
+template <typename T>
+T Max(T a, T b) { return a < b ? b : a; }
+
+template <typename T>
+T Min(T a, T b) { return a < b ? a : b; }

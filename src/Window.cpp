@@ -76,9 +76,30 @@ HandleInput(Window* window)
     input->mousedown[0] = io.MouseDown[0];
 }
 
+void
+DelayForFPS(Window* window)
+{
+    window->frame_end_time = SDL_GetPerformanceCounter();
+    U64 freq = SDL_GetPerformanceFrequency();
+    U64 elapsed = window->frame_end_time-window->frame_start_time;
+
+    window->update_millis = 1000.0f*elapsed/(R32)freq;
+    R32 millis_per_frame = 1000.0f/window->fps;
+    R32 exact_delay = millis_per_frame - window->update_millis + window->carry_millis;
+    I32 delay = floor(exact_delay);
+    window->carry_millis = Max(0.0f, (R32)(exact_delay - delay));
+    if(delay > 0)
+    {
+        std::cout << delay << std::endl;
+        SDL_Delay(delay);
+    }
+}
+
 void 
 WindowBegin(Window* window)
 {
+    window->frame_start_time = SDL_GetPerformanceCounter();
+
     HandleInput(window);
     // Clear the screen
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -121,6 +142,7 @@ WindowEnd(Window* window)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Swap the screen buffers
+    DelayForFPS(window);
     SDL_GL_SwapWindow(window->window);
 }
 
@@ -129,6 +151,8 @@ CreateWindow(int width, int height)
 {
     Window* window = new Window();
     *window = {0};
+    
+    window->fps = 60;
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
@@ -148,6 +172,11 @@ CreateWindow(int width, int height)
 
     window->context = SDL_GL_CreateContext(window->window);
     SDL_GL_MakeCurrent(window->window, window->context);
+
+    // Disable VSync
+    if (SDL_GL_SetSwapInterval(0) < 0) {
+        std::cerr << "Warning: Unable to disable VSync! SDL Error: " << SDL_GetError() << std::endl;
+    }
 
     if (glewInit() != GLEW_OK) 
     {

@@ -5,7 +5,6 @@ This will be the most large scale and fastest evolution simulation out there.
 Brain update rate will be 1 / 6 of the 
 
 #### TODO
-- Fix at user specified FPS with SDL_Delay.
 - Render eyes.
 - Make creature struct.
 - Do simple collision detection.
@@ -14,6 +13,7 @@ Brain update rate will be 1 / 6 of the
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Fix at user specified FPS with SDL_Delay.
 - Create window struct for platform handling.
 - Render a creature.
 - Implement scrolling.

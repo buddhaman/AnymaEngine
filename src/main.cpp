@@ -82,6 +82,9 @@ int main(int argc, char** argv)
         WindowBegin(window);
         ImGui::Begin("Hellow i set it  up agian");
         ImGui::Text("I just setup imgui");
+        ImGui::Text("FPS: %d", window->fps);
+        ImGui::Text("update: %.2f millis", window->update_millis);
+        ImGui::Text("carry: %.2f", window->carry_millis);
         ImGui::End();
 
         // Draw the triangle

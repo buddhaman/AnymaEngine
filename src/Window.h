@@ -16,16 +16,25 @@ struct Window
     bool running;
 
     R32 carry_millis;
+    R32 update_millis;
+
+    U64 frame_end_time;
+    U64 frame_start_time;
+
+    R32 fps;
 };
 
-Window* 
-CreateWindow(int width, int height);
-
-void 
-DestroyWindow(Window* window);
+void
+DelayForFPS(Window* window);
 
 void 
 WindowBegin(Window* window);
 
 void 
 WindowEnd(Window* window);
+
+Window* 
+CreateWindow(int width, int height);
+
+void 
+DestroyWindow(Window* window);
