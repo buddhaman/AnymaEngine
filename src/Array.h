@@ -135,19 +135,18 @@ struct DynamicArray : public Array<T>
         free(data);
     }
 
-    inline bool GrowCapacity(U64 toCapacity) 
+    inline void GrowCapacity(U64 toCapacity) 
     {
         capacity = toCapacity;
         data = (T*)realloc(data, capacity*sizeof(T));
-        // Yes this is a memory leak.
+        // Yes this is a memory leak, but we abort anyway.
         if(!data)
         {
             // When malloc fails the program is terminated if you ask me. So
             // this will result in a crash and thats fine.
             std::cerr << "No memory allocated in GrowCapacity" << std::endl;
-            return false;
+            std::abort();
         }
-        return true;
     }
 
     inline T* IncreaseSize(int toSize)
