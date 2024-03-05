@@ -23,6 +23,7 @@ Brain update rate will be 1 / 6 of the
 
 #### Done
 - Resize screen.
+- Fix Array issues.
 - Level of detail.
 - Render eyes.
 - Use N-gon to draw creatures.
