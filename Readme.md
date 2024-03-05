@@ -41,3 +41,6 @@ Brain update rate will be 1 / 6 of the
 - Make a 2D camera.
 - Make a basic 2D renderer.
 - Import imgui with docking.
+
+### Ideas
+- For an overview of how the world is evolving, create a kind of sampling minimap. Dont render each individual creature but take a couple of samples for each pixel using the bsp-tree and take the average color. Store these frames and show as animation.

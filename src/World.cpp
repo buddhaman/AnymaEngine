@@ -105,7 +105,7 @@ void RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 void InitWorld(World* world)
 {
     world->size = V2(1000, 1000);
-    int nAgents = 30000;
+    int nAgents = 64000;
     for(int i = 0; i < nAgents; i++)
     {
         Agent* agent = world->agents.PushBack();
