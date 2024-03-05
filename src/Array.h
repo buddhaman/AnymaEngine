@@ -66,6 +66,17 @@ struct Array
         InvalidCodePath();
     }
 
+    // Iterator support
+    struct Iterator {
+        T* ptr;
+        Iterator(T* ptr) : ptr(ptr) {}
+        bool operator!=(const Iterator& other) const { return ptr != other.ptr; }
+        const T& operator*() const { return *ptr; }
+        T& operator*() { return *ptr; }
+        Iterator& operator++() { ++ptr; return *this; }  // Prefix increment
+    };
+    Iterator begin() { return Iterator(data); }
+    Iterator end() { return Iterator(data + size); }
 };
 
 template <typename T>

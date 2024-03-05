@@ -1,6 +1,6 @@
 #include <GL/glew.h>
 
-#include "Render2D.h"
+#include "Mesh2D.h"
 
 void
 PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color)
@@ -40,18 +40,18 @@ PushQuad(Mesh2D* mesh,
 }
 
 void
-PushRect(Mesh2D* mesh, Vec2 pos, Vec2 extent, Vec2 tex_pos, Vec2 tex_extent, U32 color)
+PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 tex_pos, Vec2 tex_extent, U32 color)
 {
     PushQuad(mesh, 
              pos, tex_pos,
-             V2(extent.x, pos.y), V2(tex_extent.x, tex_pos.y),
-             V2(extent.x, extent.y), V2(tex_extent.x, tex_extent.y),
-             V2(pos.x, extent.y), V2(tex_pos.x, tex_extent.y),
+             V2(pos.x+dims.x, pos.y), V2(tex_extent.x, tex_pos.y),
+             V2(pos.x+dims.x, pos.y+dims.y), V2(tex_extent.x, tex_extent.y),
+             V2(pos.x, pos.y+dims.y), V2(tex_pos.x, tex_extent.y),
              color);
 }
 
 void
-BufferData(Mesh2D* mesh, GLenum drawMode)
+BufferData(Mesh2D* mesh, U32 drawMode)
 {
     glBindVertexArray(mesh->vertex_array_handle);
 
