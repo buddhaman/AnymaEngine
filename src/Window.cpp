@@ -90,7 +90,6 @@ DelayForFPS(Window* window)
     window->carry_millis = Max(0.0f, (R32)(exact_delay - delay));
     if(delay > 0)
     {
-        std::cout << delay << std::endl;
         SDL_Delay(delay);
     }
 }
@@ -151,7 +150,7 @@ CreateWindow(int width, int height)
 {
     Window* window = new Window();
     *window = {0};
-    
+
     window->fps = 60;
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);

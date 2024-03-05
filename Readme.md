@@ -4,6 +4,13 @@ This will be the most large scale and fastest evolution simulation out there.
 
 Brain update rate will be 1 / 6 of the 
 
+### Large scale TODO
+ - Switch to HandmadeMath linear algebra library.
+ - Make neural network library.
+ - Implement Evolution Strategies.
+ - Break world up in chunks and process chunks using multithreading.
+ - Make cute renderer.
+
 #### TODO
 - Render eyes.
 - Make creature struct.
@@ -11,6 +18,7 @@ Brain update rate will be 1 / 6 of the
 - Do raycast;
 - Update creature sensor info based on raycast (seeing).
 - Make creature respond to sensor in a simple way.
+
 
 #### Done
 - Fix at user specified FPS with SDL_Delay.

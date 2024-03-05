@@ -56,6 +56,15 @@ int main(int argc, char** argv)
         return -1;
     }
 
+// Check if asan works.
+#if 0
+    int* ptr = new int;
+    *ptr = 23;
+    delete ptr;
+
+    std::cout << *ptr << std::endl;
+#endif
+
     Shader shader = CreateShader(vertex_shader_source, fragment_shader_source);
 
     // Find uniforms

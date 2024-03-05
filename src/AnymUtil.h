@@ -59,7 +59,7 @@ typedef double R64;
 static float GetRandomR32Debug(float min, float max)
 {
     float randFloat = (float)(rand()) / (float)(RAND_MAX);
-    return randFloat * (max + min) - min;
+    return randFloat * (max - min) + min;
 }
 
 template <typename T>
