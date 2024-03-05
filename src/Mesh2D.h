@@ -26,6 +26,12 @@ struct Mesh2D
 };
 
 void
+PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color);
+
+void
+PushIndex(Mesh2D* mesh, U32 index);
+
+void
 PushQuad(Mesh2D* mesh, 
          Vec2 p0, Vec2 uv0, 
          Vec2 p1, Vec2 uv1, 
@@ -33,13 +39,13 @@ PushQuad(Mesh2D* mesh,
          Vec2 p3, Vec2 uv3, U32 color);
 
 void
-PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 tex_offset, Vec2 tex_extent, U32 color);
+PushQuad(Mesh2D* mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 u_orig, Vec2 u_size, U32 color);
 
 void
-PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color);
+PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 u_orig, Vec2 u_size, U32 color);
 
 void
-PushIndex(Mesh2D* mesh, U32 index);
+PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color);
 
 void
 BufferData(Mesh2D* mesh, U32 drawMode);

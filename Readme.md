@@ -12,6 +12,8 @@ Brain update rate will be 1 / 6 of the
  - Make cute renderer.
 
 #### TODO
+- Make texture region.
+- Global empty texture.
 - Render eyes.
 - Make creature struct.
 - Do simple collision detection.
@@ -19,9 +21,9 @@ Brain update rate will be 1 / 6 of the
 - Update creature sensor info based on raycast (seeing).
 - Make creature respond to sensor in a simple way.
 
-
 #### Done
-- Fix at user specified FPS with SDL_Delay.
+- Line rendering.
+- Fix frame update rate at user specified FPS with SDL_Delay.
 - Create window struct for platform handling.
 - Render a creature.
 - Implement scrolling.

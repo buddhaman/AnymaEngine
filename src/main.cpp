@@ -126,6 +126,8 @@ int main(int argc, char** argv)
 
         UpdateWorld(&world);
         RenderWorld(&world, &mesh);
+
+        PushLine(&mesh, V2(sinf(time)*2,0), V2(10, sinf(time*2)*3), 0.4f, pos, pos, 0xffaa77ff);
         
         BufferData(&mesh, GL_DYNAMIC_DRAW);
         Draw(&mesh);

@@ -40,14 +40,39 @@ PushQuad(Mesh2D* mesh,
 }
 
 void
-PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 tex_pos, Vec2 tex_extent, U32 color)
+PushQuad(Mesh2D* mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 u_orig, Vec2 u_size, U32 color)
+{
+    PushQuad(mesh, p0, u_orig, 
+        p1, V2(u_orig.x+u_size.x, u_orig.y),
+        p2, V2(u_orig.x+u_size.x, u_orig.y+u_size.y),
+        p3, V2(u_orig.x, u_orig.y+u_size.y), color);
+}
+
+void
+PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 u_orig, Vec2 u_size, U32 color)
 {
     PushQuad(mesh, 
-             pos, tex_pos,
-             V2(pos.x+dims.x, pos.y), V2(tex_extent.x, tex_pos.y),
-             V2(pos.x+dims.x, pos.y+dims.y), V2(tex_extent.x, tex_extent.y),
-             V2(pos.x, pos.y+dims.y), V2(tex_pos.x, tex_extent.y),
+             pos, 
+             V2(pos.x+dims.x, pos.y), 
+             V2(pos.x+dims.x, pos.y+dims.y), 
+             V2(pos.x, pos.y+dims.y), 
+             u_orig, u_size,
              color);
+}
+
+void
+PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 lineWidth, Vec2 u_orig, Vec2 u_size, U32 color)
+{
+    Vec2 diff = V2Sub(to, from);
+    R32 invl = 1.0/V2Len(diff);
+    Vec2 perp = V2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
+
+    PushQuad(mesh,
+            V2Add(from, perp), 
+            V2Add(to, perp),
+            V2Sub(to, perp), 
+            V2Sub(from, perp),
+            u_orig, u_size, color);
 }
 
 void
