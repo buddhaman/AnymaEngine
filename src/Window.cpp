@@ -74,6 +74,8 @@ HandleInput(Window* window)
     ImGuiIO& io = ImGui::GetIO();
     input->prev_mousedown[0] = input->mousedown[0];
     input->mousedown[0] = io.MouseDown[0];
+
+    SDL_GetWindowSize(window->window, &window->width, &window->height);
 }
 
 void
@@ -103,6 +105,8 @@ WindowBegin(Window* window)
     // Clear the screen
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, window->width, window->height);
 
     // Start ImGui Frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -167,7 +171,7 @@ CreateWindow(int width, int height)
                                      SDL_WINDOWPOS_CENTERED, 
                                      SDL_WINDOWPOS_CENTERED, 
                                      window->width, window->height, 
-                                     SDL_WINDOW_OPENGL);
+                                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     window->context = SDL_GL_CreateContext(window->window);
     SDL_GL_MakeCurrent(window->window, window->context);

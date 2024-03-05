@@ -4,6 +4,13 @@
 
 // Forward declarations
 struct World;
+
+enum AgentType
+{
+    AgentType_Herbivore = 0,
+    AgentType_Carnivore,
+};
+
 struct Agent
 {
     Vec2 pos; 
@@ -11,6 +18,6 @@ struct Agent
 
     R32 orientation;
     R32 radius;
-};
 
-void UpdateAgent(World* world, Agent* agent);
+    AgentType type;
+};

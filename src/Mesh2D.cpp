@@ -76,6 +76,37 @@ PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 lineWidth, Vec2 u_orig, Vec2 u_si
 }
 
 void
+PushNGon(Mesh2D *mesh,
+        Vec2 pos,
+        R32 radius, 
+        I32 n,
+        R32 orientation,
+        Vec2 u_orig, 
+        U32 color)
+{
+    I32 npoints = n+1;
+    U32 last_idx = mesh->vertex_buffer.size;
+    R32 angdiff = 2*M_PI/(npoints-1);
+    PushVertex(mesh, pos, u_orig, color);
+    for(U32 atPoint = 0;
+            atPoint < npoints;
+            atPoint++)
+    {
+        R32 angle = orientation+angdiff*atPoint;
+        Vec2 point = V2Add(pos, V2Polar(angle, radius));
+        PushVertex(mesh, point, u_orig, color);
+    }
+    for(U32 at_point = 0;
+            at_point < npoints-1;
+            at_point++)
+    {
+        PushIndex(mesh, last_idx);
+        PushIndex(mesh, last_idx+at_point+1);
+        PushIndex(mesh, last_idx+at_point+2);
+    }
+}
+
+void
 BufferData(Mesh2D* mesh, U32 drawMode)
 {
     glBindVertexArray(mesh->vertex_array_handle);
@@ -84,7 +115,7 @@ BufferData(Mesh2D* mesh, U32 drawMode)
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex2D)*mesh->vertex_buffer.size, mesh->vertex_buffer.data, drawMode);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer_handle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Vertex2D)*mesh->index_buffer.size, mesh->index_buffer.data, drawMode);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(U32)*mesh->index_buffer.size, mesh->index_buffer.data, drawMode);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -93,6 +124,7 @@ void
 Draw(Mesh2D* mesh)
 {
     glBindVertexArray(mesh->vertex_array_handle);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer_handle); 
     glDrawElements(GL_TRIANGLES, mesh->index_buffer.size, GL_UNSIGNED_INT, nullptr);
 }
 

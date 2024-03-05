@@ -92,8 +92,9 @@ int main(int argc, char** argv)
         ImGui::Begin("Hellow i set it  up agian");
         ImGui::Text("I just setup imgui");
         ImGui::Text("FPS: %d", window->fps);
-        ImGui::Text("update: %.2f millis", window->update_millis);
-        ImGui::Text("carry: %.2f", window->carry_millis);
+        ImGui::Text("Update: %.2f millis", window->update_millis);
+        ImGui::Text("Carry: %.2f", window->carry_millis);
+        ImGui::Text("Camera scale: %.2f", cam.scale);
         ImGui::End();
 
         // Draw the triangle
@@ -125,9 +126,10 @@ int main(int argc, char** argv)
         PushRect(&mesh, pos, V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
 
         UpdateWorld(&world);
-        RenderWorld(&world, &mesh);
+        RenderWorld(&world, &mesh, &cam);
 
         PushLine(&mesh, V2(sinf(time)*2,0), V2(10, sinf(time*2)*3), 0.4f, pos, pos, 0xffaa77ff);
+        PushNGon(&mesh, V2(12, 12), 3, 5, time, pos, 0x77ffaaff);
         
         BufferData(&mesh, GL_DYNAMIC_DRAW);
         Draw(&mesh);

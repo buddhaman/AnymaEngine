@@ -1,5 +1,8 @@
 #pragma once
 
+// TODO: REMOVE
+#include <functional>
+
 #include "AnymUtil.h"
 #include "Memory.h"
 
@@ -66,6 +69,16 @@ struct Array
         InvalidCodePath();
     }
 
+    // TODO: Dont be dependent on standard library. Get rid of STDs.
+    inline void Sort(const std::function<int(T, T)>& compare)
+    {
+        if(size == 0)
+        {
+            return;
+        }
+        Quicksort(0, size-1, compare);
+    }
+
     // Iterator support
     struct Iterator {
         T* ptr;
@@ -77,6 +90,29 @@ struct Array
     };
     Iterator begin() { return Iterator(data); }
     Iterator end() { return Iterator(data + size); }
+
+    private:
+    void Quicksort(int low, int high, const std::function<int(T, T)>& compare) {
+        if (low < high) {
+            int pivot_idx = Partition(low, high, compare);
+            Quicksort(low, pivot_idx - 1, compare);
+            Quicksort(pivot_idx + 1, high, compare);
+        }
+    }
+
+    int Partition(int low, int high, const std::function<int(T, T)>& compare) {
+        T pivot = data[high];
+        int i = (low - 1);
+
+        for (int j = low; j <= high - 1; j++) {
+            if (compare(data[j], pivot) < 0) {
+                i++;
+                Swap(i, j);
+            }
+        }
+        Swap(i + 1, high);
+        return (i + 1);
+    }
 };
 
 template <typename T>
@@ -92,7 +128,6 @@ struct DynamicArray : public Array<T>
 
     DynamicArray()
     {
-        size = capacity = 0; data = nullptr;
     }
 
     ~DynamicArray()
@@ -104,6 +139,7 @@ struct DynamicArray : public Array<T>
     {
         capacity = toCapacity;
         data = (T*)realloc(data, capacity*sizeof(T));
+        // Yes this is a memory leak.
         if(!data)
         {
             // When malloc fails the program is terminated if you ask me. So
@@ -118,8 +154,8 @@ struct DynamicArray : public Array<T>
     {
         if(toSize > capacity)
         {
-            U64 newSize = toSize > 1000 ? (toSize + toSize/2) : (toSize * 2);
-            GrowCapacity(newSize);
+            U64 new_capacity = toSize > 1000 ? (toSize + toSize/2) : (toSize * 2);
+            GrowCapacity(new_capacity);
         }
         size = toSize;
         return data+size-1;

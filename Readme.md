@@ -13,15 +13,22 @@ Brain update rate will be 1 / 6 of the
 
 #### TODO
 - Make texture region.
-- Global empty texture.
-- Render eyes.
-- Make creature struct.
+- Pass tex_orig and tex_size as texture region.
+- Global empty texture for convenience.
 - Do simple collision detection.
+- Make color header with list of colors and color helper functions.
 - Do raycast;
 - Update creature sensor info based on raycast (seeing).
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Resize screen.
+- Level of detail.
+- Render eyes.
+- Use N-gon to draw creatures.
+- Sorting in Array
+- Render N-polygon
+- Make creature struct (Agent).
 - Line rendering.
 - Fix frame update rate at user specified FPS with SDL_Delay.
 - Create window struct for platform handling.
