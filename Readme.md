@@ -12,16 +12,16 @@ Brain update rate will be 1 / 6 of the
  - Make cute renderer.
 
 #### TODO
+- Do raycast;
+- Update creature sensor info based on raycast (seeing).
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
 - Global empty texture for convenience.
-- Do simple collision detection.
 - Make color header with list of colors and color helper functions.
-- Do raycast;
-- Update creature sensor info based on raycast (seeing).
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Do simple collision detection.
 - Resize screen.
 - Fix Array issues.
 - Level of detail.
