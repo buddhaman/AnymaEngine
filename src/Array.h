@@ -6,7 +6,9 @@
 #include "AnymUtil.h"
 #include "Memory.h"
 
-// Simple std::vector without slow debug build and slightly different implementation. No new/delete.
+// Simple std::vector without slow debug build and slightly different
+// implementation. No constructors or destructors called on contents. Made for
+// plain datatypes.
 template <typename T>
 struct Array
 {
@@ -132,7 +134,10 @@ struct DynamicArray : public Array<T>
 
     ~DynamicArray()
     {
-        free(data);
+        if(data)
+        {
+            free(data);
+        }
     }
 
     inline void GrowCapacity(U64 toCapacity) 
