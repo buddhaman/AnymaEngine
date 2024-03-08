@@ -46,9 +46,19 @@ const char* fragment_shader_source = R"glsl(
     }
 )glsl";
 
+void
+PrintArray(Array<int>& arr)
+{
+    for(int i = 0; i < arr.size; i++)
+    {
+        std::cout << arr[i] << ", ";
+    }
+    std::cout << std::endl;
+}
+
 int main(int argc, char** argv) 
 {
-     // Initialize random seed once. This will be removed by my own rng.
+     // Initialize random seed once. This will be replaced by my own rng.
     srand((time(nullptr)));
 
     Window* window = CreateWindow(1280, 720);
@@ -57,18 +67,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-// Check if asan works.
-#if 0
-    int* ptr = new int;
-    *ptr = 23;
-    delete ptr;
-
-    std::cout << *ptr << std::endl;
-#endif
-
     Shader shader = CreateShader(vertex_shader_source, fragment_shader_source);
-
-    // Find uniforms
     U32 transform_loc = glGetUniformLocation(shader.program_handle, "u_transform");
 
     // Camera
@@ -77,9 +76,6 @@ int main(int argc, char** argv)
 
     Mesh2D mesh;
     Vec2 uv = V2(0,0);
-    // Main loop
-    bool running = true;
-    SDL_Event event;
 
     World world;
     InitWorld(&world);
@@ -92,6 +88,10 @@ int main(int argc, char** argv)
     window->fps = 60;
 
     InputHandler* input = &window->input;
+
+    // Main loop
+    bool running = true;
+    SDL_Event event;
     while (window->running) 
     {
         WindowBegin(window);
@@ -106,9 +106,14 @@ int main(int argc, char** argv)
 
         update_times.Shift(-1);
         update_times[update_times.size-1] = window->update_millis;
-        ImPlotFlags flags = ImPlotFlags_NoBoxSelect | ImPlotFlags_NoInputs | ImPlotFlags_NoFrame;
-        ImPlot::SetNextAxesLimits(0, update_times.size, 0, 16.0f, 0);
-        if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), flags))
+
+        ImPlotFlags updatetime_plot_flags = ImPlotFlags_NoBoxSelect | 
+                            ImPlotFlags_NoInputs | 
+                            ImPlotFlags_NoFrame | 
+                            ImPlotFlags_NoLegend;
+
+        ImPlot::SetNextAxesLimits(0, update_times.size, 0, 32.0f, 0);
+        if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
         {
             ImPlot::PlotBars("Update time", update_times.data, update_times.size, 1);
             ImPlot::EndPlot();

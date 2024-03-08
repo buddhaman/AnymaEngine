@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnymUtil.h"
+#include "Array.h"
 #include "Math.h"
 
 // Forward declarations
@@ -19,6 +20,7 @@ struct AgentEye
     Ray ray;
     R32 distance;
     U32 color;
+    R32 orientation;
 };
 
 struct Agent
@@ -29,7 +31,7 @@ struct Agent
     R32 orientation;
     R32 radius;
 
-    AgentEye eye;
+    Array<AgentEye> eyes;
 
     AgentType type;
     EntityID id;

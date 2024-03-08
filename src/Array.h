@@ -23,14 +23,25 @@ struct Array
     inline void Fill() {size = capacity;}
     inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
+    inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
+    // TODO: Remove all STL classes.
+    inline void Apply(const std::function<void(T& value)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
+
     inline void Shift(int shift, int fill=0) 
     {
+        if(abs(shift) >= size)
+        {
+            memset(data, fill, size*sizeof(T));
+            return;
+        }
+
         if(shift < 0)
         {
             for(int i = 0; i < size+shift; i++)
             {
                 data[i] = data[i-shift];
             }
+            memset(data+size+shift, fill, -shift*sizeof(T));
         }
         else
         {
@@ -38,10 +49,9 @@ struct Array
             {
                 data[i] = data[i-shift];
             }
+            memset(data, fill, shift*sizeof(T));
         }
     }
-
-    inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
 
     inline void RemoveIndexUnordered(int idx) 
     {
@@ -92,12 +102,13 @@ struct Array
     // TODO: Dont be dependent on standard library. Get rid of STDs.
     inline void Sort(const std::function<int(T, T)>& compare)
     {
-        if(size == 0)
+        if(size <= 1)
         {
             return;
         }
         Quicksort(0, size-1, compare);
     }
+
 
     // Iterator support
     struct Iterator {
@@ -112,20 +123,25 @@ struct Array
     Iterator end() { return Iterator(data + size); }
 
     private:
-    void Quicksort(int low, int high, const std::function<int(T, T)>& compare) {
-        if (low < high) {
+    void Quicksort(int low, int high, const std::function<int(T, T)>& compare) 
+    {
+        if (low < high) 
+        {
             int pivot_idx = Partition(low, high, compare);
             Quicksort(low, pivot_idx - 1, compare);
             Quicksort(pivot_idx + 1, high, compare);
         }
     }
 
-    int Partition(int low, int high, const std::function<int(T, T)>& compare) {
+    int Partition(int low, int high, const std::function<int(T, T)>& compare) 
+    {
         T pivot = data[high];
         int i = (low - 1);
 
-        for (int j = low; j <= high - 1; j++) {
-            if (compare(data[j], pivot) < 0) {
+        for (int j = low; j <= high - 1; j++) 
+        {
+            if (compare(data[j], pivot) < 0) 
+            {
                 i++;
                 Swap(i, j);
             }
@@ -145,8 +161,8 @@ struct DynamicArray : public Array<T>
     // I actually do not care if these are deleted or not.
     DynamicArray(const DynamicArray&) = delete;
     DynamicArray& operator=(const DynamicArray&) = delete;
-    DynamicArray(const DynamicArray&&) = delete;
-    DynamicArray& operator=(const DynamicArray&&) = delete;
+    DynamicArray(DynamicArray&&) = delete;
+    DynamicArray& operator=(DynamicArray&&) = delete;
 
     DynamicArray()
     {
@@ -169,11 +185,10 @@ struct DynamicArray : public Array<T>
     {
         capacity = toCapacity;
         data = (T*)realloc(data, capacity*sizeof(T));
-        // Yes this is a memory leak, but we abort anyway.
+        // Yes this is a potential memory leak, but we abort anyway.
         if(!data)
         {
-            // When malloc fails the program is terminated if you ask me. So
-            // this will result in a crash and thats fine.
+            // When malloc fails the program is terminated. 
             std::cerr << "No memory allocated in GrowCapacity" << std::endl;
             std::abort();
         }
@@ -194,11 +209,10 @@ struct DynamicArray : public Array<T>
     inline T* PushBack() { T* newT = IncreaseSize(size+1); return newT; }
 };
 
-template <typename T> 
-Array<T>
+template <typename T> Array<T>
 CreateArray(MemoryArena* arena, int capacity)
 {
-    Array<T> array = {0};
+    Array<T> array;
     array.capacity = capacity;
     array.data = (T *)PushAndZeroMemory_(arena, sizeof(T)*capacity);
     return array;

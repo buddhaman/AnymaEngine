@@ -2,6 +2,21 @@
 
 #include "AnymUtil.h"
 
+static constexpr U64 KiloBytes(U64 n)
+{
+    return n * 1024ULL;
+}
+
+static constexpr U64 MegaBytes(U64 n)
+{
+    return 1024ULL * KiloBytes(n);
+}
+
+static constexpr U64 GigaBytes(U64 n)
+{
+    return 1024ULL * MegaBytes(n);
+}
+
 struct MemoryArena
 {
     U8 *base;

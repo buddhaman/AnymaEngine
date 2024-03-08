@@ -30,9 +30,9 @@ GetAgentColor(AgentType type)
 void 
 UpdateWorld(World* world)
 {
-    for(int i = 0; i < world->agents.size; i++)
+    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
-        Agent* agent = &world->agents[i];
+        Agent* agent = &world->agents[agent_idx];
         R32 dev = 0.04f;
         R32 speed = 0.1f;
         Vec2 dir = V2(cosf(agent->orientation), sinf(agent->orientation));
@@ -63,30 +63,34 @@ UpdateWorld(World* world)
             agent->pos.y = agent->pos.y - size.y;
         }
 
-        #if 1
-        // Update eye
-        agent->eye.ray = {agent->pos, dir};
-        agent->eye.distance = 50.0f;
-        agent->eye.color = 0xffffffff;
-
-        // Cast ray
-        for(int j = 0; j < world->agents.size; j++)
+        for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
-            Agent* ac = &world->agents[j];
-            if(i==j) continue;
-            
-            Vec2 intersection;
-            if(RayCircleIntersect(agent->eye.ray, {ac->pos, ac->radius}, &intersection))
+            AgentEye* eye = &agent->eyes[eye_idx];
+            // Update eye
+            Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
+            eye->ray = {agent->pos, eye_dir};
+            eye->distance = 50.0f;
+            eye->color = 0xffffffff;
+
+            // Cast ray
+            for(int raycheck_agent_idx = 0; raycheck_agent_idx < world->agents.size; raycheck_agent_idx++)
             {
-                R32 dist = V2Dist(intersection, agent->eye.ray.pos);
-                if(dist < agent->eye.distance)
+               Agent* ac = &world->agents[raycheck_agent_idx];
+               if(agent_idx==raycheck_agent_idx) continue;
+                
+                Vec2 intersection;
+                if(RayCircleIntersect(eye->ray, {ac->pos, ac->radius}, &intersection))
                 {
-                    agent->eye.distance = dist;
-                    agent->eye.color = GetAgentColor(ac->type);
+                    R32 dist = V2Dist(intersection, eye->ray.pos);
+                    if(dist < eye->distance)
+                    {
+                        eye->distance = dist;
+                        eye->color = GetAgentColor(ac->type);
+                    }
                 }
             }
         }
-        #endif
+
     }
 
 #if 1
@@ -131,10 +135,15 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
     U32 pupil_color = 0xff000000;
     R32 pupil_r = eye_r*0.7f;
 
+#if 1
     // Draw eye rays
-    AgentEye* eye = &agent->eye;
-    R32 ray_width = 0.1f;
-    PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.direction, ray_width, uv, uv, eye->color);
+    for(int i = 0; i < agent->eyes.size; i++)
+    {
+        AgentEye* eye = &agent->eyes[i];
+        R32 ray_width = 0.1f;
+        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.direction, ray_width, uv, uv, eye->color);
+    }
+#endif
 
     // Eyes
     PushNGon(mesh, agent->pos+dir*eye_d+perp*eye_d, eye_r, eye_sides, eye_orientation, uv, eye_color);
@@ -143,7 +152,6 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
     // Pupils
     PushNGon(mesh, agent->pos+dir*eye_d+perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
     PushNGon(mesh, agent->pos+dir*eye_d-perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
-
 }
 
 void 
@@ -186,19 +194,49 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
     }
 }
 
+void RenderDebugInfo(World* world, Mesh2D* mesh)
+{
+    
+}
+
 void 
 InitWorld(World* world)
 {
-    world->size = V2(300, 300);
-    int nAgents = 400;
-    for(int i = 0; i < nAgents; i++)
+    world->arena = CreateMemoryArena(MegaBytes(256));
+    world->chunk_size = 100;
+    world->x_chunks = 4;
+    world->y_chunks = 4;
+    world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
+
+    world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
+    for(int y = 0; y < world->y_chunks; y++)
+    for(int x = 0; x < world->x_chunks; x++)
+    {
+        Chunk* chunk = world->chunks.PushBack();
+        chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
+        chunk->x_idx = x;
+        chunk->y_idx = y;
+    }
+
+    world->agents = CreateArray<Agent>(world->arena, 64000);
+    int n_agents = 400;
+    for(int i = 0; i < n_agents; i++)
     {
         Agent* agent = world->agents.PushBack();
         *agent = {0};
         agent->pos.x = GetRandomR32Debug(0, world->size.x);
         agent->pos.y = GetRandomR32Debug(0, world->size.y);
-        agent->type = i < nAgents/2 ? AgentType_Carnivore : AgentType_Herbivore;
+        agent->type = i < n_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
         agent->radius = 1.2f;
         agent->id = i+1;
+
+        int n_eyes = 4;
+        R32 agent_fov = 0.8f;
+        agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
+        for(int i = 0; i < n_eyes; i++)
+        {
+            AgentEye* eye = agent->eyes.PushBack();
+            eye->orientation = -agent_fov/2.0f + i*agent_fov/(n_eyes-1);
+        }
     }
 }

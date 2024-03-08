@@ -7,10 +7,27 @@
 #include "Camera2D.h"
 #include "Math.h"
 
+struct Chunk
+{
+    // For convenience
+    Vec2 pos;
+    int x_idx;
+    int y_idx;
+
+    // Index into the world agent array 
+    Array<int> agent_indices;
+};
+
 struct World
 {
+    R32 chunk_size;
+    int x_chunks;
+    int y_chunks;
+    Array<Chunk> chunks;
+
     Vec2 size;
-    DynamicArray<Agent> agents;
+    Array<Agent> agents;
+    MemoryArena* arena;
 };
 
 void 
