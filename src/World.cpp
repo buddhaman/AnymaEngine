@@ -194,9 +194,15 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
     }
 }
 
-void RenderDebugInfo(World* world, Mesh2D* mesh)
+void 
+RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam)
 {
-    
+    Vec2 chunk_dims = V2(world->chunk_size, world->chunk_size);
+    for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
+    {
+        Chunk* chunk = &world->chunks[chunk_idx];
+        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0xffffffff);
+    }
 }
 
 void 
@@ -204,8 +210,8 @@ InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(256));
     world->chunk_size = 100;
-    world->x_chunks = 4;
-    world->y_chunks = 4;
+    world->x_chunks = 16;
+    world->y_chunks = 16;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);

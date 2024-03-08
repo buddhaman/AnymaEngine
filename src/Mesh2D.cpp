@@ -61,11 +61,11 @@ PushRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, Vec2 u_orig, Vec2 u_size, U32 color)
 }
 
 void
-PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 lineWidth, Vec2 u_orig, Vec2 u_size, U32 color)
+PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color)
 {
     Vec2 diff = V2Sub(to, from);
     R32 invl = 1.0/V2Len(diff);
-    Vec2 perp = V2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
+    Vec2 perp = V2(diff.y*invl*line_width/2.0, -diff.x*invl*line_width/2.0);
 
     PushQuad(mesh,
             V2Add(from, perp), 
@@ -73,6 +73,30 @@ PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 lineWidth, Vec2 u_orig, Vec2 u_si
             V2Sub(to, perp), 
             V2Sub(from, perp),
             u_orig, u_size, color);
+}
+
+void
+PushLineRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color)
+{
+    PushRect(mesh, 
+             V2(pos.x - 0.5f*line_width, pos.y - 0.5f*line_width), 
+             V2(dims.x, line_width), 
+             u_orig, V2(0,0), color);
+
+    PushRect(mesh, 
+             V2(pos.x + dims.x - 0.5f*line_width, pos.y - 0.5f*line_width), 
+             V2(line_width, dims.y), 
+             u_orig, V2(0,0), color);
+
+    PushRect(mesh, 
+             V2(pos.x - 0.5f*line_width, pos.y + dims.y - 0.5f*line_width), 
+             V2(dims.x+line_width, line_width), 
+             u_orig, V2(0,0), color);
+
+    PushRect(mesh, 
+             V2(pos.x - 0.5f*line_width, pos.y - 0.5f*line_width), 
+             V2(line_width, dims.y), 
+             u_orig, V2(0,0), color);
 }
 
 void

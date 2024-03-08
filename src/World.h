@@ -30,6 +30,12 @@ struct World
     MemoryArena* arena;
 };
 
+static inline Chunk* 
+GetChunk(World* world, int x_idx, int y_idx)
+{
+    return &world->chunks[x_idx+y_idx*world->x_chunks];
+}
+
 void 
 UpdateWorld(World* world);
 
@@ -38,6 +44,9 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam);
 
 EntityID
 CastRay(World* world, Ray ray, EntityID exclude_id=0);
+
+void 
+RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void 
 InitWorld(World* world);
