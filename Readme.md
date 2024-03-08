@@ -2,7 +2,7 @@
 
 This will be the most large scale and fastest evolution simulation out there. 
 
-Brain update rate will be 1 / 6 of the 
+Brain update rate will be 1 / 6 of the physics update rate.
 
 ### Large scale TODO
  - Switch to HandmadeMath linear algebra library.
@@ -12,6 +12,12 @@ Brain update rate will be 1 / 6 of the
  - Make cute renderer.
 
 #### TODO
+- Divide the world into chunks.
+- Make agents selectable.
+- Make chunks selectable.
+- Set debug option: Show chunks.
+- Show agents in chunk in debug window. 
+- Pause simulation.
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
 - Global empty texture for convenience.
