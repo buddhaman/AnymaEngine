@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
+#include <implot.h>
 
 #include "Window.h"
 
@@ -206,6 +207,9 @@ CreateWindow(int width, int height)
 
     ImGui_ImplSDL2_InitForOpenGL(window->window, window->context);
     ImGui_ImplOpenGL3_Init("#version 130");
+
+    // Setup ImPlot
+    ImPlot::CreateContext();
 
     window->running = true;
 

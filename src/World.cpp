@@ -189,8 +189,8 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 void 
 InitWorld(World* world)
 {
-    world->size = V2(100, 100);
-    int nAgents = 50;
+    world->size = V2(300, 300);
+    int nAgents = 400;
     for(int i = 0; i < nAgents; i++)
     {
         Agent* agent = world->agents.PushBack();

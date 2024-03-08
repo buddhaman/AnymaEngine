@@ -11,7 +11,6 @@ struct World
 {
     Vec2 size;
     DynamicArray<Agent> agents;
-    DynamicArray<U16> visible_agent_indices;
 };
 
 void 

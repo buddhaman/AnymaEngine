@@ -5,7 +5,6 @@
 static inline U32
 CreateAndCompileShaderSource(const char *source, GLenum shaderType)
 {
-    printf("I am now compiling this shader\n");
     const char *const* src = (const char *const *)&source;
     U32 shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, src, NULL);

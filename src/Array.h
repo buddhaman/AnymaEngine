@@ -21,7 +21,25 @@ struct Array
     inline T& operator[](int idx) { Assert(idx >=0 && idx < size); return data[idx];}
     inline T& At(int idx) { Assert(idx >=0 && idx < size); return data[idx];}
     inline void Fill() {size = capacity;}
+    inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
+    inline void Shift(int shift, int fill=0) 
+    {
+        if(shift < 0)
+        {
+            for(int i = 0; i < size+shift; i++)
+            {
+                data[i] = data[i-shift];
+            }
+        }
+        else
+        {
+            for(int i = size-1; i>=shift; i--)
+            {
+                data[i] = data[i-shift];
+            }
+        }
+    }
 
     inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
 
@@ -127,9 +145,16 @@ struct DynamicArray : public Array<T>
     // I actually do not care if these are deleted or not.
     DynamicArray(const DynamicArray&) = delete;
     DynamicArray& operator=(const DynamicArray&) = delete;
+    DynamicArray(const DynamicArray&&) = delete;
+    DynamicArray& operator=(const DynamicArray&&) = delete;
 
     DynamicArray()
     {
+    }
+
+    DynamicArray(size_t initial_capacity) 
+    {
+        GrowCapacity(initial_capacity);
     }
 
     ~DynamicArray()

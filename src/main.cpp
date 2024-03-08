@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <GL/glew.h>
 #include <imgui.h>
+#include <implot.h>
 
 #include "AnymUtil.h"
 #include "Array.h"
@@ -85,18 +86,34 @@ int main(int argc, char** argv)
 
     cam.pos = world.size/2.0f;
 
+    DynamicArray<R32> update_times(120);
+    update_times.FillAndSetValue(0);
+
+    window->fps = 60;
+
     InputHandler* input = &window->input;
     while (window->running) 
     {
         WindowBegin(window);
         ImGui::Begin("Hellow i set it  up agian");
         ImGui::Text("I just setup imgui");
-        ImGui::Text("FPS: %d", window->fps);
+        ImGui::Text("FPS: %.0f", window->fps);
         ImGui::Text("Update: %.2f millis", window->update_millis);
         ImGui::Text("Carry: %.2f", window->carry_millis);
         ImGui::Text("Camera scale: %.2f", cam.scale);
         ImGui::Separator();
         ImGui::Text("Number of agents: %zu", world.agents.size);
+
+        update_times.Shift(-1);
+        update_times[update_times.size-1] = window->update_millis;
+        ImPlotFlags flags = ImPlotFlags_NoBoxSelect | ImPlotFlags_NoInputs | ImPlotFlags_NoFrame;
+        ImPlot::SetNextAxesLimits(0, update_times.size, 0, 16.0f, 0);
+        if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), flags))
+        {
+            ImPlot::PlotBars("Update time", update_times.data, update_times.size, 1);
+            ImPlot::EndPlot();
+        }
+
         ImGui::End();
 
         // Draw the triangle
@@ -110,19 +127,23 @@ int main(int argc, char** argv)
 
         glUniformMatrix3fv(transform_loc, 1, GL_FALSE, &cam.transform.m[0][0]);
 
-        if(IsKeyDown(input, InputAction_W))
+        ImGuiIO& io = ImGui::GetIO();
+        if(!io.WantCaptureMouse)
         {
-            cam.pos.y += .1f/cam.scale;
-        }
+            if(IsKeyDown(input, InputAction_W))
+            {
+                cam.pos.y += .1f/cam.scale;
+            }
 
-        if(input->mousedown[0])
-        {
-            Vec2 diff = input->mouse_delta / (cam.scale);
-            cam.pos.x -= diff.x;
-            cam.pos.y += diff.y;
-        }
+            if(input->mousedown[0])
+            {
+                Vec2 diff = input->mouse_delta / (cam.scale);
+                cam.pos.x -= diff.x;
+                cam.pos.y += diff.y;
+            }
 
-        cam.scale = cam.scale *= powf(1.05f, input->mouse_scroll);
+            cam.scale = cam.scale *= powf(1.05f, input->mouse_scroll);
+        }
 
         Vec2 pos = V2(-0.5, -0.5);
         PushRect(&mesh, pos, V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);

@@ -12,7 +12,6 @@ Brain update rate will be 1 / 6 of the
  - Make cute renderer.
 
 #### TODO
-- Do raycast;
 - Update creature sensor info based on raycast (seeing).
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
@@ -21,6 +20,7 @@ Brain update rate will be 1 / 6 of the
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Do raycast;
 - Do simple collision detection.
 - Resize screen.
 - Fix Array issues.

@@ -7,6 +7,7 @@
     {
       "name": "imgui",
       "features": ["docking-experimental", "sdl2-binding", "opengl3-binding"]
-    }
+    },
+    "implot"
   ]
 }
