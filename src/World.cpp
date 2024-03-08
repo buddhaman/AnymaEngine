@@ -205,14 +205,33 @@ RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam)
     }
 }
 
+void
+SortAgentsIntoChunks(World* world)
+{
+    for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
+    {
+        world->chunks[chunk_idx].agent_indices.Clear();
+    }
+
+    for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+    {
+        Agent* agent = &world->agents[agent_idx];
+        int x_chunk = floor(agent->pos.x/world->chunk_size);
+        int y_chunk = floor(agent->pos.y/world->chunk_size);
+        GetChunk(world, x_chunk, y_chunk)->agent_indices.PushBack(agent_idx);
+    }
+}
+
 void 
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(256));
     world->chunk_size = 100;
-    world->x_chunks = 16;
-    world->y_chunks = 16;
+    world->x_chunks = 4;
+    world->y_chunks = 4;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
+
+    int n_agents = 400;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
@@ -222,10 +241,10 @@ InitWorld(World* world)
         chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
         chunk->x_idx = x;
         chunk->y_idx = y;
+        chunk->agent_indices = CreateArray<U32>(world->arena, n_agents);
     }
 
     world->agents = CreateArray<Agent>(world->arena, 64000);
-    int n_agents = 400;
     for(int i = 0; i < n_agents; i++)
     {
         Agent* agent = world->agents.PushBack();

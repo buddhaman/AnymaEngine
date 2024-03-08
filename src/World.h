@@ -15,7 +15,7 @@ struct Chunk
     int y_idx;
 
     // Index into the world agent array 
-    Array<int> agent_indices;
+    Array<U32> agent_indices;
 };
 
 struct World
@@ -47,6 +47,9 @@ CastRay(World* world, Ray ray, EntityID exclude_id=0);
 
 void 
 RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam);
+
+void
+SortAgentsIntoChunks(World* world);
 
 void 
 InitWorld(World* world);

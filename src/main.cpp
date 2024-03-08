@@ -119,6 +119,14 @@ int main(int argc, char** argv)
             ImPlot::EndPlot();
         }
 
+        SortAgentsIntoChunks(&world);
+
+        for(int chunk_idx = 0; chunk_idx < world.chunks.size; chunk_idx++)
+        {
+            Chunk* chunk = &world.chunks[chunk_idx];
+            ImGui::Text("Chunk(%d, %d) : %zu", chunk->x_idx, chunk->y_idx, chunk->agent_indices.size);
+        }
+
         ImGui::End();
 
         // Draw the triangle
