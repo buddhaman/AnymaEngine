@@ -62,7 +62,6 @@ UpdateWorld(World* world)
         {
             agent->pos.y = agent->pos.y - size.y;
         }
-
 #if 0
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
@@ -159,9 +158,20 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 {
-    for(int i = 0; i < world->agents.size; i++)
+    // Which agents are visible.
+    world->visible_agent_indices.Clear();
+    for(U32 i = 0; i < world->agents.size; i++)
     {
         Agent* agent = &world->agents[i];
+        if(InBounds({cam->pos-cam->size/2.0f, cam->size}, agent->pos))
+        {
+            world->visible_agent_indices.PushBack(i);
+        }
+    }
+
+    for(int i = 0; i < world->visible_agent_indices.size; i++)
+    {
+        Agent* agent = &world->agents[world->visible_agent_indices[i]];
 
         R32 r = agent->radius;
         Vec2 uv = V2(0,0);
@@ -231,11 +241,11 @@ InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(256));
     world->chunk_size = 100;
-    world->x_chunks = 4;
-    world->y_chunks = 4;
+    world->x_chunks = 20;
+    world->y_chunks = 20;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int n_agents = 400;
+    int n_agents = 64000;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
@@ -249,6 +259,7 @@ InitWorld(World* world)
     }
 
     world->agents = CreateArray<Agent>(world->arena, n_agents);
+    world->visible_agent_indices = CreateArray<U32>(world->arena, n_agents);
     for(int i = 0; i < n_agents; i++)
     {
         Agent* agent = world->agents.PushBack();

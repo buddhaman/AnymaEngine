@@ -22,7 +22,7 @@ struct Ray
 };
 
 // Assume ray is normalized
-static bool
+static inline bool
 RayCircleIntersect(Ray ray, Circle circle, Vec2* intersection)
 {
     //Vec2 intersection = V2(0,0);
@@ -53,3 +53,15 @@ RayCircleIntersect(Ray ray, Circle circle, Vec2* intersection)
 
     return false;
 }
+
+static inline bool
+InBounds(Rect bounds, Vec2 point)
+{
+    if(point.x < bounds.pos.x || point.x > bounds.pos.x+bounds.dims.x || 
+        point.y < bounds.pos.y || point.y > bounds.pos.y+bounds.dims.y)
+    {
+        return false;
+    }
+    return true;
+}
+

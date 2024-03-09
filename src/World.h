@@ -27,6 +27,7 @@ struct World
 
     Vec2 size;
     Array<Agent> agents;
+    Array<U32> visible_agent_indices;
     MemoryArena* arena;
 };
 

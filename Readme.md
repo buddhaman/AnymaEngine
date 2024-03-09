@@ -12,7 +12,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - Make cute renderer.
 
 #### TODO
-- Divide the world into chunks.
+- Collect statistics about chunk occupancy.
 - Make agents selectable.
 - Make chunks selectable.
 - Set debug option: Show chunks.
@@ -25,6 +25,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Only render visible agents.
+- Divide the world into chunks.
 - Update creature sensor info based on raycast (seeing).
 - Do raycast;
 - Do simple collision detection.

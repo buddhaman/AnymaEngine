@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 
         ImPlot::SetNextAxesLimits(0, update_times.size, 0, 80.0f, 0);
         if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
-        {
+        { 
             ImPlot::PlotBars("Update time", update_times.data, update_times.size, 1);
             ImPlot::EndPlot();
         }
