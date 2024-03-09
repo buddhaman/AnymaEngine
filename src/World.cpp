@@ -63,6 +63,7 @@ UpdateWorld(World* world)
             agent->pos.y = agent->pos.y - size.y;
         }
 
+#if 0
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
             AgentEye* eye = &agent->eyes[eye_idx];
@@ -90,10 +91,11 @@ UpdateWorld(World* world)
                 }
             }
         }
+#endif
 
     }
 
-#if 1
+#if 0
     // Collision detection
     for(int i = 0; i < world->agents.size-1; i++)
     {
@@ -218,6 +220,8 @@ SortAgentsIntoChunks(World* world)
         Agent* agent = &world->agents[agent_idx];
         int x_chunk = floor(agent->pos.x/world->chunk_size);
         int y_chunk = floor(agent->pos.y/world->chunk_size);
+        x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
+        y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
         GetChunk(world, x_chunk, y_chunk)->agent_indices.PushBack(agent_idx);
     }
 }
@@ -244,7 +248,7 @@ InitWorld(World* world)
         chunk->agent_indices = CreateArray<U32>(world->arena, n_agents);
     }
 
-    world->agents = CreateArray<Agent>(world->arena, 64000);
+    world->agents = CreateArray<Agent>(world->arena, n_agents);
     for(int i = 0; i < n_agents; i++)
     {
         Agent* agent = world->agents.PushBack();

@@ -67,3 +67,11 @@ T Max(T a, T b) { return a < b ? b : a; }
 
 template <typename T>
 T Min(T a, T b) { return a < b ? a : b; }
+
+template <typename T>
+T Clamp(T min, T val, T max)
+{
+    if(val < min) return min;
+    if(val > max) return min;
+    return val;
+}

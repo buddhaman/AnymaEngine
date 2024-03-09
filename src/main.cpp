@@ -112,7 +112,7 @@ int main(int argc, char** argv)
                             ImPlotFlags_NoFrame | 
                             ImPlotFlags_NoLegend;
 
-        ImPlot::SetNextAxesLimits(0, update_times.size, 0, 32.0f, 0);
+        ImPlot::SetNextAxesLimits(0, update_times.size, 0, 80.0f, 0);
         if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
         {
             ImPlot::PlotBars("Update time", update_times.data, update_times.size, 1);
@@ -121,11 +121,36 @@ int main(int argc, char** argv)
 
         SortAgentsIntoChunks(&world);
 
+#if 0
         for(int chunk_idx = 0; chunk_idx < world.chunks.size; chunk_idx++)
         {
             Chunk* chunk = &world.chunks[chunk_idx];
             ImGui::Text("Chunk(%d, %d) : %zu", chunk->x_idx, chunk->y_idx, chunk->agent_indices.size);
         }
+#else
+        ImGui::SeparatorText("Chunks");
+        if (ImGui::BeginTable("ChunksTable", world.x_chunks, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) 
+        {
+            for(int y = 0; y < world.y_chunks; y++)
+            {
+                ImGui::TableNextRow(); // Start a new row
+                for(int x = 0; x < world.x_chunks; x++)
+                {
+                    ImGui::TableNextColumn(); // Move to the next column
+                    Chunk* chunk = GetChunk(&world, x, y); // You need to implement this function
+                    if (chunk != nullptr) 
+                    {
+                        ImGui::Text("%zu", chunk->agent_indices.size); // Display the number in the cell
+                    } 
+                    else 
+                    {
+                        ImGui::Text("Empty"); // Or handle empty chunks however you prefer
+                    }
+                }
+            }
+            ImGui::EndTable();
+        }
+#endif
 
         ImGui::End();
 
