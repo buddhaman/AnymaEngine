@@ -1,6 +1,6 @@
 # AnymaEngine 
 
-![Anyma Engine Logo](anyma_engine_logo.png)
+<img src="anyma_engine_logo.png" alt="Anyma Engine Logo" width="300"/>
 
 This will be the most large scale and fastest evolution simulation out there. 
 
