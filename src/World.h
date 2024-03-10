@@ -30,6 +30,8 @@ struct World
     Array<Agent> agents;
     Array<U32> visible_agent_indices;
     MemoryArena* arena;
+
+    I32 reproduction_rate;
 };
 
 static inline Chunk* 
@@ -52,6 +54,9 @@ RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void
 SortAgentsIntoChunks(World* world);
+
+Agent* 
+AddAgent(World* world, AgentType type, Vec2 pos);
 
 void 
 InitWorld(World* world);

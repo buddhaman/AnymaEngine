@@ -62,6 +62,16 @@ UpdateWorld(World* world)
         {
             agent->pos.y = agent->pos.y - size.y;
         }
+
+        agent->ticks_until_reproduce--;
+        if(agent->ticks_until_reproduce <= 0)
+        {
+            agent->ticks_until_reproduce = world->reproduction_rate;
+            if(world->agents.size < world->agents.capacity)
+            {
+                AddAgent(world, agent->type, agent->pos+V2(0.5f, 0.5f));
+            }
+        }
 #if 0
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
@@ -236,16 +246,42 @@ SortAgentsIntoChunks(World* world)
     }
 }
 
+Agent* 
+AddAgent(World* world, AgentType type, Vec2 pos)
+{
+    Agent* agent = world->agents.PushBack();
+    *agent = Agent{};
+    agent->pos = pos;
+    agent->type = type;
+    agent->radius = 1.2f;
+    agent->id = 1;          // TODO: Use entity ids
+
+    int n_eyes = 4;
+    R32 agent_fov = 0.8f;
+    agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
+    for(int i = 0; i < n_eyes; i++)
+    {
+        AgentEye* eye = agent->eyes.PushBack();
+        eye->orientation = -agent_fov/2.0f + i*agent_fov/(n_eyes-1);
+    }
+
+    agent->ticks_until_reproduce = world->reproduction_rate;
+
+    return agent;
+}
+
 void 
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(256));
     world->chunk_size = 100;
-    world->x_chunks = 20;
-    world->y_chunks = 20;
+    world->x_chunks = 4;
+    world->y_chunks = 4;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int n_agents = 64000;
+    int max_agents = 64000;
+
+    world->reproduction_rate = 60;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
@@ -255,28 +291,16 @@ InitWorld(World* world)
         chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
         chunk->x_idx = x;
         chunk->y_idx = y;
-        chunk->agent_indices = CreateArray<U32>(world->arena, n_agents);
+        chunk->agent_indices = CreateArray<U32>(world->arena, max_agents);
     }
 
-    world->agents = CreateArray<Agent>(world->arena, n_agents);
-    world->visible_agent_indices = CreateArray<U32>(world->arena, n_agents);
-    for(int i = 0; i < n_agents; i++)
-    {
-        Agent* agent = world->agents.PushBack();
-        *agent = {0};
-        agent->pos.x = GetRandomR32Debug(0, world->size.x);
-        agent->pos.y = GetRandomR32Debug(0, world->size.y);
-        agent->type = i < n_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
-        agent->radius = 1.2f;
-        agent->id = i+1;
+    world->agents = CreateArray<Agent>(world->arena, max_agents);
+    world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
-        int n_eyes = 4;
-        R32 agent_fov = 0.8f;
-        agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
-        for(int i = 0; i < n_eyes; i++)
-        {
-            AgentEye* eye = agent->eyes.PushBack();
-            eye->orientation = -agent_fov/2.0f + i*agent_fov/(n_eyes-1);
-        }
+    int n_initial_agents = 400;
+    for(int i = 0; i < n_initial_agents; i++)
+    {
+        AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
+        Agent* agent = AddAgent(world, type, GetRandomVec2Debug(V2(0,0), world->size));
     }
 }

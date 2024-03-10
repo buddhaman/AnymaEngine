@@ -35,4 +35,5 @@ struct Agent
 
     AgentType type;
     EntityID id;
+    I32 ticks_until_reproduce;
 };

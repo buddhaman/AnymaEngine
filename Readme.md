@@ -12,19 +12,23 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - Make cute renderer.
 
 #### TODO
-- Collect statistics about chunk occupancy.
 - Make agents selectable.
-- Make chunks selectable.
-- Set debug option: Show chunks.
+- Show agent info in debug window.
+- Show agent rays and sensors when selected.
+- Make super simple brain.
+- Set debug option: Show chunks etc.
 - Show agents in chunk in debug window. 
 - Pause simulation.
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
+- Make chunks selectable.
 - Global empty texture for convenience.
 - Make color header with list of colors and color helper functions.
 - Make creature respond to sensor in a simple way.
 
 #### Done
+- Asexual reproduction.
+- Collect statistics about chunk occupancy.
 - Only render visible agents.
 - Divide the world into chunks.
 - Update creature sensor info based on raycast (seeing).
