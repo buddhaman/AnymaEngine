@@ -274,9 +274,9 @@ void
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(256));
-    world->chunk_size = 100;
-    world->x_chunks = 4;
-    world->y_chunks = 4;
+    world->chunk_size = 20;
+    world->x_chunks = 20;
+    world->y_chunks = 20;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
     int max_agents = 64000;

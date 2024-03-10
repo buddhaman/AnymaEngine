@@ -99,6 +99,22 @@ struct Array
         InvalidCodePath();
     }
 
+    inline T MinElement() 
+    {
+        if(size==0) return 0;
+        T min = data[0];
+        for(int i = 1; i < size; i++) { if(data[i] < min) min = data[i]; }
+        return min;
+    }
+
+    inline T MaxElement() 
+    {
+        if(size==0) return 0;
+        T max = data[0];
+        for(int i = 1; i < size; i++) { if(data[i] > max) max = data[i]; }
+        return max;
+    }
+
     // TODO: Dont be dependent on standard library. Get rid of STDs.
     inline void Sort(const std::function<int(T, T)>& compare)
     {
@@ -108,7 +124,6 @@ struct Array
         }
         Quicksort(0, size-1, compare);
     }
-
 
     // Iterator support
     struct Iterator {
