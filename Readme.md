@@ -1,8 +1,21 @@
 # AnymaEngine 
 
+![Anyma Engine Logo](anyma_engine_logo.png)
+
 This will be the most large scale and fastest evolution simulation out there. 
 
 Brain update rate will be 1 / 6 of the physics update rate.
+
+## Building
+Make sure you have cmake, vcpkg and all necessary c++ development tools for your operating system.
+ - Go to the root directory.
+ - Make a folder ./build
+ - `cd build`
+ - `cmake ..`
+
+ this will generate a build folder with a visual studio solution file if you are on windows. Open this file or you can build using cmake
+
+ - `cmake --build . --config Release`
 
 ### Large scale TODO
  - Switch to HandmadeMath linear algebra library.
