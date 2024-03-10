@@ -273,13 +273,16 @@ AddAgent(World* world, AgentType type, Vec2 pos)
 void 
 InitWorld(World* world)
 {
-    world->arena = CreateMemoryArena(MegaBytes(256));
-    world->chunk_size = 20;
-    world->x_chunks = 20;
-    world->y_chunks = 20;
+    world->arena = CreateMemoryArena(MegaBytes(512));
+    world->chunk_size = 40;
+    world->x_chunks = 100;
+    world->y_chunks = 100;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
     int max_agents = 64000;
+
+    // TODO: This is a heuristic. Do something better.
+    int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
     world->reproduction_rate = 60;
 
@@ -291,13 +294,13 @@ InitWorld(World* world)
         chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
         chunk->x_idx = x;
         chunk->y_idx = y;
-        chunk->agent_indices = CreateArray<U32>(world->arena, max_agents);
+        chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
 
     world->agents = CreateArray<Agent>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
-    int n_initial_agents = 400;
+    int n_initial_agents = 64000;
     for(int i = 0; i < n_initial_agents; i++)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;

@@ -100,8 +100,8 @@ int main(int argc, char** argv)
         ImGui::Text("I just setup imgui");
         ImGui::Text("FPS: %.0f", window->fps);
         ImGui::Text("Update: %.2f millis", window->update_millis);
-        ImGui::Text("Carry: %.2f", window->carry_millis);
         ImGui::Text("Camera scale: %.2f", cam.scale);
+        ImGui::Text("Static memory used in world: %zu/%zuMB", world.arena->used/(1024U*1024U), world.arena->size/(1024U*1024U));
         ImGui::Separator();
         ImGui::Text("Number of agents: %zu", world.agents.size);
 

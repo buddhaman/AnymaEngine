@@ -10,8 +10,11 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - Implement Evolution Strategies.
  - Break world up in chunks and process chunks using multithreading.
  - Make cute renderer.
+ - Make the world absolutely huge and do processing by chunk offsets to prevent floating point errors.
+ - Two pass collision solving.
 
 #### TODO
+- Implement alpha blending.
 - Make agents selectable.
 - Show agent info in debug window.
 - Show agent rays and sensors when selected.
@@ -26,8 +29,12 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Global empty texture for convenience.
 - Make color header with list of colors and color helper functions.
 - Make creature respond to sensor in a simple way.
+- Draw grid in a more efficient way and in the background.
+- Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+------------------------------ RELEASE 1 ------------------------------ 
+- Create itch.io page.
 - Asexual reproduction.
 - Collect statistics about chunk occupancy.
 - Only render visible agents.

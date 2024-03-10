@@ -56,7 +56,6 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
 #define PushZeroArray(arena, type, nElements) \
     (type *)PushAndZeroMemory_(arena, sizeof(type) * nElements);
 
-
 MemoryArena *
 CreateMemoryArena(size_t sizeInBytes);
 
