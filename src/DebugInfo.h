@@ -7,3 +7,6 @@ ImGuiChunkGrid(World* world);
 
 void 
 ImGuiChunkBarGraph(World* world);
+
+void 
+ImGuiChunkDistribution(World* world, int n_bins);

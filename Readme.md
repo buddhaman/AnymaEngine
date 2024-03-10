@@ -17,6 +17,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Show agent rays and sensors when selected.
 - Make super simple brain.
 - Set debug option: Show chunks etc.
+- Separate data collection and debug data rendering.
 - Show agents in chunk in debug window. 
 - Pause simulation.
 - Make texture region.

@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     srand((time(nullptr)));
 
     Window* window = CreateWindow(1280, 720);
-    if(!window)
+    if(!window) 
     {
         return -1;
     }
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
         }
 
         SortAgentsIntoChunks(&world);
-        ImGuiChunkBarGraph(&world);
+        ImGuiChunkDistribution(&world, 20);
 
         ImGui::End();
 
