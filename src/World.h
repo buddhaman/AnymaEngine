@@ -1,3 +1,4 @@
+#pragma once
 
 #include "AnymUtil.h"
 #include "Array.h"

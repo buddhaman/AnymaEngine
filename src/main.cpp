@@ -12,6 +12,7 @@
 #include "Window.h"
 #include "InputHandler.h"
 #include "Shader.h"
+#include "DebugInfo.h"
 
 #include "World.h"
 
@@ -120,37 +121,7 @@ int main(int argc, char** argv)
         }
 
         SortAgentsIntoChunks(&world);
-
-#if 0
-        for(int chunk_idx = 0; chunk_idx < world.chunks.size; chunk_idx++)
-        {
-            Chunk* chunk = &world.chunks[chunk_idx];
-            ImGui::Text("Chunk(%d, %d) : %zu", chunk->x_idx, chunk->y_idx, chunk->agent_indices.size);
-        }
-#else
-        ImGui::SeparatorText("Chunks");
-        if (ImGui::BeginTable("ChunksTable", world.x_chunks, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) 
-        {
-            for(int y = 0; y < world.y_chunks; y++)
-            {
-                ImGui::TableNextRow(); // Start a new row
-                for(int x = 0; x < world.x_chunks; x++)
-                {
-                    ImGui::TableNextColumn(); // Move to the next column
-                    Chunk* chunk = GetChunk(&world, x, y); // You need to implement this function
-                    if (chunk != nullptr) 
-                    {
-                        ImGui::Text("%zu", chunk->agent_indices.size); // Display the number in the cell
-                    } 
-                    else 
-                    {
-                        ImGui::Text("Empty"); // Or handle empty chunks however you prefer
-                    }
-                }
-            }
-            ImGui::EndTable();
-        }
-#endif
+        ImGuiChunkBarGraph(&world);
 
         ImGui::End();
 
