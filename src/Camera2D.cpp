@@ -26,3 +26,11 @@ CameraStopDragging(Camera2D *camera)
 {
     camera->isDragging = 0;
 }
+
+Vec2
+MouseToWorld(Camera2D* camera, InputHandler* input, int screen_width, int screen_height)
+{
+    R32 xf = input->mouse_pos.x/((R32)screen_width);
+    R32 yf = 1.0f - input->mouse_pos.y/((R32)screen_height);
+    return camera->pos + camera->size*V2(xf, yf) - camera->size/2.0f;
+}

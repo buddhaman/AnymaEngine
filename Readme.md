@@ -29,8 +29,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Two pass collision solving.
 
 #### TODO
+- IMPORTANT: Refactor main loop and main in general. Move to SimulationScreen.
 - Implement alpha blending.
-- Make agents selectable.
 - Show agent info in debug window.
 - Show agent rays and sensors when selected.
 - Make super simple brain.
@@ -48,6 +48,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Camera to world position.
+- Make agents selectable.
 ------------------------------ RELEASE 1 ------------------------------ 
 - Create itch.io page.
 - Asexual reproduction.

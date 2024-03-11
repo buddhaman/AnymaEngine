@@ -16,10 +16,13 @@ void
 UpdateCamera(Camera2D *camera, int screenWidth, int screenHeight);
 
 void
-UpdateCameraScrollInput(InputHandler inputHandler, Camera2D *camera);
+UpdateCameraScrollInput(InputHandler input, Camera2D *camera);
 
 void
-UpdateCameraDragInput(InputHandler inputHandler, Camera2D *camera);
+UpdateCameraDragInput(InputHandler input, Camera2D *camera);
 
 void
 CameraStopDragging(Camera2D *camera);
+
+Vec2
+MouseToWorld(Camera2D* camera, InputHandler* input, int screen_width, int screen_height);

@@ -254,10 +254,17 @@ V2Len2(Vec2 v)
 }
 
 static inline float
+V2Dist2(Vec2 a, Vec2 b)
+{
+	return V2Len2(V2Sub(b, a));
+}
+
+static inline float
 V2Dist(Vec2 a, Vec2 b)
 {
 	return V2Len(V2Sub(b, a));
 }
+
 
 static inline Vec2
 V2Norm(Vec2 v)

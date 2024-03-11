@@ -238,11 +238,7 @@ SortAgentsIntoChunks(World* world)
     for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = &world->agents[agent_idx];
-        int x_chunk = floor(agent->pos.x/world->chunk_size);
-        int y_chunk = floor(agent->pos.y/world->chunk_size);
-        x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
-        y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
-        GetChunk(world, x_chunk, y_chunk)->agent_indices.PushBack(agent_idx);
+        GetChunkAt(world, agent->pos)->agent_indices.PushBack(agent_idx);
     }
 }
 
@@ -268,6 +264,22 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     agent->ticks_until_reproduce = world->reproduction_rate;
 
     return agent;
+}
+
+Agent* 
+SelectFromWorld(World* world, Vec2 pos)
+{
+    Chunk* chunk = GetChunkAt(world, pos);
+    for(int agent_idx = 0; agent_idx < chunk->agent_indices.size; agent_idx++)
+    {
+        Agent* agent = &world->agents[chunk->agent_indices[agent_idx]];
+        R32 r2 = V2Dist2(agent->pos, pos);
+        if(r2 < agent->radius)
+        {
+            return agent;
+        }
+    }
+    return nullptr;
 }
 
 void 

@@ -90,6 +90,8 @@ int main(int argc, char** argv)
 
     InputHandler* input = &window->input;
 
+    Agent* selected = nullptr;
+
     // Main loop
     bool running = true;
     SDL_Event event;
@@ -136,6 +138,7 @@ int main(int argc, char** argv)
 
         glUniformMatrix3fv(transform_loc, 1, GL_FALSE, &cam.transform.m[0][0]);
 
+        Vec2 world_mouse_pos = MouseToWorld(&cam, input, window->width, window->height);
         ImGuiIO& io = ImGui::GetIO();
         if(!io.WantCaptureMouse)
         {
@@ -149,13 +152,25 @@ int main(int argc, char** argv)
                 Vec2 diff = input->mouse_delta / (cam.scale);
                 cam.pos.x -= diff.x;
                 cam.pos.y += diff.y;
+
+                Agent* found = SelectFromWorld(&world, world_mouse_pos);
+                selected = found;
             }
 
             cam.scale = cam.scale *= powf(1.05f, input->mouse_scroll);
+
         }
+
+        if(selected)
+        {
+            PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
+        }
+
 
         Vec2 pos = V2(-0.5, -0.5);
         PushRect(&mesh, pos, V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
+
+        PushRect(&mesh, world_mouse_pos-V2(0.5, 0.5), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
 
         UpdateWorld(&world);
         RenderWorld(&world, &mesh, &cam);

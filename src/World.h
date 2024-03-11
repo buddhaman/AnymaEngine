@@ -40,6 +40,17 @@ GetChunk(World* world, int x_idx, int y_idx)
     return &world->chunks[x_idx+y_idx*world->x_chunks];
 }
 
+static inline Chunk* 
+GetChunkAt(World* world, Vec2 at)
+{
+    int x_chunk = floor(at.x/world->chunk_size);
+    int y_chunk = floor(at.y/world->chunk_size);
+    x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
+    y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
+    return GetChunk(world, x_chunk, y_chunk);
+}
+
+
 void 
 UpdateWorld(World* world);
 
@@ -57,6 +68,9 @@ SortAgentsIntoChunks(World* world);
 
 Agent* 
 AddAgent(World* world, AgentType type, Vec2 pos);
+
+Agent* 
+SelectFromWorld(World* world, Vec2 pos);
 
 void 
 InitWorld(World* world);
