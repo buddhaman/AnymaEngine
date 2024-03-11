@@ -121,7 +121,7 @@ int main(int argc, char** argv)
         }
 
         SortAgentsIntoChunks(&world);
-        ImGuiChunkDistribution(&world, 20);
+        ImGuiChunkDistribution(&world);
 
         ImGui::End();
 

@@ -17,6 +17,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
  - `cmake --build . --config Release`
 
+ --- 
+
 ### Large scale TODO
  - Switch to HandmadeMath linear algebra library.
  - Make neural network library.

@@ -52,11 +52,9 @@ ImGuiChunkBarGraph(World* world)
 }
 
 void 
-ImGuiChunkDistribution(World* world, int n_bins)
+ImGuiChunkDistribution(World* world)
 {
     DynamicArray<U32> chunk_agents(world->chunks.size);
-    DynamicArray<U32> bins(n_bins);
-    bins.FillAndSetValue(0);
 
     ImPlotFlags chunk_bar_plot_flags = ImPlotFlags_NoBoxSelect | 
                         ImPlotFlags_NoInputs | 
@@ -72,20 +70,19 @@ ImGuiChunkDistribution(World* world, int n_bins)
     U32 min = chunk_agents.MinElement();
     U32 max = chunk_agents.MaxElement();
 
-    // TODO: Is adding +0.1 the best way to solve rounding issues?
-    float bin_size = (max-min+0.1)/((R32)n_bins);
-
+    int n_bins = max-min+1;
+    DynamicArray<U32> bins(n_bins);
+    bins.FillAndSetValue(0);
     for(int val : chunk_agents)
     {
-        int bin_idx = (int)floor((val-min)/bin_size);
-        Assert(bin_idx >= 0);
-        Assert(bin_idx < n_bins);
+        int bin_idx = val - min;
         bins[bin_idx]++;
     }
 
     ImPlot::SetNextAxesToFit();
     if(ImPlot::BeginPlot("Distribution of agents per chunk.", V2(-1, 200), chunk_bar_plot_flags))
     { 
+        ImPlot::SetupAxes("Number of Agents", "Number of Chunks");
         ImPlot::PlotBars("ChunkDistr", bins.data, bins.size, 1);
         ImPlot::EndPlot();
     }

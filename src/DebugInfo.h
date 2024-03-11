@@ -9,4 +9,4 @@ void
 ImGuiChunkBarGraph(World* world);
 
 void 
-ImGuiChunkDistribution(World* world, int n_bins);
+ImGuiChunkDistribution(World* world);
