@@ -30,6 +30,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 #### TODO
 - IMPORTANT: Refactor main loop and main in general. Move to SimulationScreen.
+- Draw eye rays for selected agent.
 - Implement alpha blending.
 - Show agent info in debug window.
 - Show agent rays and sensors when selected.

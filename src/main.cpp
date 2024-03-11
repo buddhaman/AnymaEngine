@@ -166,7 +166,6 @@ int main(int argc, char** argv)
             PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
         }
 
-
         Vec2 pos = V2(-0.5, -0.5);
         PushRect(&mesh, pos, V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
 

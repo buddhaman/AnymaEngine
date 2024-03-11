@@ -50,9 +50,11 @@ GetChunkAt(World* world, Vec2 at)
     return GetChunk(world, x_chunk, y_chunk);
 }
 
-
 void 
 UpdateWorld(World* world);
+
+void
+RenderDetails(Mesh2D* mesh, Agent* agent);
 
 void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam);

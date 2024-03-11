@@ -128,7 +128,7 @@ UpdateWorld(World* world)
 #endif
 }
 
-static inline void
+void
 RenderDetails(Mesh2D* mesh, Agent* agent)
 {
     R32 r = agent->radius;
