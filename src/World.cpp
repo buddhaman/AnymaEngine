@@ -1,21 +1,5 @@
 #include "World.h"
 
-EntityID
-CastRay(World* world, Ray ray, EntityID exclude_id)
-{
-    R32 minDist = 10000.0f;
-    for(int i = 0; i < world->agents.size; i++)
-    {
-        Agent* agent = &world->agents[i];
-        if(agent->id==exclude_id) continue;
-        
-        Vec2 intersection;
-        RayCircleIntersect(ray, {agent->pos, agent->radius}, &intersection);
-        
-    }
-    return 0;
-}
-
 static inline U32
 GetAgentColor(AgentType type)
 {
@@ -147,7 +131,7 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
     {
         AgentEye* eye = &agent->eyes[i];
         R32 ray_width = 0.1f;
-        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.direction, ray_width, uv, uv, eye->color);
+        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, eye->color);
     }
 #endif
 
@@ -184,7 +168,6 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
         Vec2 perp = V2(dir.y, -dir.x);
         U32 herbivore_color = 0xff0ff000;
         U32 carnivore_color = 0xff0000ff;
-
         // TODO: Better just make two completely separate loops
         if(cam->scale > 3)
         {
@@ -340,7 +323,7 @@ InitWorld(World* world)
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
     int max_agents = 128000;
-    int n_initial_agents = 100;
+    int n_initial_agents = 200;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);

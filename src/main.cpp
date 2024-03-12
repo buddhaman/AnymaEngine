@@ -95,10 +95,14 @@ int main(int argc, char** argv)
     // Main loop
     bool running = true;
     SDL_Event event;
+
+    bool simulationRunning = true;
     while (window->running) 
     {
         WindowBegin(window);
         ImGui::Begin("Hellow i set it  up agian");
+
+        ImGui::Checkbox(simulationRunning ? "||" : ">", &simulationRunning);
         ImGui::Text("I just setup imgui");
         ImGui::Text("FPS: %.0f", window->fps);
         ImGui::Text("Update: %.2f millis", window->update_millis);
@@ -174,10 +178,17 @@ int main(int argc, char** argv)
             cam.scale = cam.scale *= powf(1.05f, input->mouse_scroll);
 
         }
-
+        Agent* hit = nullptr;
         if(selected)
         {
             PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
+            Ray ray = { selected->pos, V2Polar(selected->orientation, 1.0f) };
+            hit = CastRay(&world, ray, 100.0f, selected);
+        }
+
+        if(hit)
+        {
+            PushLine(&mesh, selected->pos, hit->pos, 0.1f, V2(0,0), V2(0,0), 0xffffffff);
         }
 
         Vec2 pos = V2(-0.5, -0.5);
@@ -185,7 +196,7 @@ int main(int argc, char** argv)
 
         PushRect(&mesh, world_mouse_pos-V2(0.5, 0.5), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
 
-        UpdateWorld(&world);
+        if(simulationRunning) UpdateWorld(&world);
 
         RenderDebugInfo(&world, &mesh, &cam);
         RenderWorld(&world, &mesh, &cam);

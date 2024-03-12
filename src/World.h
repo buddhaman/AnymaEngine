@@ -57,6 +57,12 @@ GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
 }
 
 static inline I32
+GetXChunk(World* world, R32 x)
+{ 
+    return floor(x/world->chunk_size); 
+}
+
+static inline I32
 GetYChunk(World* world, R32 y)
 { 
     return floor(y/world->chunk_size); 
@@ -70,6 +76,64 @@ GetChunkAt(World* world, Vec2 at)
     x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return GetChunk(world, x_chunk, y_chunk);
+}
+
+// Now this algorithm can double check agents belonging to multiple chunks. Fix this.
+static inline Agent* 
+CastRay(World* world, Ray ray, R32 ray_length, Agent* exclude_agent=nullptr)
+{
+    Vec2 at = ray.pos;
+    int x_chunk = GetXChunk(world, at.x);
+    int y_chunk = GetYChunk(world, at.y);
+    if( x_chunk < 0 || 
+        y_chunk < 0 || 
+        x_chunk >= world->x_chunks || 
+        y_chunk >= world->y_chunks) 
+    {
+        return nullptr;
+    }
+
+    R32 traversed = 0.0f;
+    int x_dir = at.x < 0.0f ? -1 : 1;
+    int y_dir = at.y < 0.0f ? -1 : 1;
+    R32 half_chunk = world->chunk_size/2.0f;
+    Vec2 intersection;
+
+    while(traversed < ray_length)
+    {
+        Chunk* chunk = GetChunk(world, x_chunk, y_chunk);
+        
+        for(U32 agent_idx : chunk->agent_indices)
+        {
+            Agent* agent = &world->agents[agent_idx];
+            if(RayCircleIntersect(ray, {agent->pos, agent->radius}, &intersection))
+            {
+                Vec
+            }
+        }
+
+        // Move to next chunk.
+        R32 x_edge = (chunk->x_idx + 0.5f)*world->chunk_size + half_chunk*x_dir;
+        R32 y_edge = (chunk->y_idx + 0.5f)*world->chunk_size + half_chunk*y_dir;
+        R32 x_trav = (x_edge - at.x)/ray.dir.x;
+        R32 y_trav = (y_edge - at.y)/ray.dir.y;
+        if(x_trav < y_trav)
+        {
+            traversed += x_trav;
+            at = ray.pos + traversed*ray.dir;
+            x_chunk += x_dir;
+            if(x_chunk < 0 || x_chunk > world->x_chunks) break;
+        }
+        else
+        {
+            traversed += y_trav;
+            at = ray.pos + traversed*ray.dir;
+            y_chunk += y_dir;
+            if(y_chunk < 0 || y_chunk > world->y_chunks) break;
+        }
+    }
+
+    return nullptr;
 }
 
 void 

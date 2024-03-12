@@ -18,7 +18,7 @@ struct Circle
 struct Ray
 {
     Vec2 pos;
-    Vec2 direction;
+    Vec2 dir;
 };
 
 // Assume ray is normalized
@@ -36,18 +36,18 @@ RayCircleIntersect(Ray ray, Circle circle, Vec2* intersection)
         return true;
     }
 
-    R32 dp = V2Dot(ray.direction, diff);
+    R32 dp = V2Dot(ray.dir, diff);
     // Circle is behind the ray.
     if(dp < 0) return false;
 
-    Vec2 nearest_to_center = ray.pos + ray.direction*dp;
+    Vec2 nearest_to_center = ray.pos + ray.dir*dp;
 
     R32 nearest_d2 = V2Len2(nearest_to_center - circle.pos);
     if(nearest_d2 < circle.radius*circle.radius)
     {
         // Intersection
         R32 entry = sqrtf(circle.radius*circle.radius - nearest_d2);
-        *intersection = nearest_to_center - entry*ray.direction;
+        *intersection = nearest_to_center - entry*ray.dir;
         return true;
     }
 
