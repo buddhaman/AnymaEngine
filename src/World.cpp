@@ -131,12 +131,12 @@ UpdateWorld(World* world)
             }
         }
 
+#if 0
         CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
         CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
         CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
         CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
 
-#if 0
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
             AgentEye* eye = &agent->eyes[eye_idx];
@@ -398,17 +398,17 @@ InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
     world->chunk_size = 10;
-    world->x_chunks = 40;
-    world->y_chunks = 40;
+    world->x_chunks = 200;
+    world->y_chunks = 200;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 10000;
-    int n_initial_agents = 10000;
+    int max_agents = 128'000;
+    int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
-    world->reproduction_rate = 60;
+    world->reproduction_rate = 70;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
