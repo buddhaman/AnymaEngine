@@ -186,9 +186,9 @@ int main(int argc, char** argv)
         PushRect(&mesh, world_mouse_pos-V2(0.5, 0.5), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
 
         UpdateWorld(&world);
-        RenderWorld(&world, &mesh, &cam);
 
         RenderDebugInfo(&world, &mesh, &cam);
+        RenderWorld(&world, &mesh, &cam);
 
         PushLine(&mesh, V2(sinf(time)*2,0), V2(10, sinf(time*2)*3), 0.4f, pos, pos, 0xffaa77ff);
         PushNGon(&mesh, V2(12, 12), 3, 5, time, pos, 0x77ffaaff);

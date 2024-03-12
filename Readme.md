@@ -28,10 +28,11 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make the world absolutely huge and do processing by chunk offsets to prevent floating point errors.
  - Two pass collision solving.
  - Improve standard library: add string type, better sorting.
+ - Build introspection and profiling tools.
 
 #### TODO
 - IMPORTANT: Refactor main loop and main in general. Move to SimulationScreen.
-- Handle collisions using chunks.
+- Fix agents popping into view.
 - Draw eye rays for selected agent.
 - Implement alpha blending.
 - Show agent info in debug window.
@@ -53,6 +54,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 #### Done
 - Camera to world position.
 - Make agents selectable.
+- Handle collisions using chunks.
 ------------------------------ RELEASE 1 ------------------------------ 
 - Create itch.io page.
 - Asexual reproduction.

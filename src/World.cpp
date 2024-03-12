@@ -218,7 +218,7 @@ RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0xffffffff);
+        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0x88888888);
     }
 }
 
@@ -334,12 +334,13 @@ void
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
-    world->chunk_size = 20;
-    world->x_chunks = 50;
-    world->y_chunks = 50;
+    world->chunk_size = 10;
+    world->x_chunks = 200;
+    world->y_chunks = 200;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 4000;
+    int max_agents = 128000;
+    int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
@@ -360,7 +361,6 @@ InitWorld(World* world)
     world->agents = CreateArray<Agent>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
-    int n_initial_agents = 100;
     for(int i = 0; i < n_initial_agents; i++)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
