@@ -12,8 +12,8 @@
 template <typename T>
 struct Array
 {
-    U64 size = 0;
-    U64 capacity = 0;
+    I64 size = 0;
+    I64 capacity = 0;
     T *data = nullptr;
 
     inline void PushBack(const T& t) { Assert(size < capacity); data[size++] = t; }
@@ -24,6 +24,7 @@ struct Array
     inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
     inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
+
     // TODO: Remove all STL classes.
     inline void Apply(const std::function<void(T& value)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
 

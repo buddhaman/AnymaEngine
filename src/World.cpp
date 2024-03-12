@@ -104,29 +104,24 @@ UpdateWorld(World* world)
 
     }
 
-#if 0
-    // Collision detection
-    for(int i = 0; i < world->agents.size-1; i++)
-    {
-        Agent* agent0 = &world->agents[i];
-        for(int j = i+1; j < world->agents.size; j++)
-        {
-            Agent* agent1 = &world->agents[j];
-            Vec2 diff = agent1->pos - agent0->pos;
-            R32 l2 = V2Len2(diff);
-            R32 radsum = agent0->radius+agent1->radius;
-            if(l2 < radsum*radsum)
-            {
-                // Collision
-                R32 l = sqrtf(l2);
-                R32 amount = radsum-l;
-                agent1->pos += amount*diff/2.0f;
-                agent0->pos -= amount*diff/2.0f;
-            }
-        }
-    }
-#endif
 }
+
+static inline void
+CheckCollisions(Agent* agent0, Agent* agent1)
+{
+    Vec2 diff = agent1->pos - agent0->pos;
+    R32 l2 = V2Len2(diff);
+    R32 radsum = agent0->radius+agent1->radius;
+    if(l2 < radsum*radsum)
+    {
+        // Collision
+        R32 l = sqrtf(l2);
+        R32 amount = radsum-l;
+        agent1->pos += amount*diff/2.0f;
+        agent0->pos -= amount*diff/2.0f;
+    }
+}
+
 
 void
 RenderDetails(Mesh2D* mesh, Agent* agent)
@@ -282,13 +277,66 @@ SelectFromWorld(World* world, Vec2 pos)
     return nullptr;
 }
 
+static inline void 
+ChunkCollisions(World* world, Chunk* chunk0, Chunk* chunk1)
+{
+    for(int i = 0; i < chunk0->agent_indices.size; i++)
+    {
+        U32 a0_idx = chunk0->agent_indices[i];
+        Agent* a0 = &world->agents[a0_idx];
+
+        for(int j = 0; j < chunk1->agent_indices.size; j++)
+        {
+            U32 a1_idx = chunk1->agent_indices[j];
+            Agent* a1 = &world->agents[a1_idx];
+            CheckCollisions(a0, a1);
+        }
+    }
+}
+
+void
+ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
+{
+    // First try, naive algorithm.
+    Chunk* center_chunk = GetChunk(world, center_chunk_x, center_chunk_y);
+
+    bool has_right = center_chunk_x < world->x_chunks-1;
+    bool has_down = center_chunk_y < world->y_chunks-1;
+    if(has_right) 
+    {
+        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x+1, center_chunk_y));
+    }
+    if(has_down) 
+    {
+        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x, center_chunk_y+1));
+    }
+    if(has_down && has_right)
+    {
+        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x+1, center_chunk_y+1));
+    }
+
+    // Inside center chunk.
+    for(int i = 0; i < center_chunk->agent_indices.size-1; i++)
+    {
+        U32 a0_idx = center_chunk->agent_indices[i];
+        Agent* a0 = &world->agents[a0_idx];
+
+        for(int j = i+1; j < center_chunk->agent_indices.size; j++)
+        {
+            U32 a1_idx = center_chunk->agent_indices[j];
+            Agent* a1 = &world->agents[a1_idx];
+            CheckCollisions(a0, a1);
+        }
+    }
+}
+
 void 
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
-    world->chunk_size = 4;
-    world->x_chunks = 100;
-    world->y_chunks = 100;
+    world->chunk_size = 20;
+    world->x_chunks = 50;
+    world->y_chunks = 50;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
     int max_agents = 4000;

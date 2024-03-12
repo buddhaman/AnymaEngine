@@ -59,20 +59,7 @@ PrintArray(Array<int>& arr)
 
 int main(int argc, char** argv) 
 {
-
-    DynamicArray<int> arr;
-
-    arr.PushBack(1);
-    arr.PushBack(2);
-    arr.PushBack(3);
-    arr.PushBack(4);
-    arr.PushBack(5);
-
-    PrintArray(arr);
-    arr.Shift(2);
-    PrintArray(arr);
-
-     // Initialize random seed once. This will be replaced by my own rng.
+    // Initialize random seed once. This will be replaced by my own rng.
     srand((time(nullptr)));
 
     Window* window = CreateWindow(1280, 720);
@@ -145,6 +132,12 @@ int main(int argc, char** argv)
 
         SortAgentsIntoChunks(&world);
         ImGuiChunkDistribution(&world);
+        
+        for(int y = 0; y < world.y_chunks; y++)
+        for(int x = 0; x < world.x_chunks; x++)
+        {
+            ChunkCollisions(&world, x, y);
+        }
 
         ImGui::End();
 

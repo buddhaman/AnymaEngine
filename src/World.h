@@ -72,7 +72,6 @@ GetChunkAt(World* world, Vec2 at)
     return GetChunk(world, x_chunk, y_chunk);
 }
 
-
 void 
 UpdateWorld(World* world);
 
@@ -96,6 +95,9 @@ AddAgent(World* world, AgentType type, Vec2 pos);
 
 Agent* 
 SelectFromWorld(World* world, Vec2 pos);
+
+void
+ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
 
 void 
 InitWorld(World* world);
