@@ -40,6 +40,28 @@ GetChunk(World* world, int x_idx, int y_idx)
     return &world->chunks[x_idx+y_idx*world->x_chunks];
 }
 
+struct ChunkCoordinates
+{
+    U32 x;
+    U32 y;
+};
+
+static inline ChunkCoordinates
+GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
+{ 
+    int x_chunk = floor(at.x/world->chunk_size);
+    int y_chunk = floor(at.y/world->chunk_size);
+    x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
+    y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
+    return {(U32)x_chunk, (U32)y_chunk};
+}
+
+static inline I32
+GetYChunk(World* world, R32 y)
+{ 
+    return floor(y/world->chunk_size); 
+}
+
 static inline Chunk* 
 GetChunkAt(World* world, Vec2 at)
 {
@@ -49,6 +71,7 @@ GetChunkAt(World* world, Vec2 at)
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return GetChunk(world, x_chunk, y_chunk);
 }
+
 
 void 
 UpdateWorld(World* world);

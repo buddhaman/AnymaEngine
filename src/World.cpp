@@ -286,12 +286,12 @@ void
 InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
-    world->chunk_size = 40;
+    world->chunk_size = 4;
     world->x_chunks = 100;
     world->y_chunks = 100;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 64000;
+    int max_agents = 4000;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
@@ -312,7 +312,7 @@ InitWorld(World* world)
     world->agents = CreateArray<Agent>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
-    int n_initial_agents = 64000;
+    int n_initial_agents = 100;
     for(int i = 0; i < n_initial_agents; i++)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;

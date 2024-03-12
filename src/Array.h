@@ -29,6 +29,7 @@ struct Array
 
     inline void Shift(int shift, int fill=0) 
     {
+        if(shift==0 || size==0) return;
         if(abs(shift) >= size)
         {
             memset(data, fill, size*sizeof(T));
@@ -37,18 +38,12 @@ struct Array
 
         if(shift < 0)
         {
-            for(int i = 0; i < size+shift; i++)
-            {
-                data[i] = data[i-shift];
-            }
+            memmove(data, data-shift, (size+shift)*sizeof(T));
             memset(data+size+shift, fill, -shift*sizeof(T));
         }
         else
         {
-            for(int i = size-1; i>=shift; i--)
-            {
-                data[i] = data[i-shift];
-            }
+            memmove(data+shift, data, (size-shift)*sizeof(T));
             memset(data, fill, shift*sizeof(T));
         }
     }

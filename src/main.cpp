@@ -59,6 +59,19 @@ PrintArray(Array<int>& arr)
 
 int main(int argc, char** argv) 
 {
+
+    DynamicArray<int> arr;
+
+    arr.PushBack(1);
+    arr.PushBack(2);
+    arr.PushBack(3);
+    arr.PushBack(4);
+    arr.PushBack(5);
+
+    PrintArray(arr);
+    arr.Shift(2);
+    PrintArray(arr);
+
      // Initialize random seed once. This will be replaced by my own rng.
     srand((time(nullptr)));
 
@@ -106,6 +119,14 @@ int main(int argc, char** argv)
         ImGui::Text("Static memory used in world: %zu/%zuMB", world.arena->used/(1024U*1024U), world.arena->size/(1024U*1024U));
         ImGui::Separator();
         ImGui::Text("Number of agents: %zu", world.agents.size);
+
+        if(selected)
+        {
+            ImGui::SeparatorText("Selected agent");
+
+            ChunkCoordinates coords = GetChunkCoordinatesFromWorldPos(&world, selected->pos);
+            ImGui::Text("Chunk: %u %u", coords.x, coords.y);
+        }
 
         update_times.Shift(-1);
         update_times[update_times.size-1] = window->update_millis;
