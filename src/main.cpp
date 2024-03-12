@@ -183,7 +183,7 @@ int main(int argc, char** argv)
         {
             PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
             Ray ray = { selected->pos, V2Polar(selected->orientation, 1.0f) };
-            hit = CastRay(&world, ray, 100.0f, selected);
+            hit = CastRay(&world, ray, 30.0f, selected);
         }
 
         if(hit)

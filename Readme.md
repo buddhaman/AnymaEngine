@@ -33,7 +33,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 #### TODO
 - IMPORTANT: Refactor main loop and main in general. Move to SimulationScreen.
 - Fix agents popping into view.
-- Draw eye rays for selected agent.
+- Draw scale with some text too. 
 - Implement alpha blending.
 - Show agent info in debug window.
 - Show agent rays and sensors when selected.
@@ -48,13 +48,15 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Global empty texture for convenience.
 - Make color header with list of colors and color helper functions.
 - Make creature respond to sensor in a simple way.
-- Draw grid in a more efficient way and in the background.
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Draw grid in a more efficient way and in the background.
+- Grid based collision detection for rays.
 - Camera to world position.
 - Make agents selectable.
 - Handle collisions using chunks.
+- Draw eye rays for selected agent.
 ------------------------------ RELEASE 1 ------------------------------ 
 - Create itch.io page.
 - Asexual reproduction.
