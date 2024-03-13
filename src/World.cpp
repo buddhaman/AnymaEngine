@@ -285,18 +285,45 @@ RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam)
     }
 }
 
-void
-SortAgentsIntoChunks(World* world)
+static inline void
+ClearChunks(World* world)
 {
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         world->chunks[chunk_idx].agent_indices.Clear();
     }
+}
+
+void
+SortAgentsIntoChunks(World* world)
+{
+    ClearChunks(world);
 
     for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = &world->agents[agent_idx];
         GetChunkAt(world, agent->pos)->agent_indices.PushBack(agent_idx);
+    }
+}
+
+void
+SortAgentsIntoMultipleChunks(World* world)
+{
+    ClearChunks(world);
+
+    for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+    {
+        Agent* agent = &world->agents[agent_idx];
+        int min_x = Max(0, (int)((agent->pos.x-agent->radius)/world->chunk_size));
+        int max_x = Min(world->x_chunks-1, (int)((agent->pos.x+agent->radius)/world->chunk_size));
+        int min_y = Max(0, (int)((agent->pos.y-agent->radius)/world->chunk_size));
+        int max_y = Min(world->y_chunks-1, (int)((agent->pos.y+agent->radius)/world->chunk_size));
+        for(int y = min_y; y <= max_y; y++)
+        for(int x = min_x; x <= max_x; x++)
+        {
+            Chunk* chunk = GetChunk(world, x, y);
+            chunk->agent_indices.PushBack(agent_idx);
+        }
     }
 }
 
@@ -398,11 +425,11 @@ InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
     world->chunk_size = 10;
-    world->x_chunks = 200;
-    world->y_chunks = 200;
+    world->x_chunks = 40;
+    world->y_chunks = 40;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 128'000;
+    int max_agents = 1000;
     int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.

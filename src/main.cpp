@@ -134,7 +134,8 @@ int main(int argc, char** argv)
             ImPlot::EndPlot();
         }
 
-        SortAgentsIntoChunks(&world);
+        //SortAgentsIntoChunks(&world);
+        SortAgentsIntoMultipleChunks(&world);
         ImGuiChunkDistribution(&world);
         
         for(int y = 0; y < world.y_chunks; y++)
