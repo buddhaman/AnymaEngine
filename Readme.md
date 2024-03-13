@@ -51,6 +51,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Sort agents into all chunks they belong to.
 - Draw grid in a more efficient way and in the background.
 - Grid based collision detection for rays.
 - Camera to world position.

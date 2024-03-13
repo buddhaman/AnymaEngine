@@ -179,18 +179,21 @@ int main(int argc, char** argv)
             cam.scale = cam.scale *= powf(1.05f, input->mouse_scroll);
 
         }
-        Agent* hit = nullptr;
         if(selected)
         {
             PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
             Ray ray = { selected->pos, V2Polar(selected->orientation, 1.0f) };
-            hit = CastRay(&world, ray, 30.0f, selected);
+            Agent* hit = CastRay(&world, ray, 30.0f, selected);
+            if(hit)
+            {
+                PushLine(&mesh, selected->pos, hit->pos, 0.1f, V2(0,0), V2(0,0), 0xffffffff);
+            }
+            else
+            {
+                PushLine(&mesh, selected->pos, selected->pos+V2Polar(selected->orientation, 30.0f), 0.1f, V2(0,0), V2(0,0), 0xffffffff);
+            }
         }
 
-        if(hit)
-        {
-            PushLine(&mesh, selected->pos, hit->pos, 0.1f, V2(0,0), V2(0,0), 0xffffffff);
-        }
 
         Vec2 pos = V2(-0.5, -0.5);
         PushRect(&mesh, pos, V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
