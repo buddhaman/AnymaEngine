@@ -33,7 +33,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
-- Refactor main loop and main in general. Move to SimulationScreen.
 - Setup screen to make new simulation.
 - Set debug option: Show chunks etc.
 - Simple behavior.
@@ -57,6 +56,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Refactor main loop and main in general. Move to SimulationScreen.
 - Show agent rays when selected.
 - Show agent info in debug window.
 - Raycasting for all eyes.
