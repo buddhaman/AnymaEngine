@@ -85,6 +85,9 @@ void
 UpdateWorld(World* world);
 
 void
+RenderEyeRays(Mesh2D* mesh, Agent* agent);
+
+void
 RenderDetails(Mesh2D* mesh, Agent* agent);
 
 void 

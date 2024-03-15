@@ -29,16 +29,18 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Two pass collision solving.
  - Improve standard library: add string type, better sorting.
  - Build introspection and profiling tools.
+ - Do real good collision detection, fix the fact that lots of agents are being checked twice. 
 
 #### TODO
-- IMPORTANT: Refactor main loop and main in general. Move to SimulationScreen.
+- Set debug option: Show chunks etc.
+- Simple behavior.
+- Setup screen to make new simulation.
+- Show agent sensors when selected.
+- Refactor main loop and main in general. Move to SimulationScreen.
+- Make super simple brain.
 - Fix agents popping into view.
 - Draw scale with some text too. 
 - Implement alpha blending.
-- Show agent info in debug window.
-- Show agent rays and sensors when selected.
-- Make super simple brain.
-- Set debug option: Show chunks etc.
 - Separate data collection and debug data rendering.
 - Show agents in chunk in debug window. 
 - Pause simulation.
@@ -51,6 +53,9 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Show agent rays when selected.
+- Show agent info in debug window.
+- Raycasting for all eyes.
 - Sort agents into all chunks they belong to.
 - Draw grid in a more efficient way and in the background.
 - Grid based collision detection for rays.

@@ -152,6 +152,17 @@ CheckCollisions(Agent* agent0, Agent* agent1)
     }
 }
 
+void
+RenderEyeRays(Mesh2D* mesh, Agent* agent)
+{
+    Vec2 uv = V2(0,0);
+    for(int i = 0; i < agent->eyes.size; i++)
+    {
+        AgentEye* eye = &agent->eyes[i];
+        R32 ray_width = 0.1f;
+        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, eye->color);
+    }
+}
 
 void
 RenderDetails(Mesh2D* mesh, Agent* agent)
@@ -170,16 +181,6 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 
     U32 pupil_color = 0xff000000;
     R32 pupil_r = eye_r*0.7f;
-
-#if 1
-    // Draw eye rays
-    for(int i = 0; i < agent->eyes.size; i++)
-    {
-        AgentEye* eye = &agent->eyes[i];
-        R32 ray_width = 0.1f;
-        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, eye->color);
-    }
-#endif
 
     // Eyes
     PushNGon(mesh, agent->pos+dir*eye_d+perp*eye_d, eye_r, eye_sides, eye_orientation, uv, eye_color);
@@ -391,11 +392,11 @@ InitWorld(World* world)
 {
     world->arena = CreateMemoryArena(MegaBytes(512));
     world->chunk_size = 10;
-    world->x_chunks = 40;
-    world->y_chunks = 40;
+    world->x_chunks = 80;
+    world->y_chunks = 80;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 1000;
+    int max_agents = 10000;
     int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.
