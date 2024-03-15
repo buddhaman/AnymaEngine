@@ -239,3 +239,15 @@ CreateArray_(void *dataMemory, int capacity)
     return array;
 }
 
+// TODO: Remove, just used for testing sometimes.
+void
+PrintArray(Array<int>& arr)
+{
+    for(int i = 0; i < arr.size; i++)
+    {
+        std::cout << arr[i] << ", ";
+    }
+    std::cout << std::endl;
+}
+
+
