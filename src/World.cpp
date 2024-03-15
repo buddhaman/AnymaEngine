@@ -1,19 +1,9 @@
 #include "World.h"
 
-static inline U32
-GetAgentColor(AgentType type)
-{
-    switch(type)
-    {
-    case AgentType_Carnivore: return 0xff0000ff;
-    case AgentType_Herbivore: return 0xff00ff00;
-    }
-    return 0xffffffff;
-}
-
 // Now this algorithm can double check agents belonging to multiple chunks. Fix this.
+// Idea: first collect all agents, sort with pairs where the first index is the length 
 Agent* 
-CastRay(World* world, Ray ray, R32 ray_length, Agent* exclude_agent)
+CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* exclude_agent)
 {
     Vec2 at = ray.pos;
     int x_chunk = GetXChunk(world, at.x);
@@ -30,7 +20,6 @@ CastRay(World* world, Ray ray, R32 ray_length, Agent* exclude_agent)
     int x_dir = ray.dir.x < 0.0f ? -1 : 1;
     int y_dir = ray.dir.y < 0.0f ? -1 : 1;
     R32 half_chunk = world->chunk_size/2.0f;
-    Vec2 intersection;
 
     while(traversed < ray_length)
     {
@@ -45,15 +34,12 @@ CastRay(World* world, Ray ray, R32 ray_length, Agent* exclude_agent)
             if(agent==exclude_agent) continue;
 
             // TODO: this is inefficient, return all collision info. Distance is already calculated in RayCircleIntersect()
-            if(RayCircleIntersect(ray, {agent->pos, agent->radius}, &intersection))
+            if(!RayCircleIntersect(ray, {agent->pos, agent->radius}, collision)) continue;
+
+            if(collision->distance < min_intersect_dist)
             {
-                Vec2 diff = intersection - ray.pos;
-                R32 dist = V2Len(diff);
-                if(dist < min_intersect_dist)
-                {
-                    min_intersect_dist = dist;
-                    hit = agent;
-                }
+                min_intersect_dist = collision->distance;
+                hit = agent;
             }
         }
 
@@ -429,7 +415,7 @@ InitWorld(World* world)
     world->y_chunks = 40;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 1000;
+    int max_agents = 5000;
     int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.

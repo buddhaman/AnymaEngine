@@ -183,15 +183,12 @@ int main(int argc, char** argv)
         {
             PushRect(&mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
             Ray ray = { selected->pos, V2Polar(selected->orientation, 1.0f) };
-            Agent* hit = CastRay(&world, ray, 30.0f, selected);
-            if(hit)
-            {
-                PushLine(&mesh, selected->pos, hit->pos, 0.1f, V2(0,0), V2(0,0), 0xffffffff);
-            }
-            else
-            {
-                PushLine(&mesh, selected->pos, selected->pos+V2Polar(selected->orientation, 30.0f), 0.1f, V2(0,0), V2(0,0), 0xffffffff);
-            }
+            RayCollision collision;
+            R32 ray_length = 30.0f;
+            Agent* hit = CastRay(&world, ray, ray_length, &collision, selected);
+            R32 length = hit ? collision.distance : ray_length;
+            U32 color = hit ? GetAgentColor(hit->type) : 0xffffffff;
+            PushLine(&mesh, selected->pos, selected->pos+V2Polar(selected->orientation, length), 0.1f, V2(0,0), V2(0,0), color);
         }
 
 

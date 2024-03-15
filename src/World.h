@@ -79,7 +79,7 @@ GetChunkAt(World* world, Vec2 at)
 }
 
 Agent* 
-CastRay(World* world, Ray ray, R32 ray_length, Agent* exclude_agent=nullptr);
+CastRay(World* world, Ray ray, R32 ray_length, RayCollision *collision, Agent* exclude_agent=nullptr);
 
 void 
 UpdateWorld(World* world);

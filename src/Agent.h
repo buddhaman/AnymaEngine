@@ -39,3 +39,15 @@ struct Agent
     bool alive;
     U16 scratch_bits;  // Mark something on agents when you are sure you can do this. 
 };
+
+static inline U32
+GetAgentColor(AgentType type)
+{
+    switch(type)
+    {
+    case AgentType_Carnivore: return 0xff0000ff;
+    case AgentType_Herbivore: return 0xff00ff00;
+    }
+    return 0xffffffff;
+}
+

@@ -58,7 +58,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make agents selectable.
 - Handle collisions using chunks.
 - Draw eye rays for selected agent.
------------------------------- RELEASE 1 ------------------------------ 
+#### RELEASE 1
 - Create itch.io page.
 - Asexual reproduction.
 - Collect statistics about chunk occupancy.
