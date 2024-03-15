@@ -30,14 +30,18 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Improve standard library: add string type, better sorting.
  - Build introspection and profiling tools.
  - Do real good collision detection, fix the fact that lots of agents are being checked twice. 
+ - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
+- Refactor main loop and main in general. Move to SimulationScreen.
+- Setup screen to make new simulation.
 - Set debug option: Show chunks etc.
 - Simple behavior.
-- Setup screen to make new simulation.
 - Show agent sensors when selected.
-- Refactor main loop and main in general. Move to SimulationScreen.
 - Make super simple brain.
+- Remove agents.
+- Agent lifespan.
+- Agent asexual reproduction with mutations.
 - Fix agents popping into view.
 - Draw scale with some text too. 
 - Implement alpha blending.

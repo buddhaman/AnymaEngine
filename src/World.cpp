@@ -387,10 +387,11 @@ ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
     }
 }
 
-void 
-InitWorld(World* world)
+World* 
+CreateWorld(MemoryArena* arena)
 {
-    world->arena = CreateMemoryArena(MegaBytes(512));
+    World* world = PushStruct(arena, World);
+    world->arena = arena;
     world->chunk_size = 10;
     world->x_chunks = 80;
     world->y_chunks = 80;
@@ -424,4 +425,5 @@ InitWorld(World* world)
         Agent* agent = AddAgent(world, type,GetRandomVec2Debug(V2(0,0), world->size));
         agent->orientation = GetRandomR32Debug(-M_PI, M_PI);
     }
+    return world;
 }

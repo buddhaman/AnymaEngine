@@ -111,5 +111,5 @@ SelectFromWorld(World* world, Vec2 pos);
 void
 ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
 
-void 
-InitWorld(World* world);
+World*
+CreateWorld(MemoryArena* arena);
