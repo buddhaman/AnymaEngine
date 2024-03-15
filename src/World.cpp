@@ -32,8 +32,6 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
         {
             Agent* agent = &world->agents[agent_idx];
             if(agent==exclude_agent) continue;
-
-            // TODO: this is inefficient, return all collision info. Distance is already calculated in RayCircleIntersect()
             if(!RayCircleIntersect(ray, {agent->pos, agent->radius}, collision)) continue;
 
             if(collision->distance < min_intersect_dist)
@@ -107,6 +105,24 @@ UpdateWorld(World* world)
             agent->pos.y = agent->pos.y - size.y;
         }
 
+#if 1
+        RayCollision collision;
+        for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
+        {
+            AgentEye* eye = &agent->eyes[eye_idx];
+            // Update eye
+            Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
+            eye->ray = {agent->pos, eye_dir};
+            eye->distance = 50.0f;
+            eye->color = 0xffffffff;
+            Agent* hit = CastRay(world, eye->ray, eye->distance, &collision, agent);
+            if(!hit) { continue; }
+
+            eye->distance = collision.distance;
+            eye->color = GetAgentColor(hit->type);
+        }
+#endif
+
         agent->ticks_until_reproduce--;
         if(agent->ticks_until_reproduce <= 0)
         {
@@ -116,42 +132,6 @@ UpdateWorld(World* world)
                 AddAgent(world, agent->type, agent->pos+V2(0.5f, 0.5f));
             }
         }
-
-#if 0
-        CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
-        CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
-        CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
-        CastRay(world, {agent->pos, V2Polar(agent->radius, 1.0f)}, 30.0f, agent);
-
-        for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
-        {
-            AgentEye* eye = &agent->eyes[eye_idx];
-            // Update eye
-            Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
-            eye->ray = {agent->pos, eye_dir};
-            eye->distance = 50.0f;
-            eye->color = 0xffffffff;
-
-            // Cast ray
-            for(int raycheck_agent_idx = 0; raycheck_agent_idx < world->agents.size; raycheck_agent_idx++)
-            {
-               Agent* ac = &world->agents[raycheck_agent_idx];
-               if(agent_idx==raycheck_agent_idx) continue;
-                
-                Vec2 intersection;
-                if(RayCircleIntersect(eye->ray, {ac->pos, ac->radius}, &intersection))
-                {
-                    R32 dist = V2Dist(intersection, eye->ray.pos);
-                    if(dist < eye->distance)
-                    {
-                        eye->distance = dist;
-                        eye->color = GetAgentColor(ac->type);
-                    }
-                }
-            }
-        }
-#endif
-
     }
 
 }
@@ -415,7 +395,7 @@ InitWorld(World* world)
     world->y_chunks = 40;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 5000;
+    int max_agents = 1000;
     int n_initial_agents = 100;
 
     // TODO: This is a heuristic. Do something better.
@@ -440,7 +420,7 @@ InitWorld(World* world)
     for(int i = 0; i < n_initial_agents; i++)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
-        Agent* agent = AddAgent(world, type, GetRandomVec2Debug(V2(0,0), world->size));
+        Agent* agent = AddAgent(world, type,GetRandomVec2Debug(V2(0,0), world->size));
         agent->orientation = GetRandomR32Debug(-M_PI, M_PI);
     }
 }
