@@ -41,5 +41,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC implot::implot)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DIMGUI_USER_CONFIG="ImGuiConfig.h")
 
+add_subdirectory(Test)
+
+
 
 

@@ -33,6 +33,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
+- Draw active chunks.
+- Optimize agent indices by using views on one huge array.
 - Setup screen to make new simulation.
 - Simple behavior.
 - Keep selection when moving camera around.
@@ -55,6 +57,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+#### RELEASE 2
 - Show agent sensors when selected.
 - Set debug option: Show chunks etc.
 - Refactor main loop and main in general. Move to SimulationScreen.
