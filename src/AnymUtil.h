@@ -55,20 +55,6 @@ typedef float R32;
 typedef double R64;
 
 // Functions
-
-static inline float 
-GetRandomR32Debug(float min, float max)
-{
-    float randFloat = (float)(rand()) / (float)(RAND_MAX);
-    return randFloat * (max - min) + min;
-}
-
-static inline Vec2 
-GetRandomVec2Debug(Vec2 min, Vec2 max)
-{
-    return V2(GetRandomR32Debug(min.x, max.x), GetRandomR32Debug(min.y, max.y));
-}
-
 template <typename T>
 T Max(T a, T b) { return a < b ? b : a; }
 
@@ -81,4 +67,17 @@ T Clamp(T min, T val, T max)
     if(val < min) return min;
     if(val > max) return min;
     return val;
+}
+
+static inline float 
+GetRandomR32Debug(float min, float max)
+{
+    float randFloat = (float)(rand()) / (float)(RAND_MAX);
+    return randFloat * (max - min) + min;
+}
+
+static inline Vec2 
+GetRandomVec2Debug(Vec2 min, Vec2 max)
+{
+    return V2(GetRandomR32Debug(min.x, max.x), GetRandomR32Debug(min.y, max.y));
 }

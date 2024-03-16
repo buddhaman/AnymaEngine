@@ -56,7 +56,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make creature respond to sensor in a simple way.
 - Make a startup screen to start simulation with new persistent parameters.
 
-#### Done
+### Done
+
 #### RELEASE 2
 - Show agent sensors when selected.
 - Set debug option: Show chunks etc.

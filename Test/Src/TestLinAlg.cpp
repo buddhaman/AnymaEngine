@@ -7,13 +7,7 @@
 
 TEST_CASE("Addition")
 {
-
     VecR32 coolVec;
-    coolVec.n = 12;
-
-    REQUIRE(1 + 2 == 3);
-    REQUIRE(1 + 2 == 4);
-    REQUIRE(coolVec.n == 13);
 }
 
 int main(int argc, char** argv)

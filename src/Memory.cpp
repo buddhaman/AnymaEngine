@@ -21,18 +21,6 @@ ClearArena(MemoryArena *arena)
     arena->used = 0;
 }
 
-#define PushStruct(arena, type)               \
-    (type *)PushMemory_(arena, sizeof(type)); \
-    // DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
-#define PushArray(arena, type, nElements)                 \
-    (type *)PushMemory_(arena, sizeof(type) * nElements); \
-    // DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
-#define PushAndZeroArray(arena, type, nElements)                 \
-    (type *)PushAndZeroMemory_(arena, sizeof(type) * nElements); \
-    // DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
-#define PushZeroArray(arena, type, nElements) \
-    (type *)PushAndZeroMemory_(arena, sizeof(type) * nElements);
-
 MemoryArena *
 CreateSubArena(MemoryArena *parent, U64 sizeInBytes)
 {

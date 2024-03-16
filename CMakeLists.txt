@@ -15,7 +15,7 @@ if(USE_ASAN)
     add_link_options(/fsanitize=address)
 endif()
 
-file(GLOB PROJECT_SOURCES "src/*.cpp")
+file(GLOB PROJECT_SOURCES "Src/*.cpp")
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 if(MSVC)
