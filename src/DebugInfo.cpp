@@ -10,19 +10,12 @@ ImGuiChunkGrid(World* world)
     {
         for(int y = 0; y < world->y_chunks; y++)
         {
-            ImGui::TableNextRow(); // Start a new row
+            ImGui::TableNextRow(); 
             for(int x = 0; x < world->x_chunks; x++)
             {
-                ImGui::TableNextColumn(); // Move to the next column
-                Chunk* chunk = GetChunk(world, x, y); // You need to implement this function
-                if (chunk != nullptr) 
-                {
-                    ImGui::Text("%zu", chunk->agent_indices.size); // Display the number in the cell
-                } 
-                else 
-                {
-                    ImGui::Text("Empty"); // Or handle empty chunks however you prefer
-                }
+                ImGui::TableNextColumn(); 
+                Chunk* chunk = GetChunk(world, x, y); 
+                ImGui::Text("%zu", chunk->agent_indices.size); 
             }
         }
         ImGui::EndTable();
