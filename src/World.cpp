@@ -69,6 +69,16 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
 
     return nullptr;
 }
+
+static inline bool 
+CanAddAgent(World* world, Vec2 pos)
+{
+    Chunk* chunk = GetChunkAt(world, pos);
+    if(world->agents.IsFull()) return false;
+    if(chunk->agent_indices.IsFull()) return false;
+    return true;
+}
+
 void 
 UpdateWorld(World* world)
 {
@@ -76,7 +86,7 @@ UpdateWorld(World* world)
     {
         Agent* agent = &world->agents[agent_idx];
         R32 dev = 0.04f;
-        R32 speed = 0.1f;
+        R32 speed = 0.2f;
         Vec2 dir = V2(cosf(agent->orientation), sinf(agent->orientation));
         agent->orientation += GetRandomR32Debug(-dev, dev);
         agent->vel = speed * dir;
@@ -114,30 +124,56 @@ UpdateWorld(World* world)
             Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
             eye->ray = {agent->pos, eye_dir};
             eye->distance = 50.0f;
-            eye->color = 0xffffffff;
+            eye->hit_type = AgentType_None;
             Agent* hit = CastRay(world, eye->ray, eye->distance, &collision, agent);
             if(!hit) { continue; }
 
             eye->distance = collision.distance;
-            eye->color = GetAgentColor(hit->type);
+            eye->hit_type = hit->type;
         }
 #endif
+
+        // Behavior
+        R32 turnspeed = -0.05f;
+        I64 n_eyes = agent->eyes.size;
+        if(agent->eyes[0].hit_type)
+        {
+            if(agent->eyes[0].hit_type==agent->type)
+            {
+                agent->orientation += turnspeed;
+            }
+            else
+            {
+                agent->orientation -= turnspeed;
+            }
+        }
+        if(agent->eyes[n_eyes-1].hit_type)
+        {
+            if(agent->eyes[n_eyes-1].hit_type==agent->type)
+            {
+                agent->orientation -= turnspeed;
+            }
+            else
+            {
+                agent->orientation += turnspeed;
+            }
+        }
 
         agent->ticks_until_reproduce--;
         if(agent->ticks_until_reproduce <= 0)
         {
             agent->ticks_until_reproduce = world->reproduction_rate;
-            if(world->agents.size < world->agents.capacity)
+            Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
+            if(CanAddAgent(world, at_pos))
             {
-                AddAgent(world, agent->type, agent->pos+V2(0.5f, 0.5f));
+                AddAgent(world, agent->type, at_pos);
             }
         }
     }
-
 }
 
 static inline void
-CheckCollisions(Agent* agent0, Agent* agent1)
+CheckAgentCollisions(Agent* agent0, Agent* agent1)
 {
     Vec2 diff = agent1->pos - agent0->pos;
     R32 l2 = V2Len2(diff);
@@ -160,7 +196,8 @@ RenderEyeRays(Mesh2D* mesh, Agent* agent)
     {
         AgentEye* eye = &agent->eyes[i];
         R32 ray_width = 0.1f;
-        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, eye->color);
+        U32 color = GetAgentColor(eye->hit_type);
+        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, color);
     }
 }
 
@@ -242,13 +279,13 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 }
 
 void 
-RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam)
+RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam)
 {
     Vec2 chunk_dims = V2(world->chunk_size, world->chunk_size);
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0x88888888);
+        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0x66666666);
     }
 }
 
@@ -305,7 +342,7 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     agent->id = 1;          // TODO: Use entity ids
 
     int n_eyes = 4;
-    R32 agent_fov = 0.8f;
+    R32 agent_fov = 0.6f;
     agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
     for(int i = 0; i < n_eyes; i++)
     {
@@ -346,7 +383,7 @@ ChunkCollisions(World* world, Chunk* chunk0, Chunk* chunk1)
         {
             U32 a1_idx = chunk1->agent_indices[j];
             Agent* a1 = &world->agents[a1_idx];
-            CheckCollisions(a0, a1);
+            CheckAgentCollisions(a0, a1);
         }
     }
 }
@@ -382,23 +419,23 @@ ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
         {
             U32 a1_idx = center_chunk->agent_indices[j];
             Agent* a1 = &world->agents[a1_idx];
-            CheckCollisions(a0, a1);
+            CheckAgentCollisions(a0, a1);
         }
     }
 }
 
 World* 
-CreateWorld(MemoryArena* arena)
+CreateWorld(MemoryArena* arena, SimulationSettings* settings)
 {
     World* world = PushStruct(arena, World);
     world->arena = arena;
-    world->chunk_size = 10;
-    world->x_chunks = 80;
-    world->y_chunks = 80;
+    world->chunk_size = settings->chunk_size;
+    world->x_chunks = settings->x_chunks;
+    world->y_chunks = settings->y_chunks;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    int max_agents = 10000;
-    int n_initial_agents = 100;
+    int max_agents = settings->max_agents;
+    int n_initial_agents = settings->n_initial_agents;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);

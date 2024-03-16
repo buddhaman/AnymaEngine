@@ -7,6 +7,7 @@
 #include "Mesh2D.h"
 #include "Camera2D.h"
 #include "Math.h"
+#include "SimulationSettings.h"
 
 struct Chunk
 {
@@ -94,7 +95,7 @@ void
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void 
-RenderDebugInfo(World* world, Mesh2D* mesh, Camera2D* cam);
+RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void
 SortAgentsIntoChunks(World* world);
@@ -112,4 +113,5 @@ void
 ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
 
 World*
-CreateWorld(MemoryArena* arena);
+CreateWorld(MemoryArena* arena, SimulationSettings* settings);
+

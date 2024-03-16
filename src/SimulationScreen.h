@@ -4,6 +4,7 @@
 #include "Mesh2D.h"
 #include "Shader.h"
 #include "Window.h"
+#include "SimulationSettings.h"
 
 struct SimulationScreen
 {
@@ -22,12 +23,19 @@ struct SimulationScreen
 
     int updates_per_frame = 0;
     R32 time = 0.0f;
+
+    bool show_chunks = true;
+    bool show_debug_window = true;
+    SimulationSettings settings;
     
     SimulationScreen() : update_times(120) {};
 };
 
 void
 UpdateSimulationScreen(SimulationScreen* screen, Window* window);
+
+void
+RestartWorld(SimulationScreen* screen);
 
 void
 InitSimulationScreen(SimulationScreen* screeen);

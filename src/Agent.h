@@ -11,15 +11,16 @@ using EntityID = uint32_t;
 
 enum AgentType
 {
-    AgentType_Herbivore = 0,
-    AgentType_Carnivore,
+    AgentType_None = 0,
+    AgentType_Herbivore = 1,
+    AgentType_Carnivore = 2,
 };
 
 struct AgentEye
 {
     Ray ray;
     R32 distance;
-    U32 color;
+    AgentType hit_type;
     R32 orientation;
 };
 
@@ -45,6 +46,7 @@ GetAgentColor(AgentType type)
 {
     switch(type)
     {
+    case AgentType_None: return 0xffffffff;
     case AgentType_Carnivore: return 0xff0000ff;
     case AgentType_Herbivore: return 0xff00ff00;
     }

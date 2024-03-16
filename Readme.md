@@ -34,9 +34,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 #### TODO
 - Setup screen to make new simulation.
-- Set debug option: Show chunks etc.
 - Simple behavior.
-- Show agent sensors when selected.
+- Keep selection when moving camera around.
 - Make super simple brain.
 - Remove agents.
 - Agent lifespan.
@@ -56,6 +55,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 #### Done
+- Show agent sensors when selected.
+- Set debug option: Show chunks etc.
 - Refactor main loop and main in general. Move to SimulationScreen.
 - Show agent rays when selected.
 - Show agent info in debug window.

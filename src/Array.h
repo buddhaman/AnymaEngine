@@ -24,6 +24,7 @@ struct Array
     inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
     inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
+    inline bool IsFull() { return size==capacity; }
 
     // TODO: Remove all STL classes.
     inline void Apply(const std::function<void(T& value)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
@@ -240,7 +241,7 @@ CreateArray_(void *dataMemory, int capacity)
 }
 
 // TODO: Remove, just used for testing sometimes.
-void
+static void
 PrintArray(Array<int>& arr)
 {
     for(int i = 0; i < arr.size; i++)

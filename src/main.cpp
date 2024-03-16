@@ -17,16 +17,6 @@
 #include "World.h"
 #include "SimulationScreen.h"
 
-void
-PrintArray(Array<int>& arr)
-{
-    for(int i = 0; i < arr.size; i++)
-    {
-        std::cout << arr[i] << ", ";
-    }
-    std::cout << std::endl;
-}
-
 int main(int argc, char** argv) 
 {
     // Initialize random seed once. This will be replaced by my own rng.
@@ -40,8 +30,6 @@ int main(int argc, char** argv)
     window->fps = 60;
 
     SimulationScreen screen;
-
-    // Main loop
     InitSimulationScreen(&screen);
     while (window->running) 
     {
@@ -49,7 +37,6 @@ int main(int argc, char** argv)
         UpdateSimulationScreen(&screen, window);
         WindowEnd(window);
     }
-    
     DestroyWindow(window);
 
     return 0;
