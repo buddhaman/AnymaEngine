@@ -18,6 +18,15 @@ endif()
 file(GLOB PROJECT_SOURCES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
+if(MSVC)
+    # Set the /SUBSYSTEM:WINDOWS linker flag for Windows GUI applications in Release mode
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY
+        LINK_FLAGS_RELEASE " /SUBSYSTEM:WINDOWS")
+    
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY
+        LINK_FLAGS_DEBUG " /SUBSYSTEM:CONSOLE")
+endif()
+
 find_package(GLEW REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC GLEW::GLEW)
 
