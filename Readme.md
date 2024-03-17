@@ -34,6 +34,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 #### TODO
 - Keep selection when moving camera around.
+- Refactor update function in world.cpp.
 - Make super simple brain.
 - Optimize agent indices by using views on one huge array.
 - Draw active chunks.

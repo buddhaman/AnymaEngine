@@ -8,7 +8,7 @@
 // Forward declarations
 struct World;
 
-using EntityID = uint32_t;
+using EntityID = U32;
 
 enum AgentType
 {
@@ -49,8 +49,8 @@ struct Agent
 
     Brain brain;
 
+    I32 energy;
     bool is_alive;
-    bool is_removed;
 };
 
 static inline U32
@@ -65,3 +65,5 @@ GetAgentColor(AgentType type)
     return 0xffffffff;
 }
 
+I32
+GetTicksUntilReproduction(World* world, AgentType type);

@@ -79,6 +79,36 @@ CanAddAgent(World* world, Vec2 pos)
     return true;
 }
 
+static inline void
+SuperSimpleBehavior(Agent* agent)
+{
+        // Behavior
+        R32 turnspeed = -0.05f;
+        I64 n_eyes = agent->eyes.size;
+        if(agent->eyes[0].hit_type)
+        {
+            if(agent->eyes[0].hit_type==agent->type)
+            {
+                agent->orientation += turnspeed;
+            }
+            else
+            {
+                agent->orientation -= turnspeed;
+            }
+        }
+        if(agent->eyes[n_eyes-1].hit_type)
+        {
+            if(agent->eyes[n_eyes-1].hit_type==agent->type)
+            {
+                agent->orientation -= turnspeed;
+            }
+            else
+            {
+                agent->orientation += turnspeed;
+            }
+        }
+}
+
 void 
 UpdateWorld(World* world)
 {
@@ -133,36 +163,15 @@ UpdateWorld(World* world)
         }
 #endif
 
-        // Behavior
-        R32 turnspeed = -0.05f;
-        I64 n_eyes = agent->eyes.size;
-        if(agent->eyes[0].hit_type)
+        agent->energy--;
+        if(agent->energy <= 0)
         {
-            if(agent->eyes[0].hit_type==agent->type)
-            {
-                agent->orientation += turnspeed;
-            }
-            else
-            {
-                agent->orientation -= turnspeed;
-            }
+            RemoveAgent(world, agent_idx);
         }
-        if(agent->eyes[n_eyes-1].hit_type)
-        {
-            if(agent->eyes[n_eyes-1].hit_type==agent->type)
-            {
-                agent->orientation -= turnspeed;
-            }
-            else
-            {
-                agent->orientation += turnspeed;
-            }
-        }
-
         agent->ticks_until_reproduce--;
         if(agent->ticks_until_reproduce <= 0)
         {
-            agent->ticks_until_reproduce = world->reproduction_rate;
+            agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
             Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
             if(CanAddAgent(world, at_pos))
             {
@@ -170,6 +179,15 @@ UpdateWorld(World* world)
             }
         }
     }
+
+    world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
+    for(int remove_idx : world->removed_agent_indices)
+    {
+        world->agents.RemoveIndexUnordered(remove_idx);
+    }
+    world->removed_agent_indices.Clear();
+
+    world->ticks++;
 }
 
 static inline void
@@ -319,6 +337,7 @@ SortAgentsIntoMultipleChunks(World* world)
     for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = &world->agents[agent_idx];
+
         int min_x = Max(0, (int)((agent->pos.x-agent->radius)/world->chunk_size));
         int max_x = Min(world->x_chunks-1, (int)((agent->pos.x+agent->radius)/world->chunk_size));
         int min_y = Max(0, (int)((agent->pos.y-agent->radius)/world->chunk_size));
@@ -341,6 +360,7 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     agent->type = type;
     agent->radius = 1.2f;
     agent->id = 1;          // TODO: Use entity ids
+    agent->is_alive = true;
 
     // Eyes
     int n_eyes = 4;
@@ -361,9 +381,18 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     I64 offset = 0;
     agent->brain.weights = agent->brain.gene.ShapeAs(inputs, outputs, offset);
 
-    agent->ticks_until_reproduce = world->reproduction_rate;
+    agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
+    agent->energy = 400;
 
     return agent;
+}
+
+void
+RemoveAgent(World* world, U32 agent_idx)
+{
+    // Later this will be handled differently.
+    world->agents[agent_idx].is_alive = false;
+    world->removed_agent_indices.PushBack(agent_idx);
 }
 
 Agent* 
@@ -439,6 +468,7 @@ World*
 CreateWorld(MemoryArena* arena, SimulationSettings* settings)
 {
     World* world = PushStruct(arena, World);
+    *world = World{};
     world->arena = arena;
     world->chunk_size = settings->chunk_size;
     world->x_chunks = settings->x_chunks;
@@ -451,7 +481,8 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
-    world->reproduction_rate = 70;
+    world->carnivore_reproduction_ticks = 60*20;
+    world->herbivore_reproduction_ticks = 60*10;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
@@ -466,6 +497,7 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
 
     world->agents = CreateArray<Agent>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
+    world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
     for(int i = 0; i < n_initial_agents; i++)
     {

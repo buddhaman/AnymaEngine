@@ -86,6 +86,8 @@ EditSettings(SimulationScreen* screen)
     bool changed = false;
     changed |= ImGui::InputInt("Max agents", &screen->settings.max_agents);
     changed |= ImGui::InputInt("Initial agents", &screen->settings.n_initial_agents);
+    changed |= ImGui::InputInt("Herbivore reproduction ticks", &screen->world->herbivore_reproduction_ticks);
+    changed |= ImGui::InputInt("Carnivore reproduction ticks", &screen->world->carnivore_reproduction_ticks);
     changed |= ImGui::InputFloat("Chunk size", &screen->settings.chunk_size);
     changed |= ImGui::InputInt("X chunks", &screen->settings.x_chunks);
     changed |= ImGui::InputInt("Y chunks", &screen->settings.y_chunks);
@@ -135,16 +137,17 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         ImGui::Text("Camera scale: %.2f", screen->cam.scale);
         ImGui::Text("Static memory used in world: %zu/%zuMB", screen->world->arena->used/(1024U*1024U), screen->world->arena->size/(1024U*1024U));
         ImGui::Text("Number of agents: %zu", screen->world->agents.size);
+        ImGui::Text("At tick: %lu", screen->world->ticks);
 
         if(screen->selected)
         {
             ImGui::SeparatorText("Selected agent");
-
             ChunkCoordinates coords = GetChunkCoordinatesFromWorldPos(screen->world, screen->selected->pos);
             ImGui::Text("Chunk: %u %u", coords.x, coords.y);
+            ImGui::Text("%d ticks until reproduction.", screen->selected->ticks_until_reproduce);
+            ImGui::Text("%d ticks until out of energy.", screen->selected->energy);
         }
 
-        ImGui::SeparatorText("Settings");
         EditSettings(screen);
 
         ImGui::Checkbox("Show chunks", &screen->show_chunks);

@@ -3,6 +3,19 @@
 #include "AnymUtil.h"
 #include "Memory.h"
 
+struct MatR32
+{
+    I32 w;
+    I32 h;
+    R32 *m;
+
+    R32& Elem(int x, int y)
+    {
+        assert(0 <= x && x < w && 0 <= y && y < h);
+        return m[x+y*w];
+    }
+};
+
 struct VecR32
 {
     I32 n;
@@ -101,19 +114,6 @@ VecR32Mul(VecR32 result, VecR32 a, VecR32 b)
         result[i] = a[i] * b[i];
     }
 }
-
-struct MatR32
-{
-    I32 w;
-    I32 h;
-    R32 *m;
-
-    R32& Elem(int x, int y)
-    {
-        assert(0 <= x && x < w && 0 <= y && y < h);
-        return m[x+y*w];
-    }
-};
 
 static inline MatR32 
 MatR32Create(int w, int h, R32* data) 

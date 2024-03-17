@@ -29,10 +29,13 @@ struct World
 
     Vec2 size;
     Array<Agent> agents;
+    Array<U32> removed_agent_indices;
     Array<U32> visible_agent_indices;
     MemoryArena* arena;
 
-    I32 reproduction_rate;
+    I32 carnivore_reproduction_ticks;
+    I32 herbivore_reproduction_ticks;
+    I64 ticks;
 };
 
 static inline Chunk* 
@@ -105,6 +108,9 @@ SortAgentsIntoMultipleChunks(World* world);
 
 Agent* 
 AddAgent(World* world, AgentType type, Vec2 pos);
+
+void
+RemoveAgent(World* world, U32 agent_idx);
 
 Agent* 
 SelectFromWorld(World* world, Vec2 pos);
