@@ -12,7 +12,7 @@ struct VecR32
     inline R32 Sum() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]; } return sum; } 
     inline R32 Len2() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]*v[i]; } return sum;  } 
     inline R32 Avg() { return Sum() / n; }
-    inline R32& operator[](int idx) { return v[idx]; }
+    inline R32& operator[](int idx) { Assert(0 < idx && idx < n); return v[idx]; }
 };
 
 static inline VecR32 
@@ -55,6 +55,12 @@ struct MatR32
     I32 w;
     I32 h;
     R32 *m;
+
+    R32& Elem(int x, int y)
+    {
+        assert(x+y*w < w*h);
+        return m[x+y*w];
+    }
 };
 
 static inline MatR32 
@@ -68,4 +74,41 @@ MatR32Create(MemoryArena* arena, int w, int h)
 {
     R32* data = PushZeroArray(arena, R32, w*h);
     return MatR32Create(w, h, data);
+}
+
+static inline void 
+MatR32Mul(MatR32 result, MatR32 a, MatR32 b)
+{
+    Assert(a.w == b.h); 
+    Assert(result.w == b.w);
+    Assert(result.h == a.h); 
+
+    for(int i = 0; i < a.h; i++)
+    {
+        for(int j = 0; j < b.w; j++)
+        {
+            R32 sum = 0.0f;
+            for(int k = 0; k < a.w; k++)
+            {
+                sum += a.m[i * a.w + k] * b.m[k * b.w + j];
+            }
+            result.m[i * result.w + j] = sum;
+        }
+    }
+}
+
+// Matrix-vector multiplication
+void MatR32VecMul(VecR32 result, MatR32 a, VecR32 v)
+{
+    Assert(a.w == v.n); // Ensure the matrix and vector can be multiplied
+    Assert(result.n == a.h); // Ensure result vector has correct dimension
+    for(int i = 0; i < a.h; i++)
+    {
+        R32 sum = 0.0f;
+        for(int j = 0; j < a.w; j++)
+        {
+            sum += a.m[i * a.w + j] * v.v[j];
+        }
+        result.v[i] = sum;
+    }
 }
