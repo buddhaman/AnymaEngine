@@ -3,6 +3,7 @@
 #include "AnymUtil.h"
 #include "Array.h"
 #include "Math.h"
+#include "Linalg.h"
 
 // Forward declarations
 struct World;
@@ -22,6 +23,11 @@ struct AgentEye
     R32 distance;
     AgentType hit_type;
     R32 orientation;
+};
+
+struct Brain
+{
+    VecR32 inputs;
 };
 
 struct Agent
