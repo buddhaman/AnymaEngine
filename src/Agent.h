@@ -27,7 +27,10 @@ struct AgentEye
 
 struct Brain
 {
-    VecR32 inputs;
+    VecR32 input;
+    MatR32 weights;
+    VecR32 output;
+    VecR32 gene;
 };
 
 struct Agent
@@ -43,8 +46,11 @@ struct Agent
     AgentType type;
     EntityID id;
     I32 ticks_until_reproduce;
-    bool alive;
-    U16 scratch_bits;  // Mark something on agents when you are sure you can do this. 
+
+    Brain brain;
+
+    bool is_alive;
+    bool is_removed;
 };
 
 static inline U32

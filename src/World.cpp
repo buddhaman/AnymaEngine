@@ -88,7 +88,7 @@ UpdateWorld(World* world)
         R32 dev = 0.04f;
         R32 speed = 0.2f;
         Vec2 dir = V2(cosf(agent->orientation), sinf(agent->orientation));
-        agent->orientation += GetRandomR32Debug(-dev, dev);
+        agent->orientation += RandomR32Debug(-dev, dev);
         agent->vel = speed * dir;
         agent->pos += agent->vel;
 
@@ -252,6 +252,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
         Vec2 perp = V2(dir.y, -dir.x);
         U32 herbivore_color = 0xff0ff000;
         U32 carnivore_color = 0xff0000ff;
+
         // TODO: Better just make two completely separate loops
         if(cam->scale > 3)
         {
@@ -341,6 +342,7 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     agent->radius = 1.2f;
     agent->id = 1;          // TODO: Use entity ids
 
+    // Eyes
     int n_eyes = 4;
     R32 agent_fov = 0.6f;
     agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
@@ -349,6 +351,15 @@ AddAgent(World* world, AgentType type, Vec2 pos)
         AgentEye* eye = agent->eyes.PushBack();
         eye->orientation = -agent_fov/2.0f + i*agent_fov/(n_eyes-1);
     }
+
+    // Brain
+    int inputs = n_eyes+1;
+    int outputs = 3;
+    agent->brain.gene = VecR32Create(world->arena, inputs*outputs);
+    agent->brain.input = VecR32Create(world->arena, n_eyes+1);
+    agent->brain.output = VecR32Create(world->arena, 3);
+    I64 offset = 0;
+    agent->brain.weights = agent->brain.gene.ShapeAs(inputs, outputs, offset);
 
     agent->ticks_until_reproduce = world->reproduction_rate;
 
@@ -459,8 +470,8 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     for(int i = 0; i < n_initial_agents; i++)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
-        Agent* agent = AddAgent(world, type,GetRandomVec2Debug(V2(0,0), world->size));
-        agent->orientation = GetRandomR32Debug(-M_PI, M_PI);
+        Agent* agent = AddAgent(world, type, RandomVec2Debug(V2(0,0), world->size));
+        agent->orientation = RandomR32Debug(-M_PI, M_PI);
     }
     return world;
 }

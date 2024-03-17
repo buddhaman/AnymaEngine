@@ -13,6 +13,57 @@ struct VecR32
     inline R32 Sum() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]; } return sum; } 
     inline R32 Len2() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]*v[i]; } return sum;  } 
     inline R32 Avg() { return Sum() / n; }
+
+    inline MatR32 ShapeAs(int w, int h, I64& offset)
+    {
+        MatR32 result;
+        result.w = w;
+        result.h = h;
+        result.m = v+offset;
+        offset += w*h;
+        return result;
+    }
+
+    inline R32 StdDev() 
+    {
+        R32 mean = Avg();
+        R32 sum = 0.0f;
+        for(int i = 0; i < n; i++) {
+            R32 val = v[i];
+            sum += (val - mean) * (val - mean);
+        }
+        return sqrt(sum / n);
+    }
+
+    void
+    PrintP(FILE *stream, int w=3, int p=2)
+    {
+        fprintf(stream, "| ");
+        for(int r = 0; r < n; r++)
+        {
+            fprintf(stream, "%*.*f ", w, p, v[r]);
+        }
+        fprintf(stream, "|\n");
+    }
+
+    void SetNormal(R32 avg, R32 dev)
+    {
+        U32 pairs = n/2;
+
+        for(U32 atPair = 0;
+                atPair < pairs;
+                atPair++)
+        {
+            Vec2 v_norm = RandomNormalPairDebug();
+            v[atPair*2] = avg + v_norm.x*dev;
+            v[atPair*2+1] = avg + v_norm.y*dev;
+        }
+        if(n%2==1)
+        {
+            v[n-1] = RandomNormalPairDebug().x*dev;
+        }
+    }
+
     inline R32& operator[](int idx) { Assert(0 <= idx && idx < n); return v[idx]; }
 };
 

@@ -70,14 +70,28 @@ T Clamp(T min, T val, T max)
 }
 
 static inline float 
-GetRandomR32Debug(float min, float max)
+RandomR32Debug(float min, float max)
 {
     float randFloat = (float)(rand()) / (float)(RAND_MAX);
     return randFloat * (max - min) + min;
 }
 
 static inline Vec2 
-GetRandomVec2Debug(Vec2 min, Vec2 max)
+RandomVec2Debug(Vec2 min, Vec2 max)
 {
-    return V2(GetRandomR32Debug(min.x, max.x), GetRandomR32Debug(min.y, max.y));
+    return V2(RandomR32Debug(min.x, max.x), RandomR32Debug(min.y, max.y));
+}
+
+static inline Vec2
+RandomNormalPairDebug()
+{
+    R32 x, y, s;
+    do
+    {
+        x = RandomR32Debug(-1.0f, 1.0f);
+        y = RandomR32Debug(-1.0f, 1.0f);
+        s = x*x + y*y;
+    } while(s > 1.0);
+    R32 factor = sqrtf(-2*logf(s)/s);
+    return V2(factor*x, factor*y);
 }

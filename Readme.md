@@ -33,12 +33,10 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
-- Draw active chunks.
-- Optimize agent indices by using views on one huge array.
-- Setup screen to make new simulation.
-- Simple behavior.
 - Keep selection when moving camera around.
 - Make super simple brain.
+- Optimize agent indices by using views on one huge array.
+- Draw active chunks.
 - Remove agents.
 - Agent lifespan.
 - Agent asexual reproduction with mutations.
@@ -48,6 +46,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Separate data collection and debug data rendering.
 - Show agents in chunk in debug window. 
 - Pause simulation.
+- Make random number generator.
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
 - Make chunks selectable.
@@ -59,6 +58,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 ### Done
 
 #### RELEASE 2
+- Simple behavior.
+- Setup screen to make new simulation.
 - Show agent sensors when selected.
 - Set debug option: Show chunks etc.
 - Refactor main loop and main in general. Move to SimulationScreen.
