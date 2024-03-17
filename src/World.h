@@ -34,7 +34,11 @@ struct World
     MemoryArena* arena;
 
     I32 carnivore_reproduction_ticks;
+    I32 carnivore_initial_energy;
+
     I32 herbivore_reproduction_ticks;
+    I32 herbivore_initial_energy;
+
     I64 ticks;
 };
 
@@ -107,7 +111,7 @@ void
 SortAgentsIntoMultipleChunks(World* world);
 
 Agent* 
-AddAgent(World* world, AgentType type, Vec2 pos);
+AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent=nullptr);
 
 void
 RemoveAgent(World* world, U32 agent_idx);

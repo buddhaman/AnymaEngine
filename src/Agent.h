@@ -65,5 +65,19 @@ GetAgentColor(AgentType type)
     return 0xffffffff;
 }
 
+static inline void
+UpdateBrain(Agent* agent)
+{
+    Brain* brain = &agent->brain;
+    MatR32VecMul(brain->output, brain->weights, brain->input);
+    brain->output.Apply([](R32 x) -> R32 {return tanh(x);});
+}
+
+void
+UpdateMovement(World* world, Agent* agent);
+
 I32
 GetTicksUntilReproduction(World* world, AgentType type);
+
+I32
+GetInitialEnergy(World* world, AgentType type);

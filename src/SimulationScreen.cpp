@@ -91,6 +91,7 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGui::InputFloat("Chunk size", &screen->settings.chunk_size);
     changed |= ImGui::InputInt("X chunks", &screen->settings.x_chunks);
     changed |= ImGui::InputInt("Y chunks", &screen->settings.y_chunks);
+    changed |= ImGui::SliderInt("Updates per tick", &screen->updates_per_frame, 0, 20);
 
     if(changed)
     {
@@ -191,7 +192,11 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         cam->scale = cam->scale *= powf(1.05f, input->mouse_scroll);
     }
 
-    DoScreenWorldUpdate(screen);
+    for(int i = 0; i < screen->updates_per_frame; i++)
+    {
+        DoScreenWorldUpdate(screen);
+    }
+
     DoScreenWorldRender(screen, window);
 }
 

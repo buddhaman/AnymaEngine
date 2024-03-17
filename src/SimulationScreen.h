@@ -21,7 +21,7 @@ struct SimulationScreen
 
     DynamicArray<R32> update_times;
 
-    int updates_per_frame = 0;
+    int updates_per_frame = 1;
     R32 time = 0.0f;
 
     bool show_chunks = true;

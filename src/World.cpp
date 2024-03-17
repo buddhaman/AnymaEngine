@@ -115,36 +115,6 @@ UpdateWorld(World* world)
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = &world->agents[agent_idx];
-        R32 dev = 0.04f;
-        R32 speed = 0.2f;
-        Vec2 dir = V2(cosf(agent->orientation), sinf(agent->orientation));
-        agent->orientation += RandomR32Debug(-dev, dev);
-        agent->vel = speed * dir;
-        agent->pos += agent->vel;
-
-        Vec2 offset = V2(0,0);
-        Vec2 size = world->size;
-
-        if(agent->pos.x < offset.x)
-        {
-            agent->pos.x = agent->pos.x + size.x;
-        }
-        
-        if(agent->pos.x > offset.x + size.x)
-        {
-            agent->pos.x = agent->pos.x - size.x;
-        }
-
-        if(agent->pos.y < offset.y)
-        {
-            agent->pos.y = agent->pos.y + size.y;
-        }
-        
-        if(agent->pos.y > offset.y + size.y)
-        {
-            agent->pos.y = agent->pos.y - size.y;
-        }
-
 #if 1
         RayCollision collision;
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
@@ -160,8 +130,13 @@ UpdateWorld(World* world)
 
             eye->distance = collision.distance;
             eye->hit_type = hit->type;
+
+            agent->brain.input[eye_idx] = eye->hit_type;
         }
+        agent->brain.input[agent->brain.input.n-1] = 1.0f;
 #endif
+        UpdateBrain(agent);
+        UpdateMovement(world, agent);
 
         agent->energy--;
         if(agent->energy <= 0)
@@ -173,11 +148,17 @@ UpdateWorld(World* world)
         {
             agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
             Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
-            if(CanAddAgent(world, at_pos))
+            int n_rep = RandomR32Debug(0, 1) < 0.5 ? 2 : 1;
+            for(int i = 0; i < n_rep; i++)
             {
-                AddAgent(world, agent->type, at_pos);
+                if(CanAddAgent(world, at_pos))
+                {
+                    AddAgent(world, agent->type, at_pos);
+                }
             }
         }
+
+        // Update brain
     }
 
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
@@ -190,6 +171,15 @@ UpdateWorld(World* world)
     world->ticks++;
 }
 
+void
+HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
+{
+    Assert(herbivore->type==AgentType_Herbivore);
+    Assert(carnivore->type==AgentType_Carnivore);
+    herbivore->energy-=5;
+    carnivore->energy+=5;
+}
+
 static inline void
 CheckAgentCollisions(Agent* agent0, Agent* agent1)
 {
@@ -198,11 +188,22 @@ CheckAgentCollisions(Agent* agent0, Agent* agent1)
     R32 radsum = agent0->radius+agent1->radius;
     if(l2 < radsum*radsum)
     {
-        // Collision
-        R32 l = sqrtf(l2);
-        R32 amount = radsum-l;
-        agent1->pos += amount*diff/2.0f;
-        agent0->pos -= amount*diff/2.0f;
+        if(agent0->type==AgentType_Carnivore && agent1->type==AgentType_Herbivore)
+        {
+            HerbivoreCarnivoreCollision(agent1, agent0);
+        }
+        else if(agent0->type==AgentType_Herbivore && agent1->type==AgentType_Carnivore)
+        {
+            HerbivoreCarnivoreCollision(agent0, agent1);
+        }
+        else
+        {
+            // Resolve collision
+            R32 l = sqrtf(l2);
+            R32 amount = radsum-l;
+            agent1->pos += amount*diff/2.0f;
+            agent0->pos -= amount*diff/2.0f;
+        }
     }
 }
 
@@ -352,7 +353,7 @@ SortAgentsIntoMultipleChunks(World* world)
 }
 
 Agent* 
-AddAgent(World* world, AgentType type, Vec2 pos)
+AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 {
     Agent* agent = world->agents.PushBack();
     *agent = Agent{};
@@ -376,13 +377,15 @@ AddAgent(World* world, AgentType type, Vec2 pos)
     int inputs = n_eyes+1;
     int outputs = 3;
     agent->brain.gene = VecR32Create(world->arena, inputs*outputs);
+    agent->brain.gene.SetNormal(0, 2);
     agent->brain.input = VecR32Create(world->arena, n_eyes+1);
     agent->brain.output = VecR32Create(world->arena, 3);
+
     I64 offset = 0;
     agent->brain.weights = agent->brain.gene.ShapeAs(inputs, outputs, offset);
 
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-    agent->energy = 400;
+    agent->energy = GetInitialEnergy(world, agent->type);
 
     return agent;
 }
@@ -481,8 +484,11 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
-    world->carnivore_reproduction_ticks = 60*20;
-    world->herbivore_reproduction_ticks = 60*10;
+    world->herbivore_reproduction_ticks = 60*9;
+    world->herbivore_initial_energy = 60*10;
+
+    world->carnivore_reproduction_ticks = 60*10;
+    world->carnivore_initial_energy = 60*9;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)

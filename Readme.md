@@ -33,6 +33,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
+- IMPORTANT: Solve the huge memory leak in AddAgent.
 - Keep selection when moving camera around.
 - Refactor update function in world.cpp.
 - Make super simple brain.
