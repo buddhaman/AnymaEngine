@@ -502,6 +502,7 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     }
 
     world->agents = CreateArray<Agent>(world->arena, max_agents);
+    world->active_agents = CreateArray<U32>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
     world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
 

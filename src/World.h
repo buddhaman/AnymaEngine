@@ -31,6 +31,7 @@ struct World
     Array<Agent> agents;
     Array<U32> removed_agent_indices;
     Array<U32> visible_agent_indices;
+    Array<U32> active_agents;
     MemoryArena* arena;
 
     I32 carnivore_reproduction_ticks;
