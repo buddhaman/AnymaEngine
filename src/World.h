@@ -28,17 +28,10 @@ struct World
     Array<Chunk> chunks;
 
     Vec2 size;
-    Array<Agent> agents;
-    Array<Brain> brains;
 
-    // Note: these are the indices of the indices.
+    Array<Agent*> agents;
     Array<U32> removed_agent_indices;
-
     Array<U32> visible_agent_indices;
-
-    Array<U32> active_agents;
-    Array<U32> available_indices;
-
 
     I32 carnivore_reproduction_ticks;
     I32 carnivore_initial_energy;
@@ -73,6 +66,7 @@ GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
     x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return {(U32)x_chunk, (U32)y_chunk};
+    
 }
 
 static inline I32

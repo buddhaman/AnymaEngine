@@ -30,7 +30,7 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
         Agent* hit = nullptr;
         for(U32 agent_idx : chunk->agent_indices)
         {
-            Agent* agent = &world->agents[agent_idx];
+            Agent* agent = world->agents[agent_idx];
             if(agent==exclude_agent) continue;
             if(!RayCircleIntersect(ray, {agent->pos, agent->radius}, collision)) continue;
 
@@ -81,39 +81,39 @@ CanAddAgent(World* world, Vec2 pos)
 static inline void
 SuperSimpleBehavior(Agent* agent)
 {
-        // Behavior
-        R32 turnspeed = -0.05f;
-        I64 n_eyes = agent->eyes.size;
-        if(agent->eyes[0].hit_type)
+    // Behavior
+    R32 turnspeed = -0.05f;
+    I64 n_eyes = agent->eyes.size;
+    if(agent->eyes[0].hit_type)
+    {
+        if(agent->eyes[0].hit_type==agent->type)
         {
-            if(agent->eyes[0].hit_type==agent->type)
-            {
-                agent->orientation += turnspeed;
-            }
-            else
-            {
-                agent->orientation -= turnspeed;
-            }
+            agent->orientation += turnspeed;
         }
-        if(agent->eyes[n_eyes-1].hit_type)
+        else
         {
-            if(agent->eyes[n_eyes-1].hit_type==agent->type)
-            {
-                agent->orientation -= turnspeed;
-            }
-            else
-            {
-                agent->orientation += turnspeed;
-            }
+            agent->orientation -= turnspeed;
         }
+    }
+    if(agent->eyes[n_eyes-1].hit_type)
+    {
+        if(agent->eyes[n_eyes-1].hit_type==agent->type)
+        {
+            agent->orientation -= turnspeed;
+        }
+        else
+        {
+            agent->orientation += turnspeed;
+        }
+    }
 }
 
 void 
 UpdateWorld(World* world)
 {
-    for(U32 agent_idx : world->active_agents)
+    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
-        Agent* agent = &world->agents[agent_idx];
+        Agent* agent = world->agents[agent_idx];
 #if 1
         RayCollision collision;
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
@@ -164,7 +164,7 @@ UpdateWorld(World* world)
     // Note: these are the indices of the indices.
     for(int remove_idx : world->removed_agent_indices)
     {
-        world->active_agents.RemoveIndexUnordered(remove_idx);
+        world->agents.RemoveIndexUnordered(remove_idx);
     }
     world->removed_agent_indices.Clear();
 
@@ -252,9 +252,9 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 {
     // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
-    for(U32 agent_idx : world->active_agents)
+    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
-        Agent* agent = &world->agents[agent_idx];
+        Agent* agent = world->agents[agent_idx];
         if(InBounds({cam->pos-cam->size/2.0f, cam->size}, agent->pos))
         {
             world->visible_agent_indices.PushBack(agent_idx);
@@ -263,7 +263,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 
     for(int i = 0; i < world->visible_agent_indices.size; i++)
     {
-        Agent* agent = &world->agents[world->visible_agent_indices[i]];
+        Agent* agent = world->agents[world->visible_agent_indices[i]];
 
         R32 r = agent->radius;
         Vec2 uv = V2(0,0);
@@ -323,9 +323,9 @@ SortAgentsIntoChunks(World* world)
 {
     ClearChunks(world);
 
-    for(U32 agent_idx : world->active_agents)
+    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
-        Agent* agent = &world->agents[agent_idx];
+        Agent* agent = world->agents[agent_idx];
         GetChunkAt(world, agent->pos)->agent_indices.PushBack(agent_idx);
     }
 }
@@ -335,10 +335,9 @@ SortAgentsIntoMultipleChunks(World* world)
 {
     ClearChunks(world);
 
-    for(U32 agent_idx : world->active_agents)
+    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
-        Agent* agent = &world->agents[agent_idx];
-
+        Agent* agent = world->agents[agent_idx];
         int min_x = Max(0, (int)((agent->pos.x-agent->radius)/world->chunk_size));
         int max_x = Min(world->x_chunks-1, (int)((agent->pos.x+agent->radius)/world->chunk_size));
         int min_y = Max(0, (int)((agent->pos.y-agent->radius)/world->chunk_size));
@@ -352,29 +351,12 @@ SortAgentsIntoMultipleChunks(World* world)
     }
 }
 
-Brain*
-GetBrainForAgent(World* world, U32 agent_idx, int n_eyes)
-{
-    // Already initialized. Not zeroed though.
-    Brain* brain = &world->brains[agent_idx];
-    if(agent_idx < world->agents.size)
-    {
-        return brain;
-    }
-
-    int inputs = n_eyes+1;
-    int outputs = 3;
-    brain->gene = VecR32Create(world->arena, inputs*outputs);
-    brain->gene.SetNormal(0, 2);
-    brain->input = VecR32Create(world->arena, n_eyes+1);
-    brain->output = VecR32Create(world->arena, 3);
-}
-
 Agent* 
 AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 {
-    Agent* agent = world->agents.PushBack();
+    Agent* agent = world->agent_pool->Alloc();
     *agent = Agent{};
+    world->agents.PushBack(agent);
     agent->pos = pos;
     agent->type = type;
     agent->radius = 1.2f;
@@ -392,10 +374,16 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
-    //Brain* brain = GetBrainForAgent(world, agent_
-
+    Brain* brain = world->brain_pool->Alloc();
+    int inputs = n_eyes+1;
+    int outputs = 3;
+    brain->gene = VecR32Create(world->arena, inputs*outputs);
+    brain->gene.SetNormal(0, 2);
+    brain->input = VecR32Create(world->arena, n_eyes+1);
+    brain->output = VecR32Create(world->arena, 3);
     I64 offset = 0;
     brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
+    agent->brain = brain;
 
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
     agent->energy = GetInitialEnergy(world, agent->type);
@@ -407,7 +395,7 @@ void
 RemoveAgent(World* world, U32 agent_idx)
 {
     // Later this will be handled differently.
-    world->agents[agent_idx].is_alive = false;
+    world->agents[agent_idx]->is_alive = false;
     world->removed_agent_indices.PushBack(agent_idx);
 }
 
@@ -417,7 +405,7 @@ SelectFromWorld(World* world, Vec2 pos)
     Chunk* chunk = GetChunkAt(world, pos);
     for(U32 agent_idx : chunk->agent_indices)
     {
-        Agent* agent = &world->agents[chunk->agent_indices[agent_idx]];
+        Agent* agent = world->agents[agent_idx];
         R32 r2 = V2Dist2(agent->pos, pos);
         if(r2 < agent->radius)
         {
@@ -433,12 +421,12 @@ ChunkCollisions(World* world, Chunk* chunk0, Chunk* chunk1)
     for(int i = 0; i < chunk0->agent_indices.size; i++)
     {
         U32 a0_idx = chunk0->agent_indices[i];
-        Agent* a0 = &world->agents[a0_idx];
+        Agent* a0 = world->agents[a0_idx];
 
         for(int j = 0; j < chunk1->agent_indices.size; j++)
         {
             U32 a1_idx = chunk1->agent_indices[j];
-            Agent* a1 = &world->agents[a1_idx];
+            Agent* a1 = world->agents[a1_idx];
             CheckAgentCollisions(a0, a1);
         }
     }
@@ -469,12 +457,12 @@ ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
     for(int i = 0; i < center_chunk->agent_indices.size-1; i++)
     {
         U32 a0_idx = center_chunk->agent_indices[i];
-        Agent* a0 = &world->agents[a0_idx];
+        Agent* a0 = world->agents[a0_idx];
 
         for(int j = i+1; j < center_chunk->agent_indices.size; j++)
         {
             U32 a1_idx = center_chunk->agent_indices[j];
-            Agent* a1 = &world->agents[a1_idx];
+            Agent* a1 = world->agents[a1_idx];
             CheckAgentCollisions(a0, a1);
         }
     }
@@ -514,10 +502,14 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
         chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
 
-    world->agents = CreateArray<Agent>(world->arena, max_agents);
-    world->active_agents = CreateArray<U32>(world->arena, max_agents);
+    world->agents = CreateArray<Agent*>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
     world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
+
+    // Stupid way to calculate number of blocks 
+    U32 n_blocks = max_agents/32+1;
+    world->agent_pool = CreateBittedMemoryPool<Agent>(arena, n_blocks);
+    world->brain_pool = CreateBittedMemoryPool<Brain>(arena, n_blocks);
 
     for(int i = 0; i < n_initial_agents; i++)
     {

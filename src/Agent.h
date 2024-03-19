@@ -67,7 +67,7 @@ GetAgentColor(AgentType type)
 static inline void
 UpdateBrain(Agent* agent)
 {
-    Brain* brain = &agent->brain;
+    Brain* brain = agent->brain;
     MatR32VecMul(brain->output, brain->weights, brain->input);
     brain->output.Apply([](R32 x) -> R32 {return tanh(x);});
 }

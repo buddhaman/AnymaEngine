@@ -111,15 +111,15 @@ struct BittedMemoryPool
 
 template <typename T>
 BittedMemoryPool<T> *
-CreateMemoryPool(MemoryArena *arena, size_t maxBlocks)
+CreateBittedMemoryPool(MemoryArena *arena, size_t maxBlocks)
 {
     BittedMemoryPool<T> *pool = PushStruct(arena, BittedMemoryPool<T>);
     *pool = BittedMemoryPool<T>{};
     pool->maxBlocks = maxBlocks;
-    pool->sizeInBytes = sizeof(T) * maxBlocks * 32;
-    pool->base = PushArray(arena, U8, pool->sizeInBytes);
+    pool->size = maxBlocks * 32;
+    pool->base = PushArray(arena, T, maxBlocks*32);
     pool->blocks = PushArray(arena, U32, maxBlocks);
-    memset(pool->base, 0, pool->sizeInBytes);
+    memset(pool->base, 0, pool->size*sizeof(T));
     memset(pool->blocks, 0, maxBlocks * sizeof(U32));
     return pool;
 }
