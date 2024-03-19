@@ -74,7 +74,6 @@ static inline bool
 CanAddAgent(World* world, Vec2 pos)
 {
     Chunk* chunk = GetChunkAt(world, pos);
-    if(world->agents.IsFull()) return false;
     if(chunk->agent_indices.IsFull()) return false;
     return true;
 }
@@ -112,7 +111,7 @@ SuperSimpleBehavior(Agent* agent)
 void 
 UpdateWorld(World* world)
 {
-    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+    for(U32 agent_idx : world->active_agents)
     {
         Agent* agent = &world->agents[agent_idx];
 #if 1
@@ -131,9 +130,9 @@ UpdateWorld(World* world)
             eye->distance = collision.distance;
             eye->hit_type = hit->type;
 
-            agent->brain.input[eye_idx] = eye->hit_type;
+            agent->brain->input[eye_idx] = eye->hit_type;
         }
-        agent->brain.input[agent->brain.input.n-1] = 1.0f;
+        agent->brain->input[agent->brain->input.n-1] = 1.0f;
 #endif
         UpdateBrain(agent);
         UpdateMovement(world, agent);
@@ -162,9 +161,10 @@ UpdateWorld(World* world)
     }
 
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
+    // Note: these are the indices of the indices.
     for(int remove_idx : world->removed_agent_indices)
     {
-        world->agents.RemoveIndexUnordered(remove_idx);
+        world->active_agents.RemoveIndexUnordered(remove_idx);
     }
     world->removed_agent_indices.Clear();
 
@@ -250,14 +250,14 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 {
-    // Which agents are visible.
+    // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
-    for(U32 i = 0; i < world->agents.size; i++)
+    for(U32 agent_idx : world->active_agents)
     {
-        Agent* agent = &world->agents[i];
+        Agent* agent = &world->agents[agent_idx];
         if(InBounds({cam->pos-cam->size/2.0f, cam->size}, agent->pos))
         {
-            world->visible_agent_indices.PushBack(i);
+            world->visible_agent_indices.PushBack(agent_idx);
         }
     }
 
@@ -323,7 +323,7 @@ SortAgentsIntoChunks(World* world)
 {
     ClearChunks(world);
 
-    for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+    for(U32 agent_idx : world->active_agents)
     {
         Agent* agent = &world->agents[agent_idx];
         GetChunkAt(world, agent->pos)->agent_indices.PushBack(agent_idx);
@@ -335,7 +335,7 @@ SortAgentsIntoMultipleChunks(World* world)
 {
     ClearChunks(world);
 
-    for(U32 agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+    for(U32 agent_idx : world->active_agents)
     {
         Agent* agent = &world->agents[agent_idx];
 
@@ -350,6 +350,24 @@ SortAgentsIntoMultipleChunks(World* world)
             chunk->agent_indices.PushBack(agent_idx);
         }
     }
+}
+
+Brain*
+GetBrainForAgent(World* world, U32 agent_idx, int n_eyes)
+{
+    // Already initialized. Not zeroed though.
+    Brain* brain = &world->brains[agent_idx];
+    if(agent_idx < world->agents.size)
+    {
+        return brain;
+    }
+
+    int inputs = n_eyes+1;
+    int outputs = 3;
+    brain->gene = VecR32Create(world->arena, inputs*outputs);
+    brain->gene.SetNormal(0, 2);
+    brain->input = VecR32Create(world->arena, n_eyes+1);
+    brain->output = VecR32Create(world->arena, 3);
 }
 
 Agent* 
@@ -374,15 +392,10 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
-    int inputs = n_eyes+1;
-    int outputs = 3;
-    agent->brain.gene = VecR32Create(world->arena, inputs*outputs);
-    agent->brain.gene.SetNormal(0, 2);
-    agent->brain.input = VecR32Create(world->arena, n_eyes+1);
-    agent->brain.output = VecR32Create(world->arena, 3);
+    //Brain* brain = GetBrainForAgent(world, agent_
 
     I64 offset = 0;
-    agent->brain.weights = agent->brain.gene.ShapeAs(inputs, outputs, offset);
+    brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
 
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
     agent->energy = GetInitialEnergy(world, agent->type);
@@ -402,7 +415,7 @@ Agent*
 SelectFromWorld(World* world, Vec2 pos)
 {
     Chunk* chunk = GetChunkAt(world, pos);
-    for(int agent_idx = 0; agent_idx < chunk->agent_indices.size; agent_idx++)
+    for(U32 agent_idx : chunk->agent_indices)
     {
         Agent* agent = &world->agents[chunk->agent_indices[agent_idx]];
         R32 r2 = V2Dist2(agent->pos, pos);

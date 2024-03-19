@@ -29,10 +29,16 @@ struct World
 
     Vec2 size;
     Array<Agent> agents;
+    Array<Brain> brains;
+
+    // Note: these are the indices of the indices.
     Array<U32> removed_agent_indices;
+
     Array<U32> visible_agent_indices;
+
     Array<U32> active_agents;
-    MemoryArena* arena;
+    Array<U32> available_indices;
+
 
     I32 carnivore_reproduction_ticks;
     I32 carnivore_initial_energy;
@@ -41,6 +47,10 @@ struct World
     I32 herbivore_initial_energy;
 
     I64 ticks;
+
+    MemoryArena* arena;
+    BittedMemoryPool<Agent>* agent_pool;
+    BittedMemoryPool<Brain>* brain_pool;
 };
 
 static inline Chunk* 

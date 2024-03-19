@@ -42,12 +42,11 @@ struct Agent
     R32 radius;
 
     Array<AgentEye> eyes;
+    Brain* brain;
 
     AgentType type;
     EntityID id;
     I32 ticks_until_reproduce;
-
-    Brain brain;
 
     I32 energy;
     bool is_alive;
