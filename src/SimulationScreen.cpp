@@ -203,6 +203,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 void
 RestartWorld(SimulationScreen* screen)
 {
+    ClearArena(screen->world_arena);
     screen->world = CreateWorld(screen->world_arena, &screen->settings);
 }
 
