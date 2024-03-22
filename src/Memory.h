@@ -62,6 +62,9 @@ ClearArena(MemoryArena *arena);
 MemoryArena *
 CreateSubArena(MemoryArena *parent, size_t sizeInBytes);
 
+void
+DestroyArena(MemoryArena* arena);
+
 template <typename T>
 struct BittedMemoryPool
 {
@@ -74,13 +77,14 @@ struct BittedMemoryPool
     T *
     Alloc()
     {
+        bool found = false;
         U32 blockIdx = 0;
         U32 bitIdx = 0;
         for(blockIdx = 0;
-                blockIdx < this->maxBlocks;
+                blockIdx < maxBlocks;
                 blockIdx++)
         {
-            U32 block = this->blocks[blockIdx];
+            U32 block = blocks[blockIdx];
             if((~(block))!=0U)
             {
                 bitIdx = 0;
@@ -89,11 +93,15 @@ struct BittedMemoryPool
                     block>>=1;
                     bitIdx++;
                 }
-                this->blocks[blockIdx]|=(1<<bitIdx);
+                blocks[blockIdx]|=(1<<bitIdx);
+                found = true;
                 break;
             }
         }
-        return &this->base[32*blockIdx + bitIdx];
+
+        if(!found) return nullptr;
+
+        return &base[32*blockIdx + bitIdx];
     }
 
     void

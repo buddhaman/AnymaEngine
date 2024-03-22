@@ -30,3 +30,9 @@ CreateSubArena(MemoryArena *parent, U64 sizeInBytes)
     arena->size = sizeInBytes;
     return arena;
 }
+
+void
+DestroyMemoryArena(MemoryArena* arena)
+{
+    free(arena);
+}

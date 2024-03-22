@@ -33,7 +33,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
 
 #### TODO
-- IMPORTANT: Solve the huge memory leak in AddAgent.
+- Implement 2 memory arenas for lifetime management.
 - Keep selection when moving camera around.
 - Refactor update function in world.cpp.
 - Make super simple brain.
@@ -59,6 +59,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 ### Done
 
+- Make cumulative graph of types of agents.
+- IMPORTANT: Solve the huge memory leak in AddAgent.
 #### RELEASE 2
 - Simple behavior.
 - Setup screen to make new simulation.

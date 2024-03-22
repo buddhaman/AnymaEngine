@@ -15,6 +15,7 @@ enum AgentType
     AgentType_None = 0,
     AgentType_Herbivore = 1,
     AgentType_Carnivore = 2,
+    AgentType_Num
 };
 
 struct AgentEye

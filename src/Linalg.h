@@ -21,14 +21,18 @@ struct VecR32
     I32 n;
     R32 *v;
 
+    inline R32& operator[](int idx) { Assert(0 <= idx && idx < n); return v[idx]; }
+    inline void Set(R32 value) { for(int i = 0; i < n; i++) { v[i] = value; } } 
     inline void Apply(R32 (*f)(R32 x)) { for(int i = 0; i < n; i++) { v[i] = f(v[i]); } } 
     inline void Apply(R32 (*f)(int idx, R32 x)) { for(int i = 0; i < n; i++) { v[i] = f(i, v[i]); } } 
     inline R32 Sum() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]; } return sum; } 
     inline R32 Len2() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]*v[i]; } return sum;  } 
     inline R32 Avg() { return Sum() / n; }
+    inline void CopyFrom(VecR32 from) { Assert(n == from.n); for(int i = 0; i < n; i++) { v[i] = from.v[i]; } }
 
     inline MatR32 ShapeAs(int w, int h, I64& offset)
     {
+        Assert(offset+w*h <= n);
         MatR32 result;
         result.w = w;
         result.h = h;
@@ -59,7 +63,7 @@ struct VecR32
         fprintf(stream, "|\n");
     }
 
-    void SetNormal(R32 avg, R32 dev)
+    void AddNormal(R32 avg, R32 dev)
     {
         U32 pairs = n/2;
 
@@ -68,8 +72,8 @@ struct VecR32
                 atPair++)
         {
             Vec2 v_norm = RandomNormalPairDebug();
-            v[atPair*2] = avg + v_norm.x*dev;
-            v[atPair*2+1] = avg + v_norm.y*dev;
+            v[atPair*2] += (avg + v_norm.x*dev);
+            v[atPair*2+1] += (avg + v_norm.y*dev);
         }
         if(n%2==1)
         {
@@ -77,7 +81,6 @@ struct VecR32
         }
     }
 
-    inline R32& operator[](int idx) { Assert(0 <= idx && idx < n); return v[idx]; }
 };
 
 static inline VecR32 
@@ -91,6 +94,18 @@ VecR32Create(MemoryArena* arena, int n)
 {
     R32* data = PushZeroArray(arena, R32, n);
     return VecR32Create(n, data);
+}
+
+static inline VecR32 
+VecR32Create(int n)
+{
+    return {n, (R32*)malloc(n*sizeof(R32))};
+}
+
+static inline void
+VecR32Destroy(VecR32 vec)
+{
+    free(vec.v);
 }
 
 static inline void

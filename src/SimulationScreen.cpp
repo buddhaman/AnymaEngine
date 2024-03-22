@@ -137,7 +137,8 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         ImGui::Text("Update: %.2f millis", window->update_millis);
         ImGui::Text("Camera scale: %.2f", screen->cam.scale);
         ImGui::Text("Static memory used in world: %zu/%zuMB", screen->world->arena->used/(1024U*1024U), screen->world->arena->size/(1024U*1024U));
-        ImGui::Text("Number of agents: %zu", screen->world->agents.size);
+        ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
+                world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
         ImGui::Text("At tick: %lu", screen->world->ticks);
 
         if(screen->selected)
@@ -162,6 +163,41 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
         { 
             ImPlot::PlotBars("Update time", screen->update_times.data, screen->update_times.size, 1);
+            ImPlot::EndPlot();
+        }
+
+        // Collect population info
+        if((screen->track_population_per-=screen->updates_per_frame) <= 0)
+        {
+            screen->track_population_per = 30;
+            screen->num_herbivores.Shift(-1);
+            screen->num_herbivores[screen->num_herbivores.size-1] = world->num_agenttype[AgentType_Herbivore];
+            screen->num_carnivores.Shift(-1);
+            screen->num_carnivores[screen->num_carnivores.size-1] = world->num_agenttype[AgentType_Carnivore];
+        }
+
+        DynamicArray<R32> x_axis(screen->num_herbivores.size);
+        x_axis.Fill();
+        x_axis.Apply([](int i, R32& val) {val = i;});
+
+        DynamicArray<R32> bottom(screen->num_herbivores.size);
+        bottom.FillAndSetValue(0);
+
+        ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, 5000);
+        if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
+        {
+            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0, 0.0f, 0.0f, 1.0f));
+            ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, screen->num_carnivores.size);
+            ImPlot::PopStyleColor();
+
+    #if 1
+            bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
+
+            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.0f, 1.0f, 0.0f, 1.0f));
+            ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, screen->num_herbivores.size);
+            ImPlot::PopStyleColor();
+    #endif
+
             ImPlot::EndPlot();
         }
 
@@ -219,4 +255,6 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->transform_loc = glGetUniformLocation(screen->shader.program_handle, "u_transform");
 
     screen->update_times.FillAndSetValue(0);
+    screen->num_carnivores.FillAndSetValue(0);
+    screen->num_herbivores.FillAndSetValue(0);
 }

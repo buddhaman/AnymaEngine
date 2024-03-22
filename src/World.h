@@ -32,6 +32,7 @@ struct World
     Array<Agent*> agents;
     Array<U32> removed_agent_indices;
     Array<U32> visible_agent_indices;
+    int max_eyes_per_agent;
 
     I32 carnivore_reproduction_ticks;
     I32 carnivore_initial_energy;
@@ -40,6 +41,8 @@ struct World
     I32 herbivore_initial_energy;
 
     I64 ticks;
+
+    I32 num_agenttype[AgentType_Num];
 
     MemoryArena* arena;
     BittedMemoryPool<Agent>* agent_pool;
@@ -66,7 +69,6 @@ GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
     x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return {(U32)x_chunk, (U32)y_chunk};
-    
 }
 
 static inline I32

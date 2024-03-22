@@ -25,9 +25,22 @@ struct Array
     inline void Clear() { size = 0;}
     inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
     inline bool IsFull() { return size==capacity; }
+    inline Array<T> View(I64 offset, I64 new_array_size)
+    {
+        Assert(offset >= 0);
+        Assert(offset+new_array_size <= size);
+        return Array<T>{0, new_array_size, data+offset};
+    }
 
     // TODO: Remove all STL classes.
-    inline void Apply(const std::function<void(T& value)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
+    inline void Apply(std::function<void(R32& x)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
+    inline void Apply(std::function<void(int i, R32& x)> f) 
+    {
+        for(int i = 0; i < size; i++) 
+        { 
+            f(i, data[i]); 
+        }
+    }
 
     inline void Shift(int shift, int fill=0) 
     {

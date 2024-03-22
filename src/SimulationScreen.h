@@ -21,6 +21,10 @@ struct SimulationScreen
 
     DynamicArray<R32> update_times;
 
+    int track_population_per = 6;
+    DynamicArray<R32> num_carnivores;
+    DynamicArray<R32> num_herbivores;
+
     int updates_per_frame = 1;
     R32 time = 0.0f;
 
@@ -28,7 +32,7 @@ struct SimulationScreen
     bool show_debug_window = true;
     SimulationSettings settings;
     
-    SimulationScreen() : update_times(120) {};
+    SimulationScreen() : update_times(120), num_carnivores(120), num_herbivores(120) {};
 };
 
 void

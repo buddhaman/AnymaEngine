@@ -74,6 +74,7 @@ static inline bool
 CanAddAgent(World* world, Vec2 pos)
 {
     Chunk* chunk = GetChunkAt(world, pos);
+    if(world->agents.IsFull()) return false;
     if(chunk->agent_indices.IsFull()) return false;
     return true;
 }
@@ -147,7 +148,8 @@ UpdateWorld(World* world)
         {
             agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
             Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
-            int n_rep = RandomR32Debug(0, 1) < 0.5 ? 2 : 1;
+            int more = agent->type==AgentType_Carnivore ? 4 : 2;
+            int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
             for(int i = 0; i < n_rep; i++)
             {
                 if(CanAddAgent(world, at_pos))
@@ -164,6 +166,9 @@ UpdateWorld(World* world)
     // Note: these are the indices of the indices.
     for(int remove_idx : world->removed_agent_indices)
     {
+        Agent* agent = world->agents[remove_idx];
+        world->brain_pool->Free(agent->brain);
+        world->agent_pool->Free(agent);
         world->agents.RemoveIndexUnordered(remove_idx);
     }
     world->removed_agent_indices.Clear();
@@ -357,11 +362,14 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     Agent* agent = world->agent_pool->Alloc();
     *agent = Agent{};
     world->agents.PushBack(agent);
+    int agent_idx = world->agents.size-1;
     agent->pos = pos;
     agent->type = type;
     agent->radius = 1.2f;
     agent->id = 1;          // TODO: Use entity ids
     agent->is_alive = true;
+    
+    world->num_agenttype[type]++;
 
     // Eyes
     int n_eyes = 4;
@@ -377,8 +385,18 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     Brain* brain = world->brain_pool->Alloc();
     int inputs = n_eyes+1;
     int outputs = 3;
+    R32 mutation_rate = 0.05f;
     brain->gene = VecR32Create(world->arena, inputs*outputs);
-    brain->gene.SetNormal(0, 2);
+    if(parent)
+    {
+        brain->gene.CopyFrom(parent->brain->gene);
+    }
+    else
+    {
+        brain->gene.Set(0);
+        brain->gene.AddNormal(0, 2.0f);
+    }
+    brain->gene.AddNormal(0, mutation_rate);
     brain->input = VecR32Create(world->arena, n_eyes+1);
     brain->output = VecR32Create(world->arena, 3);
     I64 offset = 0;
@@ -386,7 +404,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->brain = brain;
 
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-    agent->energy = GetInitialEnergy(world, agent->type);
+    agent->energy = GetInitialEnergy(world, agent->type) + (int)RandomR32Debug(-50, 50);
 
     return agent;
 }
@@ -394,8 +412,10 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 void
 RemoveAgent(World* world, U32 agent_idx)
 {
-    // Later this will be handled differently.
-    world->agents[agent_idx]->is_alive = false;
+    Agent* agent = world->agents[agent_idx];
+    agent->is_alive = false;
+    world->num_agenttype[agent->type]--;
+
     world->removed_agent_indices.PushBack(agent_idx);
 }
 
@@ -485,11 +505,13 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
-    world->herbivore_reproduction_ticks = 60*9;
-    world->herbivore_initial_energy = 60*10;
+    world->herbivore_reproduction_ticks = 60*10;
+    world->herbivore_initial_energy = 60*11;
 
-    world->carnivore_reproduction_ticks = 60*10;
-    world->carnivore_initial_energy = 60*9;
+    world->carnivore_reproduction_ticks = 60*26;
+    world->carnivore_initial_energy = 60*25;
+
+    world->max_eyes_per_agent = 6;
 
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)

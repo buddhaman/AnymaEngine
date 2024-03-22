@@ -60,10 +60,11 @@ TEST_CASE("Allocation")
 TEST_CASE("Random number generation")
 {
     VecR32 a = VecR32Create(arena, 120);
+    a.Set(0);
 
     R32 target_avg = 14.0f;
     R32 target_dev = 1.0f;
-    a.SetNormal(target_avg, target_dev);
+    a.AddNormal(target_avg, target_dev);
 
     REQUIRE(a.Avg() == Approx(target_avg).margin(0.1f));
     REQUIRE(a.StdDev() == Approx(target_dev).margin(0.1f));
