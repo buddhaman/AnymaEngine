@@ -56,14 +56,24 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
 MemoryArena *
 CreateMemoryArena(size_t sizeInBytes);
 
-void 
-ClearArena(MemoryArena *arena);
-
 MemoryArena *
 CreateSubArena(MemoryArena *parent, size_t sizeInBytes);
 
 void
 DestroyArena(MemoryArena* arena);
+
+static inline void 
+ClearArena(MemoryArena *arena)
+{
+    arena->used = 0;
+}
+
+static inline void
+ZeroArena(MemoryArena* arena)
+{
+    memset(arena->base, 0, arena->used);
+}
+
 
 template <typename T>
 struct BittedMemoryPool

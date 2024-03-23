@@ -37,24 +37,19 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Showing the entire state of the brain and genes.
 
 #### TODO
-- Implement 2 memory arenas for lifetime management.
+- Debug tools for memory arenas, check if clearing doesnt lead to problems.
 - Make mutation_rate adjustable in gui.
+- Organize interface.
 - Plotting utility functions.
 - More options for user. Spawn agents.
 - Keep selection when moving camera around.
+
 - Refactor update function in world.cpp.
-- Make super simple brain.
-- Optimize agent indices by using views on one huge array.
 - Draw active chunks.
-- Remove agents.
-- Agent lifespan.
-- Agent asexual reproduction with mutations.
 - Fix agents popping into view.
 - Draw scale with some text too. 
 - Implement alpha blending.
-- Separate data collection and debug data rendering.
 - Show agents in chunk in debug window. 
-- Pause simulation.
 - Make random number generator.
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
@@ -65,9 +60,14 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
-
+- Implement 2 memory arenas for lifetime management.
+- Make super simple brain.
+- Agent lifespan.
+- Agent asexual reproduction with mutations.
 - Make cumulative graph of types of agents.
 - IMPORTANT: Solve the huge memory leak in AddAgent.
+- Remove agents.
+- Pause simulation.
 #### RELEASE 2
 - Simple behavior.
 - Setup screen to make new simulation.

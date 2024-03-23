@@ -14,13 +14,6 @@ CreateMemoryArena(U64 sizeInBytes)
     return arena;
 }
 
-void 
-ClearArena(MemoryArena *arena)
-{
-    memset(arena->base, 0, arena->used);
-    arena->used = 0;
-}
-
 MemoryArena *
 CreateSubArena(MemoryArena *parent, U64 sizeInBytes)
 {

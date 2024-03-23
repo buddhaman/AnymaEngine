@@ -1,5 +1,16 @@
 #include "World.h"
 
+static void
+SwapLifespanArenas(World* world)
+{
+    // Dont clear to zero by default. TODO: Maybe in debug mode.
+    ZeroArena(world->lifespan_arena_old);
+    ClearArena(world->lifespan_arena_old);
+    MemoryArena* tmp = world->lifespan_arena;
+    world->lifespan_arena = world->lifespan_arena_old;
+    world->lifespan_arena_old = tmp;
+}
+
 // Now this algorithm can double check agents belonging to multiple chunks. Fix this.
 // Idea: first collect all agents, sort with pairs where the first index is the length 
 Agent* 
@@ -143,7 +154,8 @@ UpdateWorld(World* world)
         UpdateMovement(world, agent);
 
         agent->energy--;
-        if(agent->energy <= 0)
+        agent->ticks_alive++;
+        if(agent->energy <= 0 || agent->ticks_alive >= world->max_lifespan)
         {
             RemoveAgent(world, agent_idx);
         }
@@ -165,7 +177,6 @@ UpdateWorld(World* world)
     }
 
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
-    // Note: these are the indices of the indices.
     for(int remove_idx : world->removed_agent_indices)
     {
         Agent* agent = world->agents[remove_idx];
@@ -176,6 +187,12 @@ UpdateWorld(World* world)
     world->removed_agent_indices.Clear();
 
     world->ticks++;
+    world->lifespan_arena_swap_ticks--;
+    if(world->lifespan_arena_swap_ticks <= 0)
+    {
+        SwapLifespanArenas(world);
+        world->lifespan_arena_swap_ticks = world->max_lifespan;
+    }
 }
 
 void
@@ -384,11 +401,12 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
+    MemoryArena* brain_arena = world->lifespan_arena;
     Brain* brain = world->brain_pool->Alloc();
     int inputs = n_eyes*3+1;
     int outputs = 3;
     R32 mutation_rate = 0.04f;
-    brain->gene = VecR32Create(world->arena, inputs*outputs);
+    brain->gene = VecR32Create(brain_arena, inputs*outputs);
     if(parent)
     {
         brain->gene.CopyFrom(parent->brain->gene);
@@ -399,8 +417,8 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
         brain->gene.AddNormal(0, 0.5f);
     }
     brain->gene.AddNormal(0, mutation_rate);
-    brain->input = VecR32Create(world->arena, inputs);
-    brain->output = VecR32Create(world->arena, outputs);
+    brain->input = VecR32Create(brain_arena, inputs);
+    brain->output = VecR32Create(brain_arena, outputs);
     I64 offset = 0;
     brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
     agent->brain = brain;
@@ -501,12 +519,17 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
     world->y_chunks = settings->y_chunks;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
+    world->lifespan_arena = CreateSubArena(arena, MegaBytes(32));
+    world->lifespan_arena_old = CreateSubArena(arena, MegaBytes(32));
+
     int max_agents = settings->max_agents;
     int n_initial_agents = settings->n_initial_agents;
 
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
 
+    world->max_lifespan = 60*60;
+    world->lifespan_arena_swap_ticks = world->max_lifespan;
     world->herbivore_reproduction_ticks = 60*10;
     world->herbivore_initial_energy = 60*11;
 

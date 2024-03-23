@@ -47,9 +47,11 @@ struct Agent
 
     AgentType type;
     EntityID id;
-    I32 ticks_until_reproduce;
 
+    I32 ticks_until_reproduce;
     I32 energy;
+    I32 ticks_alive;
+
     bool is_alive;
 };
 

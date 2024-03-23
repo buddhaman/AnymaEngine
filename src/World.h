@@ -45,6 +45,11 @@ struct World
     I32 num_agenttype[AgentType_Num];
 
     MemoryArena* arena;
+    MemoryArena* lifespan_arena;
+    MemoryArena* lifespan_arena_old;
+    I64 lifespan_arena_swap_ticks;
+    I64 max_lifespan;
+
     BittedMemoryPool<Agent>* agent_pool;
     BittedMemoryPool<Brain>* brain_pool;
 };
