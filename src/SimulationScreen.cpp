@@ -186,14 +186,14 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, 5000);
         if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
         {
-            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0, 0.0f, 0.0f, 1.0f));
+            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
             ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, screen->num_carnivores.size);
             ImPlot::PopStyleColor();
 
     #if 1
             bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
 
-            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.0f, 1.0f, 0.0f, 1.0f));
+            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.3f, 1.0f, 0.3f, 0.6f));
             ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, screen->num_herbivores.size);
             ImPlot::PopStyleColor();
     #endif
@@ -246,7 +246,7 @@ RestartWorld(SimulationScreen* screen)
 void
 InitSimulationScreen(SimulationScreen* screen)
 {
-    screen->world_arena = CreateMemoryArena(MegaBytes(256));
+    screen->world_arena = CreateMemoryArena(GigaBytes(1));
 
     RestartWorld(screen);
     screen->cam.pos = screen->world->size/2.0f;

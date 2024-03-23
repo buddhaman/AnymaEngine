@@ -28,7 +28,7 @@ struct VecR32
     inline R32 Sum() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]; } return sum; } 
     inline R32 Len2() { R32 sum = 0.0f; for(int i = 0; i < n; i++) { sum += v[i]*v[i]; } return sum;  } 
     inline R32 Avg() { return Sum() / n; }
-    inline void CopyFrom(VecR32 from) { Assert(n == from.n); for(int i = 0; i < n; i++) { v[i] = from.v[i]; } }
+    inline void CopyFrom(VecR32 from) { Assert(n == from.n); memcpy(v, from.v, from.n*sizeof(R32)); }
 
     inline MatR32 ShapeAs(int w, int h, I64& offset)
     {
@@ -77,7 +77,7 @@ struct VecR32
         }
         if(n%2==1)
         {
-            v[n-1] = RandomNormalPairDebug().x*dev;
+            v[n-1] += (RandomNormalPairDebug().x*dev);
         }
     }
 

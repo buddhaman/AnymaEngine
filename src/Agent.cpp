@@ -29,8 +29,8 @@ UpdateMovement(World* world, Agent* agent)
 {
     R32 turn_speed = 0.04f;
     //agent->orientation += RandomR32Debug(-dev, dev);
-    agent->orientation += agent->brain->output[0]*turn_speed;
-    R32 speed = agent->brain->output[1]*0.2f;
+    agent->orientation += (agent->brain->output[0]-agent->brain->output[1])*turn_speed;
+    R32 speed = agent->brain->output[1]*0.5f;
     Vec2 dir = V2(cosf(agent->orientation), sinf(agent->orientation));
     agent->vel = speed * dir;
     agent->pos += agent->vel;

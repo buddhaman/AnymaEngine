@@ -31,9 +31,16 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Build introspection and profiling tools.
  - Do real good collision detection, fix the fact that lots of agents are being checked twice. 
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.
+ - Saving and loading the state of an entire world.
+ - Tracking succesful agents.
+ - Tracking lineage.
+ - Showing the entire state of the brain and genes.
 
 #### TODO
 - Implement 2 memory arenas for lifetime management.
+- Make mutation_rate adjustable in gui.
+- Plotting utility functions.
+- More options for user. Spawn agents.
 - Keep selection when moving camera around.
 - Refactor update function in world.cpp.
 - Make super simple brain.

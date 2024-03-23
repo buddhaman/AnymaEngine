@@ -110,10 +110,10 @@ struct BittedMemoryPool
         I64 elementIdx = (((U8 *)element)-((U8 *)base))/sizeof(T);
         I64 blockIdx = elementIdx/32;
         I64 bitIdx = elementIdx-blockIdx*32;
-        Assert(blockIdx < this->maxBlocks);
+        Assert(blockIdx < maxBlocks);
         Assert(bitIdx < 32);
-        Assert(this->blocks[blockIdx]&(1<<bitIdx));
-        this->blocks[blockIdx]&=~(1<<bitIdx);
+        Assert(blocks[blockIdx]&(1<<bitIdx));
+        blocks[blockIdx]&=~(1<<bitIdx);
     }
 }; 
 

@@ -117,6 +117,7 @@ UpdateWorld(World* world)
         Agent* agent = world->agents[agent_idx];
 #if 1
         RayCollision collision;
+        agent->brain->input.Set(0);
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
             AgentEye* eye = &agent->eyes[eye_idx];
@@ -130,8 +131,11 @@ UpdateWorld(World* world)
 
             eye->distance = collision.distance;
             eye->hit_type = hit->type;
-
-            agent->brain->input[eye_idx] = eye->hit_type;
+            if(eye->hit_type != 0)
+            {
+                agent->brain->input[eye_idx*3+eye->hit_type-1] = 1.0f;
+                agent->brain->input[eye_idx*3+2] = 1.2f*(1.0f - eye->distance/50.0f);
+            }
         }
         agent->brain->input[agent->brain->input.n-1] = 1.0f;
 #endif
@@ -154,12 +158,10 @@ UpdateWorld(World* world)
             {
                 if(CanAddAgent(world, at_pos))
                 {
-                    AddAgent(world, agent->type, at_pos);
+                    AddAgent(world, agent->type, at_pos, agent);
                 }
             }
         }
-
-        // Update brain
     }
 
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
@@ -383,9 +385,9 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 
     // Brain
     Brain* brain = world->brain_pool->Alloc();
-    int inputs = n_eyes+1;
+    int inputs = n_eyes*3+1;
     int outputs = 3;
-    R32 mutation_rate = 0.05f;
+    R32 mutation_rate = 0.04f;
     brain->gene = VecR32Create(world->arena, inputs*outputs);
     if(parent)
     {
@@ -394,17 +396,17 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     else
     {
         brain->gene.Set(0);
-        brain->gene.AddNormal(0, 2.0f);
+        brain->gene.AddNormal(0, 0.5f);
     }
     brain->gene.AddNormal(0, mutation_rate);
-    brain->input = VecR32Create(world->arena, n_eyes+1);
-    brain->output = VecR32Create(world->arena, 3);
+    brain->input = VecR32Create(world->arena, inputs);
+    brain->output = VecR32Create(world->arena, outputs);
     I64 offset = 0;
     brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
     agent->brain = brain;
 
-    agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-    agent->energy = GetInitialEnergy(world, agent->type) + (int)RandomR32Debug(-50, 50);
+    agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type) + (int)RandomR32Debug(-80, 40);
+    agent->energy = GetInitialEnergy(world, agent->type);
 
     return agent;
 }
