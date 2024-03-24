@@ -10,3 +10,6 @@ ImGuiChunkBarGraph(World* world);
 
 void 
 ImGuiChunkDistribution(World* world);
+
+void
+ImGuiMemoryArena(MemoryArena* arena, const char* name);

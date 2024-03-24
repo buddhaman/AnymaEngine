@@ -35,16 +35,20 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Tracking succesful agents.
  - Tracking lineage.
  - Showing the entire state of the brain and genes.
+ - Make a circular buffer.
 
 #### TODO
-- Debug tools for memory arenas, check if clearing doesnt lead to problems.
 - Make mutation_rate adjustable in gui.
+- Fix reproduction rate calculation.
 - Organize interface.
 - Plotting utility functions.
 - More options for user. Spawn agents.
 - Keep selection when moving camera around.
+- Plot low dimensional version of genes.
+- Compare two agent genes.
 
 - Refactor update function in world.cpp.
+- Make active and inactive chunks.
 - Draw active chunks.
 - Fix agents popping into view.
 - Draw scale with some text too. 
@@ -60,6 +64,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Debug tools for memory arenas, check if clearing doesnt lead to problems.
 - Implement 2 memory arenas for lifetime management.
 - Make super simple brain.
 - Agent lifespan.

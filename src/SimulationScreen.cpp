@@ -79,29 +79,42 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     Clear(mesh);
 }
 
+static inline bool
+ImGuiInputFloat(const char* text, R32* value, R32 min, R32 max)
+{
+    if(ImGui::InputFloat(text, value))
+    {
+        *value = Clamp(min, *value, max);
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+ImGuiInputInt(const char* text, int* value, int min, int max)
+{
+    if(ImGui::InputInt(text, value))
+    {
+        *value = Clamp(min, *value, max);
+        return true;
+    }
+    return false;
+}
+
 void
 EditSettings(SimulationScreen* screen)
 {
     ImGui::SeparatorText("World settings");
+    SimulationSettings* settings = &screen->settings;
+    World* world = screen->world;
     bool changed = false;
-    changed |= ImGui::InputInt("Max agents", &screen->settings.max_agents);
-    changed |= ImGui::InputInt("Initial agents", &screen->settings.n_initial_agents);
-    changed |= ImGui::InputInt("Herbivore reproduction ticks", &screen->world->herbivore_reproduction_ticks);
-    changed |= ImGui::InputInt("Carnivore reproduction ticks", &screen->world->carnivore_reproduction_ticks);
-    changed |= ImGui::InputFloat("Chunk size", &screen->settings.chunk_size);
-    changed |= ImGui::InputInt("X chunks", &screen->settings.x_chunks);
-    changed |= ImGui::InputInt("Y chunks", &screen->settings.y_chunks);
+    changed |= ImGuiInputInt("Max agents", &settings->max_agents, 1, 256000);
+    changed |= ImGuiInputInt("Initial agents", &settings->n_initial_agents, 1, settings->max_agents);
+    changed |= ImGuiInputFloat("Chunk size", &settings->chunk_size, 4.0f, 400.0f);
+    changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 10000);
+    changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 10000);
     changed |= ImGui::SliderInt("Updates per tick", &screen->updates_per_frame, 0, 20);
-
-    if(changed)
-    {
-        // Validate
-        screen->settings.max_agents = Clamp(1, screen->settings.max_agents, 256000);
-        screen->settings.n_initial_agents = Clamp(1, screen->settings.n_initial_agents, screen->settings.max_agents);
-        screen->settings.chunk_size = Clamp(1.0f, screen->settings.chunk_size, 10000000.0f);
-        screen->settings.x_chunks = Clamp(1, screen->settings.x_chunks, 10000);
-        screen->settings.y_chunks = Clamp(1, screen->settings.y_chunks, 10000);
-    }
+    (void)changed; // Not used yet/anymore.
 
     if(ImGui::Button("Restart"))
     {
@@ -136,7 +149,9 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         ImGui::Text("FPS: %.0f", window->fps);
         ImGui::Text("Update: %.2f millis", window->update_millis);
         ImGui::Text("Camera scale: %.2f", screen->cam.scale);
-        ImGui::Text("Static memory used in world: %zu/%zuMB", screen->world->arena->used/(1024U*1024U), screen->world->arena->size/(1024U*1024U));
+        ImGuiMemoryArena(world->arena, "Static memory");
+        ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
+        ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
         ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
                 world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
         ImGui::Text("At tick: %lu", screen->world->ticks);

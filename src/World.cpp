@@ -390,10 +390,12 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     
     world->num_agenttype[type]++;
 
+    MemoryArena* brain_arena = world->lifespan_arena;
+
     // Eyes
     int n_eyes = 4;
     R32 agent_fov = 0.6f;
-    agent->eyes = CreateArray<AgentEye>(world->arena, n_eyes);
+    agent->eyes = CreateArray<AgentEye>(brain_arena, n_eyes);
     for(int i = 0; i < n_eyes; i++)
     {
         AgentEye* eye = agent->eyes.PushBack();
@@ -401,7 +403,6 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
-    MemoryArena* brain_arena = world->lifespan_arena;
     Brain* brain = world->brain_pool->Alloc();
     int inputs = n_eyes*3+1;
     int outputs = 3;
