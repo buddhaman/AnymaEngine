@@ -27,7 +27,7 @@ GetInitialEnergy(World* world, AgentType type)
 void
 UpdateMovement(World* world, Agent* agent)
 {
-    R32 turn_speed = 0.04f;
+    R32 turn_speed = 0.2f;
     //agent->orientation += RandomR32Debug(-dev, dev);
     agent->orientation += (agent->brain->output[0]-agent->brain->output[1])*turn_speed;
     R32 speed = agent->brain->output[1]*0.5f;

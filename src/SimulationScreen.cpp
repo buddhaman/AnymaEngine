@@ -152,7 +152,6 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
     ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
             world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
-    ImGui::Text("At tick: %lu", screen->world->ticks);
 }
 
 void
@@ -180,6 +179,8 @@ DoControlWindow(SimulationScreen* screen)
     {
         screen->isPaused = !screen->isPaused;
     }
+    ImGui::SameLine();
+    ImGui::Text("At tick: %lu", screen->world->ticks);
     ImGui::SliderInt("Speed", &screen->updates_per_frame, 1, 25);
 }
 
