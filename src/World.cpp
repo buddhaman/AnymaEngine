@@ -81,7 +81,7 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
     return nullptr;
 }
 
-static inline bool 
+bool 
 CanAddAgent(World* world, Vec2 pos)
 {
     Chunk* chunk = GetChunkAt(world, pos);
@@ -406,7 +406,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     Brain* brain = world->brain_pool->Alloc();
     int inputs = n_eyes*3+1;
     int outputs = 3;
-    R32 mutation_rate = 0.04f;
+    R32 mutation_rate = world->mutation_rate;
     brain->gene = VecR32Create(brain_arena, inputs*outputs);
     if(parent)
     {
@@ -536,6 +536,8 @@ CreateWorld(MemoryArena* arena, SimulationSettings* settings)
 
     world->carnivore_reproduction_ticks = 60*26;
     world->carnivore_initial_energy = 60*25;
+
+    world->mutation_rate = settings->default_mutation_rate;
 
     world->max_eyes_per_agent = 6;
 

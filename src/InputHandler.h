@@ -20,9 +20,12 @@ struct InputHandler
     Vec2 mouse_pos;
     Vec2 mouse_delta;
     R32 mouse_scroll;
+    Vec2 mouse_clicked_at;
 
     bool mousedown[2];
     bool prev_mousedown[2];
 };
 
 bool IsKeyDown(InputHandler* input, InputAction action);
+
+bool IsMouseClicked(InputHandler* input, int mouse_idx);

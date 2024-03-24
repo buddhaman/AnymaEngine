@@ -40,6 +40,8 @@ struct World
     I32 herbivore_reproduction_ticks;
     I32 herbivore_initial_energy;
 
+    R32 mutation_rate;
+
     I64 ticks;
 
     I32 num_agenttype[AgentType_Num];
@@ -100,6 +102,9 @@ GetChunkAt(World* world, Vec2 at)
 
 Agent* 
 CastRay(World* world, Ray ray, R32 ray_length, RayCollision *collision, Agent* exclude_agent=nullptr);
+
+bool 
+CanAddAgent(World* world, Vec2 pos);
 
 void 
 UpdateWorld(World* world);

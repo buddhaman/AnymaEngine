@@ -38,15 +38,13 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make a circular buffer.
 
 #### TODO
-- Make mutation_rate adjustable in gui.
 - Fix reproduction rate calculation.
-- Organize interface.
+- OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
-- More options for user. Spawn agents.
-- Keep selection when moving camera around.
 - Plot low dimensional version of genes.
 - Compare two agent genes.
-
+- Custom font for imgui.
+- Icons for imgui.
 - Refactor update function in world.cpp.
 - Make active and inactive chunks.
 - Draw active chunks.
@@ -64,6 +62,10 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- More options for user. Spawn agents.
+- Make mutation_rate adjustable in gui.
+- Keep selection when moving camera around.
+- Organize interface.
 - Debug tools for memory arenas, check if clearing doesnt lead to problems.
 - Implement 2 memory arenas for lifetime management.
 - Make super simple brain.
@@ -120,3 +122,4 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 ### Ideas
 - For an overview of how the world is evolving, create a kind of sampling minimap. Dont render each individual creature but take a couple of samples for each pixel using the bsp-tree and take the average color. Store these frames and show as animation.
+- Show overlays: Make coloring of genes to show genetic distance of different agents.

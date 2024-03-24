@@ -40,7 +40,6 @@ static void
 DoScreenWorldUpdate(SimulationScreen* screen)
 {
     World* world = screen->world;
-    //SortAgentsIntoChunks(&world);
     SortAgentsIntoMultipleChunks(screen->world);
     for(int y = 0; y < world->y_chunks; y++)
     for(int x = 0; x < world->x_chunks; x++)
@@ -113,13 +112,129 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGuiInputFloat("Chunk size", &settings->chunk_size, 4.0f, 400.0f);
     changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 10000);
     changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 10000);
-    changed |= ImGui::SliderInt("Updates per tick", &screen->updates_per_frame, 0, 20);
+    changed |= ImGuiInputFloat("Mutation rate", &world->mutation_rate, 0.0f, 1.0f);
     (void)changed; // Not used yet/anymore.
+
+    if(ImGui::Button("Add herbivore"))
+    {
+        Vec2 pos = screen->cam.pos;
+        if(InBounds({V2(0,0), world->size}, pos) && CanAddAgent(world, pos))
+        {
+            AddAgent(world, AgentType_Herbivore, pos);
+        }
+    }
+
+    if(ImGui::Button("Add carnivore"))
+    {
+        Vec2 pos = screen->cam.pos;
+        if(InBounds({V2(0,0), world->size}, pos) && CanAddAgent(world, pos))
+        {
+            AddAgent(world, AgentType_Carnivore, pos);
+        }
+    }
 
     if(ImGui::Button("Restart"))
     {
         RestartWorld(screen);
     }
+}
+
+static void
+DoDebugInfo(SimulationScreen* screen, Window* window)
+{
+    World* world = screen->world;
+
+    ImGui::Text("FPS: %.0f", window->fps);
+    ImGui::Text("Update: %.2f millis", window->update_millis);
+    ImGui::Text("Camera scale: %.2f", screen->cam.scale);
+    ImGuiMemoryArena(world->arena, "Static memory");
+    ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
+    ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
+    ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
+            world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
+    ImGui::Text("At tick: %lu", screen->world->ticks);
+}
+
+void
+DoAgentInfo(SimulationScreen* screen, Agent* agent)
+{
+    World* world = screen->world;
+    ChunkCoordinates coords = GetChunkCoordinatesFromWorldPos(screen->world, agent->pos);
+    ImGui::Text("Chunk: %u %u", coords.x, coords.y);
+
+    ImGui::Text("%d ticks until reproduction.", agent->ticks_until_reproduce);
+    R32 reproduction_factor = (R32)agent->ticks_until_reproduce/(R32)world->max_lifespan;
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(0, 255, 0, 255));
+    ImGui::ProgressBar(reproduction_factor);
+    ImGui::PopStyleColor();
+
+    ImGui::Text("%d ticks until out of energy.", agent->energy);
+    R32 energy_fraction = (R32)agent->energy/(R32)world->max_lifespan;
+    ImGui::ProgressBar(energy_fraction);
+}
+
+void 
+DoControlWindow(SimulationScreen* screen)
+{
+    if(ImGui::Button(screen->isPaused ? ">" : "||"))
+    {
+        screen->isPaused = !screen->isPaused;
+    }
+    ImGui::SliderInt("Speed", &screen->updates_per_frame, 1, 25);
+}
+
+void
+DoStatisticsWindow(SimulationScreen* screen)
+{
+    World* world = screen->world;
+    ImGui::Checkbox("Show chunks", &screen->show_chunks);
+
+    ImPlotFlags updatetime_plot_flags = ImPlotFlags_NoBoxSelect | 
+                        ImPlotFlags_NoInputs | 
+                        ImPlotFlags_NoFrame | 
+                        ImPlotFlags_NoLegend;
+
+    ImPlot::SetNextAxesLimits(0, screen->update_times.size, 0, 80.0f, 0);
+    if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
+    { 
+        ImPlot::PlotBars("Update time", screen->update_times.data, screen->update_times.size, 1);
+        ImPlot::EndPlot();
+    }
+
+    // Collect population info
+    if((screen->track_population_per-=screen->updates_per_frame) <= 0)
+    {
+        screen->track_population_per = 30;
+        screen->num_herbivores.Shift(-1);
+        screen->num_herbivores[screen->num_herbivores.size-1] = world->num_agenttype[AgentType_Herbivore];
+        screen->num_carnivores.Shift(-1);
+        screen->num_carnivores[screen->num_carnivores.size-1] = world->num_agenttype[AgentType_Carnivore];
+    }
+
+    DynamicArray<R32> x_axis(screen->num_herbivores.size);
+    x_axis.Fill();
+    x_axis.Apply([](int i, R32& val) {val = i;});
+
+    DynamicArray<R32> bottom(screen->num_herbivores.size);
+    bottom.FillAndSetValue(0);
+
+    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, 5000);
+    if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
+    {
+        ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
+        ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, screen->num_carnivores.size);
+        ImPlot::PopStyleColor();
+
+        bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
+
+        ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.3f, 1.0f, 0.3f, 0.6f));
+        ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, screen->num_herbivores.size);
+        ImPlot::PopStyleColor();
+
+        ImPlot::EndPlot();
+    }
+
+    ImGuiChunkDistribution(screen->world);
 }
 
 void
@@ -135,7 +250,16 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu("Window"))
     {
-        if(ImGui::MenuItem("Show performance stats", nullptr, &screen->show_debug_window))
+        if(ImGui::MenuItem("Show debug window", nullptr, &screen->show_debug_window))
+        {
+        }
+        if(ImGui::MenuItem("Show edit window", nullptr, &screen->show_edit_window))
+        {
+        }
+        if(ImGui::MenuItem("Show statistics window", nullptr, &screen->show_statistic_window))
+        {
+        }
+        if(ImGui::MenuItem("Show control window", nullptr, &screen->show_statistic_window))
         {
         }
         ImGui::EndMenu();
@@ -144,80 +268,34 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     if(screen->show_debug_window)
     {
-        ImGui::Begin("Performance stats and settings");
-
-        ImGui::Text("FPS: %.0f", window->fps);
-        ImGui::Text("Update: %.2f millis", window->update_millis);
-        ImGui::Text("Camera scale: %.2f", screen->cam.scale);
-        ImGuiMemoryArena(world->arena, "Static memory");
-        ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
-        ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
-        ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
-                world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
-        ImGui::Text("At tick: %lu", screen->world->ticks);
-
+        ImGui::Begin("Debug and Agents");
+        DoDebugInfo(screen, window);
         if(screen->selected)
         {
             ImGui::SeparatorText("Selected agent");
-            ChunkCoordinates coords = GetChunkCoordinatesFromWorldPos(screen->world, screen->selected->pos);
-            ImGui::Text("Chunk: %u %u", coords.x, coords.y);
-            ImGui::Text("%d ticks until reproduction.", screen->selected->ticks_until_reproduce);
-            ImGui::Text("%d ticks until out of energy.", screen->selected->energy);
+            DoAgentInfo(screen, screen->selected);
         }
+        ImGui::End();
+    }
 
+    if(screen->show_edit_window)
+    {
+        ImGui::Begin("Edit");
         EditSettings(screen);
+        ImGui::End();
+    }
 
-        ImGui::Checkbox("Show chunks", &screen->show_chunks);
+    if(screen->show_statistic_window)
+    {
+        ImGui::Begin("Statistics");
+        DoStatisticsWindow(screen);
+        ImGui::End();
+    }
 
-        ImPlotFlags updatetime_plot_flags = ImPlotFlags_NoBoxSelect | 
-                            ImPlotFlags_NoInputs | 
-                            ImPlotFlags_NoFrame | 
-                            ImPlotFlags_NoLegend;
-
-        ImPlot::SetNextAxesLimits(0, screen->update_times.size, 0, 80.0f, 0);
-        if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
-        { 
-            ImPlot::PlotBars("Update time", screen->update_times.data, screen->update_times.size, 1);
-            ImPlot::EndPlot();
-        }
-
-        // Collect population info
-        if((screen->track_population_per-=screen->updates_per_frame) <= 0)
-        {
-            screen->track_population_per = 30;
-            screen->num_herbivores.Shift(-1);
-            screen->num_herbivores[screen->num_herbivores.size-1] = world->num_agenttype[AgentType_Herbivore];
-            screen->num_carnivores.Shift(-1);
-            screen->num_carnivores[screen->num_carnivores.size-1] = world->num_agenttype[AgentType_Carnivore];
-        }
-
-        DynamicArray<R32> x_axis(screen->num_herbivores.size);
-        x_axis.Fill();
-        x_axis.Apply([](int i, R32& val) {val = i;});
-
-        DynamicArray<R32> bottom(screen->num_herbivores.size);
-        bottom.FillAndSetValue(0);
-
-        ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, 5000);
-        if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
-        {
-            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
-            ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, screen->num_carnivores.size);
-            ImPlot::PopStyleColor();
-
-    #if 1
-            bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
-
-            ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.3f, 1.0f, 0.3f, 0.6f));
-            ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, screen->num_herbivores.size);
-            ImPlot::PopStyleColor();
-    #endif
-
-            ImPlot::EndPlot();
-        }
-
-        ImGuiChunkDistribution(screen->world);
-
+    if(screen->show_control_window)
+    {
+        ImGui::Begin("Control simulation");
+        DoControlWindow(screen);
         ImGui::End();
     }
 
@@ -236,6 +314,10 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
             cam->pos.x -= diff.x;
             cam->pos.y += diff.y;
 
+        }
+
+        if(IsMouseClicked(input, 0))
+        {
             Agent* found = SelectFromWorld(world, world_mouse_pos);
             screen->selected = found;
         }
@@ -243,9 +325,12 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         cam->scale = cam->scale *= powf(1.05f, input->mouse_scroll);
     }
 
-    for(int i = 0; i < screen->updates_per_frame; i++)
+    if(!screen->isPaused)
     {
-        DoScreenWorldUpdate(screen);
+        for(int i = 0; i < screen->updates_per_frame; i++)
+        {
+            DoScreenWorldUpdate(screen);
+        }
     }
 
     DoScreenWorldRender(screen, window);

@@ -65,7 +65,7 @@ template <typename T>
 T Clamp(T min, T val, T max)
 {
     if(val < min) return min;
-    if(val > max) return min;
+    if(val > max) return max;
     return val;
 }
 

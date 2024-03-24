@@ -9,4 +9,5 @@ struct SimulationSettings
     R32 chunk_size = 12.0f;
     int x_chunks = 60;
     int y_chunks = 60;
+    R32 default_mutation_rate = 0.03f;
 };

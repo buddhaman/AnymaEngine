@@ -68,13 +68,13 @@ HandleInput(Window* window)
         } break;
 
         }
-
     }
 
     // We cheat and read input info from imgui. Why not.
     ImGuiIO& io = ImGui::GetIO();
     input->prev_mousedown[0] = input->mousedown[0];
     input->mousedown[0] = io.MouseDown[0];
+    input->mouse_clicked_at = io.MouseClickedPos[0];
 
     SDL_GetWindowSize(window->window, &window->width, &window->height);
 }
