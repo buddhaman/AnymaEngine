@@ -319,7 +319,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
         if(IsMouseClicked(input, 0))
         {
-            Agent* found = SelectFromWorld(world, world_mouse_pos);
+            Agent* found = SelectFromWorld(world, world_mouse_pos, 1.0f);
             screen->selected = found;
         }
 

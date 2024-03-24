@@ -134,7 +134,7 @@ void
 RemoveAgent(World* world, U32 agent_idx);
 
 Agent* 
-SelectFromWorld(World* world, Vec2 pos);
+SelectFromWorld(World* world, Vec2 pos, R32 extra_radius = 0.0f);
 
 void
 ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);

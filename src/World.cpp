@@ -441,14 +441,15 @@ RemoveAgent(World* world, U32 agent_idx)
 }
 
 Agent* 
-SelectFromWorld(World* world, Vec2 pos)
+SelectFromWorld(World* world, Vec2 pos, R32 extra_radius)
 {
     Chunk* chunk = GetChunkAt(world, pos);
     for(U32 agent_idx : chunk->agent_indices)
     {
         Agent* agent = world->agents[agent_idx];
         R32 r2 = V2Dist2(agent->pos, pos);
-        if(r2 < agent->radius)
+        R32 target_rad = agent->radius+extra_radius;
+        if(r2 < target_rad*target_rad)
         {
             return agent;
         }

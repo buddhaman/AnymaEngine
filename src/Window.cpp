@@ -68,6 +68,7 @@ HandleInput(Window* window)
         } break;
 
         }
+
     }
 
     // We cheat and read input info from imgui. Why not.
