@@ -126,9 +126,10 @@ UpdateWorld(World* world)
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = world->agents[agent_idx];
-#if 1
+
         RayCollision collision;
         agent->brain->input.Set(0);
+        // Raycasting and updating eye sensors.
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
             AgentEye* eye = &agent->eyes[eye_idx];
@@ -149,7 +150,7 @@ UpdateWorld(World* world)
             }
         }
         agent->brain->input[agent->brain->input.n-1] = 1.0f;
-#endif
+
         UpdateBrain(agent);
         UpdateMovement(world, agent);
 
