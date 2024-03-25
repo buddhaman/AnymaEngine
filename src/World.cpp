@@ -177,6 +177,7 @@ UpdateWorld(World* world)
         }
     }
 
+    // Process removed agents, sort indices descending and then actually remove.
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
     for(int remove_idx : world->removed_agent_indices)
     {
