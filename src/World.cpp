@@ -339,19 +339,7 @@ ClearChunks(World* world)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         world->chunks[chunk_idx].agent_indices.Clear();
-    }
-}
-
-void
-SortAgentsIntoChunks(World* world)
-{
-    ClearChunks(world);
-
-    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
-    {
-        Agent* agent = world->agents[agent_idx];
-        GetChunkAt(world, agent->pos)->agent_indices.PushBack(agent_idx);
-    }
+    } 
 }
 
 void

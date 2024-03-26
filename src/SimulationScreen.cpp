@@ -110,8 +110,8 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGuiInputInt("Max agents", &settings->max_agents, 1, 256000);
     changed |= ImGuiInputInt("Initial agents", &settings->n_initial_agents, 1, settings->max_agents);
     changed |= ImGuiInputFloat("Chunk size", &settings->chunk_size, 4.0f, 400.0f);
-    changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 10000);
-    changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 10000);
+    changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 256);
+    changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 256);
     changed |= ImGuiInputFloat("Mutation rate", &world->mutation_rate, 0.0f, 1.0f);
     (void)changed; // Not used yet/anymore.
 
