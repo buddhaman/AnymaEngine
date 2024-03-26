@@ -62,6 +62,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+#### RELEASE 3
 - More options for user. Spawn agents.
 - Make mutation_rate adjustable in gui.
 - Keep selection when moving camera around.
