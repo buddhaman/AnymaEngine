@@ -40,6 +40,8 @@
          \
     } while (0)
 
+#define ArraySize(array) (sizeof(array)/sizeof((array)[0]))
+
 // Typedefs
 
 typedef int8_t I8;
