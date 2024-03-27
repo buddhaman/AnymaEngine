@@ -32,7 +32,8 @@ const char* fragment_shader_source = R"glsl(
     
     void main() 
     {
-        frag_color = v_color;
+        vec3 gammaCorrectedColor = pow(v_color.rgb, vec3(1.0/2.2));
+        frag_color = vec4(gammaCorrectedColor, v_color.a);
     }
 )glsl";
 
