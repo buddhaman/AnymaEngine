@@ -237,6 +237,10 @@ DoStatisticsWindow(SimulationScreen* screen)
     }
 
     ImGuiChunkDistribution(screen->world);
+    if(screen->selected)
+    {
+        ImGuiBrainVisualizer(screen->selected->brain);
+    }
 }
 
 void

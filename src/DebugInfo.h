@@ -13,3 +13,6 @@ ImGuiChunkDistribution(World* world);
 
 void
 ImGuiMemoryArena(MemoryArena* arena, const char* name);
+
+void 
+ImGuiBrainVisualizer(Brain* brain);

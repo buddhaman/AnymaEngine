@@ -5,7 +5,8 @@
 #include <iostream>
 #include <cassert>
 
-// Includes
+#include <math.h>
+
 
 #include "TimVectorMath.h"
 

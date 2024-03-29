@@ -83,6 +83,16 @@ ImGuiChunkDistribution(World* world)
     ImGui::Text("Maximum agents in a chunk: %u", max);
 }
 
+void 
+ImGuiBrainVisualizer(Brain* brain)
+{
+    if(ImPlot::BeginPlot("Gene"))
+    {
+        ImPlot::PlotHeatmap("Gene Map", brain->weights.m, brain->weights.w, brain->weights.h, -2.0f, 2.0f);
+        ImPlot::EndPlot();
+    }
+}
+
 void
 ImGuiMemoryArena(MemoryArena* arena, const char* name)
 {
