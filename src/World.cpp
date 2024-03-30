@@ -120,6 +120,95 @@ SuperSimpleBehavior(Agent* agent)
     }
 }
 
+void
+UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
+{
+    for(I32 agent_idx = from_idx; agent_idx < to_idx; agent_idx++)
+    {
+        Agent* agent = world->agents[agent_idx];
+        RayCollision collision;
+        agent->brain->input.Set(0);
+        // Raycasting and updating eye sensors.
+        for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
+        {
+            AgentEye* eye = &agent->eyes[eye_idx];
+            // Update eye
+            Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
+            eye->ray = {agent->pos, eye_dir};
+            eye->distance = 50.0f;
+            eye->hit_type = AgentType_None;
+            Agent* hit = CastRay(world, eye->ray, eye->distance, &collision, agent);
+            if(!hit) { continue; }
+
+            eye->distance = collision.distance;
+            eye->hit_type = hit->type;
+            if(eye->hit_type != 0)
+            {
+                agent->brain->input[eye_idx*3+eye->hit_type-1] = 1.0f;
+                agent->brain->input[eye_idx*3+2] = 1.2f*(1.0f - eye->distance/50.0f);
+            }
+        }
+        agent->brain->input[agent->brain->input.n-1] = 1.0f;
+
+        UpdateBrain(agent);
+    }
+}
+
+void
+UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx)
+{
+    for(I32 agent_idx = from_idx; agent_idx < to_idx; agent_idx++)
+    {
+        Agent* agent = world->agents[agent_idx];
+        UpdateMovement(world, agent);
+
+        agent->energy--;
+        agent->ticks_alive++;
+        if(agent->energy <= 0 || agent->ticks_alive >= world->max_lifespan)
+        {
+            RemoveAgent(world, agent_idx);
+        }
+        agent->ticks_until_reproduce--;
+        if(agent->ticks_until_reproduce <= 0)
+        {
+            agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
+            Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
+            int more = agent->type==AgentType_Carnivore ? 4 : 2;
+            int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
+            for(int i = 0; i < n_rep; i++)
+            {
+                if(CanAddAgent(world, at_pos))
+                {
+                    AddAgent(world, agent->type, at_pos, agent);
+                }
+            }
+        }
+    }
+}
+
+void
+UpdateWorldChanges(World* world)
+{
+    // Process removed agents, sort indices descending and then actually remove.
+    world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
+    for(int remove_idx : world->removed_agent_indices)
+    {
+        Agent* agent = world->agents[remove_idx];
+        world->brain_pool->Free(agent->brain);
+        world->agent_pool->Free(agent);
+        world->agents.RemoveIndexUnordered(remove_idx);
+    }
+    world->removed_agent_indices.Clear();
+
+    world->ticks++;
+    world->lifespan_arena_swap_ticks--;
+    if(world->lifespan_arena_swap_ticks <= 0)
+    {
+        SwapLifespanArenas(world);
+        world->lifespan_arena_swap_ticks = world->max_lifespan;
+    }
+}
+
 void 
 UpdateWorld(World* world)
 {

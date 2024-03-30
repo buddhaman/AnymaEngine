@@ -43,6 +43,7 @@ static void
 DoScreenWorldUpdate(SimulationScreen* screen)
 {
     World* world = screen->world;
+    #if 0
     SortAgentsIntoMultipleChunks(screen->world);
     //screen->thread_pool->AddJob(new std::function<void()>([screen, world](){
         for(int y = 0; y < world->y_chunks; y++)
@@ -55,6 +56,43 @@ DoScreenWorldUpdate(SimulationScreen* screen)
         UpdateWorld(world);
     //}));
     //screen->thread_pool->WaitForFinish();
+    #else
+    SortAgentsIntoMultipleChunks(screen->world);
+    for(int y = 0; y < world->y_chunks; y++)
+    for(int x = 0; x < world->x_chunks; x++)
+    {
+        ChunkCollisions(world, x, y);
+    }
+    ThreadPool* thread_pool = screen->thread_pool;
+
+    int num_ranges = thread_pool->workers.size;
+    DynamicArray<int> ranges(num_ranges+1);
+    int range_size = world->agents.size / num_ranges;
+    for(int i = 0; i < num_ranges; i++)
+    {
+        ranges.PushBack(range_size*i);
+    }
+    ranges.PushBack(world->agents.size);
+
+    for(int i = 0; i < ranges.size-1; i++)
+    {
+        thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
+            UpdateAgentSensorsAndBrains(world, ranges[i], ranges[i+1]);
+        }));
+    }
+    thread_pool->WaitForFinish();
+    
+    for(int i = 0; i < ranges.size-1; i++)
+    {
+        //thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
+            UpdateAgentBehavior(world, ranges[i], ranges[i+1]);
+        //}));
+    }
+    thread_pool->WaitForFinish();
+
+    UpdateWorldChanges(world);
+
+    #endif
 }
 
 static void
@@ -371,5 +409,5 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
 
-    screen->thread_pool = CreateThreadPool(8);
+    screen->thread_pool = CreateThreadPool(22);
 }

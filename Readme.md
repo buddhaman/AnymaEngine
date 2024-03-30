@@ -40,6 +40,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 #### TODO
 - Collide herbivores and carnivores.
 - Make carnivore attack.
+- Show time also in seconds, not just ticks.
 
 - Fix reproduction rate calculation.
 - Implement my own std::function.

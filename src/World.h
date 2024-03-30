@@ -124,6 +124,15 @@ RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam);
 void
 SortAgentsIntoMultipleChunks(World* world);
 
+void
+UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx);
+
+void
+UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx);
+
+void
+UpdateWorldChanges(World* world);
+
 Agent* 
 AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent=nullptr);
 

@@ -117,6 +117,7 @@ struct ThreadPool
     void
     AddJob(std::function<void()>* execute)
     {
+        num_jobs++;
         Worker* worker = workers[at_worker];
         at_worker++;
         if(at_worker >= workers.size)
@@ -130,7 +131,6 @@ struct ThreadPool
         job.execute = execute;
         worker->queue.Push(job);
         worker->cond_var.notify_one();
-        num_jobs++;
     }
 
     void
