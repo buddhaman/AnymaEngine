@@ -222,14 +222,11 @@ CheckAgentCollisions(Agent* agent0, Agent* agent1)
         {
             HerbivoreCarnivoreCollision(agent0, agent1);
         }
-        else
-        {
-            // Resolve collision
-            R32 l = sqrtf(l2);
-            R32 amount = radsum-l;
-            agent1->pos += amount*diff/2.0f;
-            agent0->pos -= amount*diff/2.0f;
-        }
+        // Resolve collision
+        R32 l = sqrtf(l2);
+        R32 amount = radsum-l;
+        agent1->pos += amount*diff/2.0f;
+        agent0->pos -= amount*diff/2.0f;
     }
 }
 
