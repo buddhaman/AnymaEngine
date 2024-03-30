@@ -39,6 +39,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 #### TODO
 - Fix reproduction rate calculation.
+- Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
 - Plot low dimensional version of genes.

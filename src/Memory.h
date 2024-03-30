@@ -40,6 +40,21 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
     return memory;
 }
 
+// TODO: Track all allocations.
+static inline void* 
+HeapAllocSize(U64 size)
+{
+    return calloc(1, size);
+}
+
+#define HeapAlloc(type) (type*)HeapAllocSize(sizeof(type))
+
+static inline void*
+HeapFree(void* ptr)
+{
+    free(ptr);
+}
+
 #define PushStruct(arena, type)               \
     (type *)PushMemory_(arena, sizeof(type)); 
 

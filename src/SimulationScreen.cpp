@@ -1,3 +1,5 @@
+#include <functional>
+
 #include <GL/glew.h>
 #include <imgui.h>
 #include <implot.h>
@@ -42,12 +44,17 @@ DoScreenWorldUpdate(SimulationScreen* screen)
 {
     World* world = screen->world;
     SortAgentsIntoMultipleChunks(screen->world);
-    for(int y = 0; y < world->y_chunks; y++)
-    for(int x = 0; x < world->x_chunks; x++)
-    {
-        ChunkCollisions(world, x, y);
-    }
-    UpdateWorld(world);
+    screen->thread_pool->AddJob(new std::function<void()>([screen, world](){
+        for(int y = 0; y < world->y_chunks; y++)
+        for(int x = 0; x < world->x_chunks; x++)
+        {
+            ChunkCollisions(world, x, y);
+        }
+    }));
+    screen->thread_pool->AddJob(new std::function<void()>([world](){
+        UpdateWorld(world);
+    }));
+    screen->thread_pool->WaitForFinish();
 }
 
 static void
@@ -363,4 +370,6 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->update_times.FillAndSetValue(0);
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
+
+    screen->thread_pool = CreateThreadPool(8);
 }

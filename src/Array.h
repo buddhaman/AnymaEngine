@@ -83,6 +83,19 @@ struct Array
         size--;
     }
 
+    // to_idx is inclusive
+    inline void RemoveRange(int from_idx, int to_idx)
+    {
+        Assert(from_idx >= 0 && from_idx < size);
+        Assert(to_idx >= 0 && to_idx < size);
+        Assert(from_idx <= to_idx);
+        if(to_idx != size-1)
+        {
+            memmove(data+from_idx, data+to_idx+1, sizeof(T)*(size-1-to_idx));
+        }
+        size -= (to_idx - from_idx + 1);
+    }
+
     inline int IndexOf(T element)
     {
         for(int idx = 0; idx < size; idx++)
@@ -251,6 +264,21 @@ CreateArray_(void *dataMemory, int capacity)
     memset(dataMemory, 0, sizeof(T)*capacity);
     array.data = (T *)dataMemory;
     return array;
+}
+
+template <typename T> Array<T>
+CreateArray(U64 capacity)
+{
+    Array<T> array = Array<T>{};
+    array.capacity = capacity;
+    array.data = (T*)calloc(capacity, sizeof(T));
+    return array;
+}
+
+template <typename T> Array<T>
+DestroyArray(Array<T> array)
+{
+    free(array.data);
 }
 
 // TODO: Remove, just used for testing sometimes.

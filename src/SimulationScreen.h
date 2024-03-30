@@ -5,6 +5,7 @@
 #include "Shader.h"
 #include "Window.h"
 #include "SimulationSettings.h"
+#include "ThreadPool.h"
 
 struct SimulationScreen
 {
@@ -36,6 +37,8 @@ struct SimulationScreen
     bool show_control_window = true;
 
     SimulationSettings settings;
+
+    ThreadPool* thread_pool;
     
     SimulationScreen() : update_times(120), num_carnivores(120), num_herbivores(120) {};
 };
