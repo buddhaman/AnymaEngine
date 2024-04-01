@@ -27,7 +27,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make cute renderer.
  - Make the world absolutely huge and do processing by chunk offsets to prevent floating point errors.
  - Two pass collision solving.
- - Improve standard library: add string type, better sorting.
+ - Improve standard library: Add string type, better sorting.
+ - Improve standard library: Make own multithreading primitives.
  - Build introspection and profiling tools.
  - Do real good collision detection, fix the fact that lots of agents are being checked twice. 
  - Do rendering on background thread such that the main thread doesnt block and feels smooth.

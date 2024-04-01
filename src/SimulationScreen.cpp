@@ -410,9 +410,9 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
 
-    U32 num_cores = std::thread::hardware_concurrency();
+    I32 num_cores = std::thread::hardware_concurrency();
     std::cout << "Num cores = " << num_cores << std::endl;
 
-    screen->thread_pool = CreateThreadPool(num_cores - 1);
-
+    U32 num_threads = Max(num_cores-1, 1);
+    screen->thread_pool = CreateThreadPool(num_threads);
 }
