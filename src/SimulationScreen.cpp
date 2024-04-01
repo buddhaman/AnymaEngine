@@ -1,4 +1,5 @@
 #include <functional>
+#include <thread>
 
 #include <GL/glew.h>
 #include <imgui.h>
@@ -63,8 +64,8 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     {
         ChunkCollisions(world, x, y);
     }
-    ThreadPool* thread_pool = screen->thread_pool;
 
+    ThreadPool* thread_pool = screen->thread_pool;
     int num_ranges = thread_pool->workers.size;
     DynamicArray<int> ranges(num_ranges+1);
     int range_size = world->agents.size / num_ranges;
@@ -80,7 +81,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
             UpdateAgentSensorsAndBrains(world, ranges[i], ranges[i+1]);
         }));
     }
-    thread_pool->WaitForFinish();
+    thread_pool->StartAndWaitForFinish();
     
     for(int i = 0; i < ranges.size-1; i++)
     {
@@ -88,7 +89,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
             UpdateAgentBehavior(world, ranges[i], ranges[i+1]);
         //}));
     }
-    thread_pool->WaitForFinish();
+    //thread_pool->WaitForFinish();
 
     UpdateWorldChanges(world);
 
@@ -265,7 +266,7 @@ DoStatisticsWindow(SimulationScreen* screen)
     DynamicArray<R32> bottom(screen->num_herbivores.size);
     bottom.FillAndSetValue(0);
 
-    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, 5000);
+    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, screen->settings.max_agents, ImPlotCond_Always);
     if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
     {
         ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
@@ -409,5 +410,9 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
 
-    screen->thread_pool = CreateThreadPool(22);
+    U32 num_cores = std::thread::hardware_concurrency();
+    std::cout << "Num cores = " << num_cores << std::endl;
+
+    screen->thread_pool = CreateThreadPool(num_cores - 1);
+
 }

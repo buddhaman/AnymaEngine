@@ -38,9 +38,9 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make a circular buffer.
 
 #### TODO
-- Collide herbivores and carnivores.
 - Make carnivore attack.
 - Show time also in seconds, not just ticks.
+- Show number of workers and available threads. Make settings.
 
 - Fix reproduction rate calculation.
 - Implement my own std::function.
@@ -67,6 +67,9 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Collide herbivores and carnivores.
+- Implement simple jobsystem.
+- Do sensor updates and brain updates in parallel.
 #### RELEASE 3
 - More options for user. Spawn agents.
 - Make mutation_rate adjustable in gui.

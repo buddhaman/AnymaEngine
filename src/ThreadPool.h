@@ -112,6 +112,8 @@ struct ThreadPool
     I32 at_worker;  // For round robin assignment.
     Array<Worker*> workers;
 
+    std::condition_variable jobs_done_condition;
+    std::mutex jobs_done_mutex;
     std::atomic<I32> num_jobs = 0;
 
     void
@@ -129,17 +131,23 @@ struct ThreadPool
         job.id = at_id;
         at_id++;
         job.execute = execute;
+
+        // This lock is not needed. Just keep it here for now.
+        worker->queue_mutex.lock();
         worker->queue.Push(job);
-        worker->cond_var.notify_one();
+        worker->queue_mutex.unlock();
     }
 
     void
-    WaitForFinish()
+    StartAndWaitForFinish()
     {
-        while(num_jobs > 0)
+        for(Worker* worker : workers)
         {
-            // busy wait
+            worker->cond_var.notify_all();
         }
+
+        std::unique_lock lock(jobs_done_mutex);
+        jobs_done_condition.wait(lock, [this](){ return num_jobs==0; });
     }
 };
 
@@ -149,12 +157,16 @@ Execute(ThreadPool* pool, Worker* worker, Job job)
     (*job.execute)();
     delete job.execute;
     pool->num_jobs--;
+    if(pool->num_jobs == 0)
+    {
+        pool->jobs_done_condition.notify_all();
+    }
 }
 
 static ThreadPool* 
 CreateThreadPool(I32 num_workers)
 {
-    ThreadPool* pool = HeapAlloc(ThreadPool);
+    ThreadPool* pool = new (HeapAlloc(ThreadPool))ThreadPool();
     pool->at_id = 1;
     pool->workers = CreateArray<Worker*>(num_workers);
     for(int i = 0; i < num_workers; i++)

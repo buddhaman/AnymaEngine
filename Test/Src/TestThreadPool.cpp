@@ -26,7 +26,7 @@ TEST_CASE("Setup worker threads")
         }));
     }
 
-    pool->WaitForFinish();
+    pool->StartAndWaitForFinish();
     std::cout << "Gracefully finished every job" << std::endl;
     DestroyThreadPool(pool);
 }
