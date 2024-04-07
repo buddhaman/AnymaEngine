@@ -481,7 +481,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     // Brain
     Brain* brain = world->brain_pool->Alloc();
     int inputs = n_eyes*3+1;
-    int outputs = 3;
+    int outputs = 4;
     R32 mutation_rate = world->mutation_rate;
     brain->gene = VecR32Create(brain_arena, inputs*outputs);
     if(parent)
