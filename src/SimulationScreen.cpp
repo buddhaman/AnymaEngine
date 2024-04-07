@@ -227,7 +227,12 @@ DoControlWindow(SimulationScreen* screen)
         screen->isPaused = !screen->isPaused;
     }
     ImGui::SameLine();
+    I64 seconds = screen->world->ticks/60;
+    I64 minutes = seconds/60;
+    I64 hours = minutes/60;
+    I64 days = minutes/60;
     ImGui::Text("At tick: %lu", screen->world->ticks);
+    ImGui::Text("%d days, %02d:%02d:%02d", days, hours%24, minutes%60, seconds%60);
     ImGui::SliderInt("Speed", &screen->updates_per_frame, 1, 25);
 }
 
