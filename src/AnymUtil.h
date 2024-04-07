@@ -7,7 +7,6 @@
 
 #include <math.h>
 
-
 #include "TimVectorMath.h"
 
 // Macros

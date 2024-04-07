@@ -5,7 +5,7 @@
 #ifdef NDEBUG
 #define DEFAULT_AXIS_CHUNKS 200
 #else
-#define DEFAULT_AXIS_CHUNKS 60
+#define DEFAULT_AXIS_CHUNKS 120
 #endif
 
 struct SimulationSettings
@@ -15,5 +15,5 @@ struct SimulationSettings
     R32 chunk_size = 12.0f;
     int x_chunks = DEFAULT_AXIS_CHUNKS;
     int y_chunks = DEFAULT_AXIS_CHUNKS;
-    R32 default_mutation_rate = 0.03f;
+    R32 default_mutation_rate = 0.004f;
 };
