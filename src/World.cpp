@@ -362,6 +362,9 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 {
+    // Draw world as square
+    R32 world_rect_width = 2.0f/cam->scale;
+    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, V2(0,0), V2(0,0), 0x88888888);
     // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
