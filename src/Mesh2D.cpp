@@ -131,6 +131,39 @@ PushNGon(Mesh2D *mesh,
 }
 
 void
+PushNGon(Mesh2D *mesh,
+        Vec2 pos,
+        I32 n,
+        Vec2 axis0, 
+        Vec2 axis1, 
+        Vec2 u_orig, 
+        U32 color)
+{
+    I32 npoints = n+1;
+    U32 last_idx = mesh->vertex_buffer.size;
+    R32 angdiff = 2*M_PI/(npoints-1);
+    PushVertex(mesh, pos, u_orig, color);
+    for(U32 atPoint = 0;
+            atPoint < npoints;
+            atPoint++)
+    {
+        R32 angle = angdiff*atPoint;
+        R32 s = sinf(angle);
+        R32 c = cosf(angle);
+        Vec2 point = pos + axis0*c + axis1*s;
+        PushVertex(mesh, point, u_orig, color);
+    }
+    for(U32 at_point = 0;
+            at_point < npoints-1;
+            at_point++)
+    {
+        PushIndex(mesh, last_idx);
+        PushIndex(mesh, last_idx+at_point+1);
+        PushIndex(mesh, last_idx+at_point+2);
+    }
+}
+
+void
 BufferData(Mesh2D* mesh, U32 drawMode)
 {
     glBindVertexArray(mesh->vertex_array_handle);

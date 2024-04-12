@@ -394,13 +394,23 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
             {
                 I32 sides = 3;
                 U32 color = carnivore_color;
-                PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, color);
+                R32 vel_len = V2Len(agent->vel); 
+                R32 r = agent->radius/vel_len;
+                Vec2 axis0 = agent->vel*r;
+                Vec2 axis1 = V2(-axis0.y, axis0.x);
+                axis0=(axis0*(1.0+vel_len));
+                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, color);
             }
             else
             {
                 I32 sides = 5;
                 U32 color = herbivore_color;
-                PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, color);
+                R32 vel_len = V2Len(agent->vel); 
+                R32 r = agent->radius/vel_len;
+                Vec2 axis0 = agent->vel*r;
+                Vec2 axis1 = V2(-axis0.y, axis0.x);
+                axis0=(axis0*(1.0+vel_len));
+                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, color);
             }
             RenderDetails(mesh, agent);
         }
