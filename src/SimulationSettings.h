@@ -4,8 +4,12 @@
 
 #ifdef NDEBUG
 #define DEFAULT_AXIS_CHUNKS 200
+#define DEFAULT_NUM_AGENTS 6000
+#define DEFAULT_MAX_AGENTS 6000
 #else
 #define DEFAULT_AXIS_CHUNKS 120
+#define DEFAULT_NUM_AGENTS 6000
+#define DEFAULT_MAX_AGENTS 1000
 #endif
 
 struct SimulationSettings
