@@ -68,6 +68,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Make agents squishy in direction of their velocity.
 - Make carnivore attack.
 - Collide herbivores and carnivores.
 - Implement simple jobsystem.
