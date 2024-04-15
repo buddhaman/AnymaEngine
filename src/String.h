@@ -11,7 +11,7 @@ struct String8
     U32 length;
 };
 
-String8 
+static inline String8 
 Concat(String8 a, String8 b)
 {
     String8 result;
@@ -22,7 +22,29 @@ Concat(String8 a, String8 b)
     return result;
 }
 
-void 
+static inline U32
+CStringLength(const char* c)
+{
+    U32 length = 0;
+    while((c++)[0])
+    {
+        length++;
+    }
+    return length;
+}
+
+static inline const String8
+CopyFromLiteral(const char* literal)
+{
+    String8 result;
+    result.length = CStringLength(literal);
+    result.data = (U8*)malloc(result.length+1);
+    memcpy(result.data, literal, result.length);
+    result.data[result.length] = 0;
+    return result;
+}
+
+static inline void 
 Destroy(String8 s)
 {
     String8Free(s.data);
