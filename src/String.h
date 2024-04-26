@@ -33,7 +33,7 @@ CStringLength(const char* c)
     return length;
 }
 
-static inline const String8
+static inline String8
 CopyFromLiteral(const char* literal)
 {
     String8 result;
