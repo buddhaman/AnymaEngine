@@ -11,6 +11,11 @@
 
 // Macros
 
+#ifdef _NDEBUG
+#define AssertMsg(...) do {} while(0)
+#define Assert(...) do {} while(0)
+#define InvalidCodePath(...) do {} while(0)
+#else
 #define AssertMsg(cond, msg) \
     do { \
         if (!(cond)) { \
@@ -39,6 +44,7 @@
         assert(false); \
          \
     } while (0)
+#endif
 
 #define ArraySize(array) (sizeof(array)/sizeof((array)[0]))
 

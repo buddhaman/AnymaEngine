@@ -39,10 +39,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make a circular buffer.
 
 #### TODO
-- Show time also in seconds, not just ticks.
 - Show number of workers and available threads. Make settings.
- - Turn off asserts when not debugging.
-
+- Turn off asserts when not debugging.
 - Fix reproduction rate calculation.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
@@ -68,6 +66,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Show time also in seconds, not just ticks.
 - Make agents squishy in direction of their velocity.
 - Make carnivore attack.
 - Collide herbivores and carnivores.
