@@ -17,6 +17,20 @@
 #include "World.h"
 #include "SimulationScreen.h"
 
+#include <direct.h>  
+
+static void
+PrintWorkingDirectory()
+{
+    char cwd[1024];  
+
+    if (_getcwd(cwd, sizeof(cwd))) {
+        std::cout << "Current working directory: " << cwd << std::endl;
+    } else {
+        std::cerr << "Error retrieving the current working directory." << std::endl;
+    }
+}
+
 int main(int argc, char** argv) 
 {
     // Initialize random seed once. This will be replaced by my own rng.
@@ -28,6 +42,8 @@ int main(int argc, char** argv)
         return -1;
     }
     window->fps = 60;
+
+    PrintWorkingDirectory();
 
     SimulationScreen screen;
     InitSimulationScreen(&screen);
