@@ -9,7 +9,7 @@
 #else
 #define DEFAULT_AXIS_CHUNKS 120
 #define DEFAULT_NUM_AGENTS 5000
-#define DEFAULT_MAX_AGENTS 1000
+#define DEFAULT_MAX_AGENTS 5000
 #endif
 
 struct SimulationSettings

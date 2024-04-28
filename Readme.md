@@ -22,7 +22,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 ### Large scale TODO
  - Switch to HandmadeMath linear algebra library.
  - Make neural network library.
- - Implement Evolution Strategies.
  - Break world up in chunks and process chunks using multithreading.
  - Make cute renderer.
  - Make the world absolutely huge and do processing by chunk offsets to prevent floating point errors.
@@ -47,7 +46,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Plotting utility functions.
 - Plot low dimensional version of genes.
 - Compare two agent genes.
-- Custom font for imgui.
 - Icons for imgui.
 - Refactor update function in world.cpp.
 - Make active and inactive chunks.
@@ -66,6 +64,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Custom font for imgui.
 - Show time also in seconds, not just ticks.
 - Make agents squishy in direction of their velocity.
 - Make carnivore attack.

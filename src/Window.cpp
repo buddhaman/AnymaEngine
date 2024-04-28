@@ -205,6 +205,13 @@ CreateWindow(int width, int height)
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
 
+    // Load imgui custom font.
+    const char* fontPath = "assets/Roboto-Regular.ttf";  
+    float fontSize = 18.0f;  
+    ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, fontSize);
+    io.Fonts->Build(); 
+    io.FontDefault = font;
+
     ImGui_ImplSDL2_InitForOpenGL(window->window, window->context);
     ImGui_ImplOpenGL3_Init("#version 130");
 

@@ -43,6 +43,24 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DIMGUI_USER_CONFIG="ImGuiConf
 
 add_subdirectory(Test)
 
+# Assets
+# Define the assets directory
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
+
+# Define the destination for assets in the build directory
+set(ASSETS_DESTINATION "${CMAKE_BINARY_DIR}/assets")
+
+# Create a custom target to copy assets when they change
+add_custom_target(
+    copy_assets ALL  # Re-run this target on every build to check dependencies
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSETS_DIR} $<TARGET_FILE_DIR:AnymaEngine>/assets
+    COMMENT "Copying assets to build directory"
+    DEPENDS ${ASSETS_DIR}/*  # This ensures the target is triggered when any file in the assets folder changes
+)
+
+add_dependencies(AnymaEngine copy_assets)
+
+
 
 
 

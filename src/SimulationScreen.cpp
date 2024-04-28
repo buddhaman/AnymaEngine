@@ -77,7 +77,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
 
     for(int i = 0; i < ranges.size-1; i++)
     {
-        thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
+        thread_pool->AddJob(new std::function<void()>([i, world, &ranges]() {
             UpdateAgentSensorsAndBrains(world, ranges[i], ranges[i+1]);
         }));
     }
