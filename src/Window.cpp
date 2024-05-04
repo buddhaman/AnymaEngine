@@ -220,7 +220,7 @@ CreateWindow(int width, int height)
 
     // Merge icon characters into the default font
     static const ImWchar icon_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 }; 
-    io.Fonts->AddFontFromFileTTF(icon_font_path, font_size*2.0f/3.0f, &font_config, icon_ranges);
+    io.Fonts->AddFontFromFileTTF(icon_font_path, font_size*0.75f, &font_config, icon_ranges);
     io.Fonts->Build();
 
     ImGui_ImplSDL2_InitForOpenGL(window->window, window->context);

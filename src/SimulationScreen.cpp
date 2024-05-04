@@ -326,7 +326,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     if(screen->show_debug_window)
     {
-        ImGui::Begin("Debug and Agents");
+        ImGui::Begin(ICON_LC_BUG " Debug and Agents");
         DoDebugInfo(screen, window);
         if(screen->selected)
         {
@@ -338,22 +338,21 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     if(screen->show_edit_window)
     {
-        ImGui::Begin("Edit");
-        ImGui::Button("Test " ICON_LC_ACTIVITY);
+        ImGui::Begin(ICON_LC_DNA " Edit");
         EditSettings(screen);
         ImGui::End();
     }
 
     if(screen->show_statistic_window)
     {
-        ImGui::Begin("Statistics");
+        ImGui::Begin(ICON_LC_BAR_CHART_BIG " Statistics");
         DoStatisticsWindow(screen);
         ImGui::End();
     }
 
     if(screen->show_control_window)
     {
-        ImGui::Begin("Control simulation");
+        ImGui::Begin(ICON_LC_GAUGE " Control simulation");
         DoControlWindow(screen);
         ImGui::End();
     }
