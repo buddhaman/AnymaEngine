@@ -3,7 +3,7 @@
 static void
 SwapLifespanArenas(World* world)
 {
-    // Dont clear to zero by default. TODO: Maybe in debug mode.
+    // TODO: Dont clear to zero by default. TODO: Maybe in debug mode.
     ZeroArena(world->lifespan_arena_old);
     ClearArena(world->lifespan_arena_old);
     MemoryArena* tmp = world->lifespan_arena;

@@ -7,6 +7,7 @@
 #include <implot.h>
 
 #include "Window.h"
+#include "FontAwesome6.h"
 
 void GLAPIENTRY MessageCallback(GLenum source,
                                 GLenum type,
@@ -211,6 +212,21 @@ CreateWindow(int width, int height)
     ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, fontSize);
     io.Fonts->Build(); 
     io.FontDefault = font;
+
+    // Load Font Awesome font.
+    const char* fontAwesomePath = "assets/FA6.ttf";  
+    //float fontSize = 18.0f;  
+    ImFontConfig fontConfig;
+    fontConfig.MergeMode = true; // Important for merging icon characters
+    fontConfig.PixelSnapH = true; // Ensure crisp rendering
+
+    // Merge icon characters into the default font
+    static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; 
+    ImFont* f = io.Fonts->AddFontFromFileTTF(fontAwesomePath, 16.0f, &fontConfig, iconRanges);
+    io.Fonts->Build();
+
+    // Set the default font to use Font Awesome
+    //io.FontDefault = fontAwesome;
 
     ImGui_ImplSDL2_InitForOpenGL(window->window, window->context);
     ImGui_ImplOpenGL3_Init("#version 130");
