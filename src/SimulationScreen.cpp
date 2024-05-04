@@ -223,7 +223,7 @@ DoAgentInfo(SimulationScreen* screen, Agent* agent)
 void 
 DoControlWindow(SimulationScreen* screen)
 {
-    if(ImGui::Button(screen->isPaused ? ">" : "||"))
+    if(ImGui::Button(screen->isPaused ? ICON_LC_PLAY : ICON_LC_PAUSE))
     {
         screen->isPaused = !screen->isPaused;
     }
@@ -233,8 +233,8 @@ DoControlWindow(SimulationScreen* screen)
     I64 hours = minutes/60;
     I64 days = minutes/60;
     ImGui::Text("At tick: %lu", screen->world->ticks);
-    ImGui::Text("%d days, %02d:%02d:%02d", days, hours%24, minutes%60, seconds%60);
-    ImGui::SliderInt("Speed", &screen->updates_per_frame, 1, 25);
+    ImGui::Text(ICON_LC_CLOCK_11 " %d days, %02d:%02d:%02d", days, hours%24, minutes%60, seconds%60);
+    ImGui::SliderInt("Speed " ICON_LC_RABBIT, &screen->updates_per_frame, 1, 25);
 }
 
 void

@@ -207,26 +207,21 @@ CreateWindow(int width, int height)
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
 
     // Load imgui custom font.
-    const char* fontPath = "assets/Roboto-Regular.ttf";  
-    float fontSize = 18.0f;  
-    ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, fontSize);
+    const char* default_font_path = "assets/Roboto-Regular.ttf";  
+    float font_size = 18.0f;  
+    ImFont* font = io.Fonts->AddFontFromFileTTF(default_font_path, font_size);
     io.Fonts->Build(); 
     io.FontDefault = font;
 
-    // Load Font Awesome font.
-    const char* fontAwesomePath = "assets/lucide.ttf";  
-    //float fontSize = 18.0f;  
-    ImFontConfig fontConfig;
-    fontConfig.MergeMode = true; // Important for merging icon characters
-    fontConfig.PixelSnapH = true; // Ensure crisp rendering
+    const char* icon_font_path = "assets/lucide.ttf";  
+    ImFontConfig font_config;
+    font_config.MergeMode = true; 
+    font_config.PixelSnapH = true; // Ensure crisp rendering
 
     // Merge icon characters into the default font
-    static const ImWchar iconRanges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 }; 
-    ImFont* f = io.Fonts->AddFontFromFileTTF(fontAwesomePath, 16.0f, &fontConfig, iconRanges);
+    static const ImWchar icon_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 }; 
+    io.Fonts->AddFontFromFileTTF(icon_font_path, font_size*2.0f/3.0f, &font_config, icon_ranges);
     io.Fonts->Build();
-
-    // Set the default font to use Font Awesome
-    //io.FontDefault = fontAwesome;
 
     ImGui_ImplSDL2_InitForOpenGL(window->window, window->context);
     ImGui_ImplOpenGL3_Init("#version 130");
