@@ -7,7 +7,7 @@
 
 #include "SimulationScreen.h"
 #include "DebugInfo.h"
-#include "FontAwesome6.h"
+#include "Lucide.h"
 
 const char* vertex_shader_source = R"glsl(
     #version 330 core
@@ -308,7 +308,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu("Window"))
     {
-        if(ImGui::MenuItem("Show debug window" ICON_FA_ARROW_DOWN, nullptr, &screen->show_debug_window))
+        if(ImGui::MenuItem("Show debug window" ICON_LC_ALBUM, nullptr, &screen->show_debug_window))
         {
         }
         if(ImGui::MenuItem("Show edit window", nullptr, &screen->show_edit_window))
@@ -339,7 +339,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     if(screen->show_edit_window)
     {
         ImGui::Begin("Edit");
-        ImGui::Button("Test " ICON_FA_DOWN_LEFT_AND_UP_RIGHT_TO_CENTER);
+        ImGui::Button("Test " ICON_LC_ACTIVITY);
         EditSettings(screen);
         ImGui::End();
     }
