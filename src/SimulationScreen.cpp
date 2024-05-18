@@ -195,6 +195,7 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGui::Text("FPS: %.0f", window->fps);
     ImGui::Text("Update: %.2f millis", window->update_millis);
     ImGui::Text("Camera scale: %.2f", screen->cam.scale);
+    ImGui::Text("Number of cores: %d", screen->thread_pool->workers.size);
     ImGuiMemoryArena(world->arena, "Static memory");
     ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
     ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");

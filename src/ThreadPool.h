@@ -8,9 +8,8 @@
 #include "Array.h"
 
 // This will not use std::function when i impleented my own. Also all
-// c++ multithreading code will be replaced. All news and deletes are temporary. 
-// I refuse to do RAII, it is for mediors.
-using JobID = U32;
+// c++ multithreading code will be replaced. 
+struct JobID { U32 id; };
 struct Job
 {
     JobID id;
@@ -128,7 +127,7 @@ struct ThreadPool
         }
 
         Job job;
-        job.id = at_id;
+        job.id.id = at_id;
         at_id++;
         job.execute = execute;
 
