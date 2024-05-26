@@ -430,7 +430,8 @@ RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), 0x66666666);
+        U32 color = chunk->agent_indices.size > 0 ? 0xff00ff00 : 0x66666666;
+        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), color);
     }
 }
 

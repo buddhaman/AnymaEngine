@@ -195,6 +195,10 @@ CreateWindow(int width, int height)
     glDebugMessageCallback(MessageCallback, 0);
     // glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 
+    // Setup alpha blending globally
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Setup ImGui
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();

@@ -38,32 +38,33 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Make a circular buffer.
 
 #### TODO
-- Show number of workers and available threads. Make settings.
-- Turn off asserts when not debugging.
 - Fix reproduction rate calculation.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
-- Plot low dimensional version of genes.
 - Compare two agent genes.
-- Icons for imgui.
 - Refactor update function in world.cpp.
 - Make active and inactive chunks.
 - Draw active chunks.
 - Fix agents popping into view.
 - Draw scale with some text too. 
-- Implement alpha blending.
+- Plot low dimensional version of genes.
 - Show agents in chunk in debug window. 
+- Consistently call everything either draw or render. 
+- Better agent selection, give feedback on agent hitboxes.
 - Make random number generator.
 - Make texture region.
 - Pass tex_orig and tex_size as texture region.
 - Make chunks selectable.
 - Global empty texture for convenience.
 - Make color header with list of colors and color helper functions.
-- Make creature respond to sensor in a simple way.
-- Make a startup screen to start simulation with new persistent parameters.
 
 ### Done
+- Implement alpha blending.
+- Icons for imgui.
+- Make a startup screen to start simulation with new persistent parameters.
+- Turn off asserts when not debugging.
+- Show number of workers and available threads. Make settings.
 - Custom font for imgui.
 - Show time also in seconds, not just ticks.
 - Make agents squishy in direction of their velocity.
