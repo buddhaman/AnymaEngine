@@ -36,8 +36,7 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
     {
         Chunk* chunk = GetChunk(world, x_chunk, y_chunk);
         
-        // TODO: Make R32_MAX
-        R32 min_intersect_dist = 100000.0f;
+        R32 min_intersect_dist = R32_MAX;
         Agent* hit = nullptr;
         for(U32 agent_idx : chunk->agent_indices)
         {

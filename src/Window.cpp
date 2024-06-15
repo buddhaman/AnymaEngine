@@ -220,7 +220,7 @@ CreateWindow(int width, int height)
     const char* icon_font_path = "assets/lucide.ttf";  
     ImFontConfig font_config;
     font_config.MergeMode = true; 
-    font_config.PixelSnapH = true; // Ensure crisp rendering
+    font_config.PixelSnapH = true; 
 
     // Merge icon characters into the default font
     static const ImWchar icon_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 }; 

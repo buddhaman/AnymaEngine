@@ -62,6 +62,9 @@ typedef uint64_t U64;
 typedef float R32;
 typedef double R64;
 
+static constexpr R32 R32_MAX = FLT_MAX;
+static constexpr R64 R64_MAX = DBL_MAX;
+
 // Functions
 template <typename T>
 T Max(T a, T b) { return a < b ? b : a; }
