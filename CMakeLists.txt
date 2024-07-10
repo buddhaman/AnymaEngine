@@ -5,7 +5,7 @@ option(USE_ASAN "Enable AddressSanitizer" OFF)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
+set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "")
 set(CMAKE_TOOLCHAIN_FILE "C:/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 project(AnymaEngine)
@@ -50,17 +50,36 @@ set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 # Define the destination for assets in the build directory
 set(ASSETS_DESTINATION "${CMAKE_BINARY_DIR}/assets")
 
-# Create a custom target to copy assets when they change
+# Ensure ASSETS_DIR is defined
+if(NOT DEFINED ASSETS_DIR)
+    message(FATAL_ERROR "ASSETS_DIR is not defined")
+endif()
+
+# Define the output directory
+set(OUTPUT_DIR $<TARGET_FILE_DIR:AnymaEngine>/assets)
+
+# Debugging message
+message("ASSETS_DIR: ${ASSETS_DIR}")
+message("OUTPUT_DIR: ${OUTPUT_DIR}")
+
+# Define a custom target to copy assets
 add_custom_target(
-    copy_assets ALL  # Re-run this target on every build to check dependencies
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSETS_DIR} $<TARGET_FILE_DIR:AnymaEngine>/assets
+    copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR} # Ensure output directory exists
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSETS_DIR} ${OUTPUT_DIR}
     COMMENT "Copying assets to build directory"
-    DEPENDS ${ASSETS_DIR}/*  # This ensures the target is triggered when any file in the assets folder changes
 )
 
+# Gather all files in the assets directory to track dependencies
+file(GLOB_RECURSE ASSET_FILES "${ASSETS_DIR}/*")
+
+# Ensure copy_assets target is rebuilt when any asset file changes
+add_custom_target(
+    copy_assets_trigger
+    DEPENDS ${ASSET_FILES}
+    COMMENT "Trigger to check asset file changes"
+)
+
+# Ensure AnymaEngine depends on the copy_assets target
+add_dependencies(copy_assets copy_assets_trigger)
 add_dependencies(AnymaEngine copy_assets)
-
-
-
-
-

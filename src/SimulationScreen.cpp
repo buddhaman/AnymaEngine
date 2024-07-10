@@ -87,7 +87,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     for(int i = 0; i < ranges.size-1; i++)
     {
         //thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
-            UpdateAgentBehavior(world, ranges[i], ranges[i+1]);
+        UpdateAgentBehavior(world, ranges[i], ranges[i+1]);
         //}));
     }
     //thread_pool->WaitForFinish();
@@ -195,7 +195,7 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGui::Text("FPS: %.0f", window->fps);
     ImGui::Text("Update: %.2f millis", window->update_millis);
     ImGui::Text("Camera scale: %.2f", screen->cam.scale);
-    ImGui::Text("Number of cores: %d", screen->thread_pool->workers.size);
+    ImGui::Text("Number of cores: %lld", screen->thread_pool->workers.size);
     ImGuiMemoryArena(world->arena, "Static memory");
     ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
     ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
@@ -233,8 +233,8 @@ DoControlWindow(SimulationScreen* screen)
     I64 minutes = seconds/60;
     I64 hours = minutes/60;
     I64 days = minutes/60;
-    ImGui::Text("At tick: %lu", screen->world->ticks);
-    ImGui::Text(ICON_LC_CLOCK_11 " %d days, %02d:%02d:%02d", days, hours%24, minutes%60, seconds%60);
+    ImGui::Text("At tick: %lld", screen->world->ticks);
+    ImGui::Text(ICON_LC_CLOCK_11 " %lld days, %02lld:%02lld:%02lld", days, hours%24, minutes%60, seconds%60);
     ImGui::SliderInt("Speed " ICON_LC_RABBIT, &screen->updates_per_frame, 1, 25);
 }
 

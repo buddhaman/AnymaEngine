@@ -49,7 +49,7 @@ HeapAllocSize(U64 size)
 
 #define HeapAlloc(type) (type*)HeapAllocSize(sizeof(type))
 
-static inline void*
+static inline void
 HeapFree(void* ptr)
 {
     free(ptr);

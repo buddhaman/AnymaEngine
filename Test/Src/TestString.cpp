@@ -4,7 +4,7 @@
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include "../../src/String.h"
+#include "../../Src/String.h"
 
 TEST_CASE("Test string basics")
 {

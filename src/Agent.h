@@ -63,6 +63,7 @@ GetAgentColor(AgentType type)
     case AgentType_None: return 0xffffffff;
     case AgentType_Carnivore: return 0xff0000ff;
     case AgentType_Herbivore: return 0xff00ff00;
+    default: return 0xffffffff;
     }
     return 0xffffffff;
 }

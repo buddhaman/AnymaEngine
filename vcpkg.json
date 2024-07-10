@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name",
+  "name": "anymaengine",
   "version-string": "1.0.0",
   "dependencies": [
     "sdl2",
