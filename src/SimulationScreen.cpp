@@ -98,15 +98,44 @@ DoScreenWorldUpdate(SimulationScreen* screen)
 }
 
 static void
+DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_max, R32 grid_size, R32 thickness, U32 color)
+{
+    Vec2 draw_min = V2(Max(cam_min.x, world_min.x), Max(cam_min.y, world_min.y));
+    Vec2 draw_max = V2(Min(cam_max.x, world_max.x), Min(cam_max.y, world_max.y));
+
+    I32 x_chunk_start = (I32)floor(draw_min.x / grid_size);
+    I32 x_chunk_end = (I32)ceil(draw_max.x / grid_size);
+    I32 y_chunk_start = (I32)floor(draw_min.y / grid_size);
+    I32 y_chunk_end = (I32)ceil(draw_max.y / grid_size);
+
+    Vec2 u = V2(0, 0);
+
+    // Draw vertical lines
+    for (I32 x_chunk = x_chunk_start; x_chunk <= x_chunk_end; x_chunk++)
+    {
+        R32 x = x_chunk * grid_size;
+        PushRect(mesh, V2(x - thickness / 2.0f, draw_min.y), V2(thickness, draw_max.y - draw_min.y), u, u, color);
+    }
+
+    // Draw horizontal lines
+    for (I32 y_chunk = y_chunk_start; y_chunk <= y_chunk_end; y_chunk++)
+    {
+        R32 y = y_chunk * grid_size;
+        PushRect(mesh, V2(draw_min.x, y - thickness / 2.0f), V2(draw_max.x - draw_min.x, thickness), u, u, color);
+    }
+}
+
+static void
 DoScreenWorldRender(SimulationScreen* screen, Window* window)
 {
     Shader* shader = &screen->shader;
     Mesh2D* mesh = &screen->dynamic_mesh;
     Agent* selected = screen->selected;
     World* world = screen->world;
+    Camera2D* cam = &screen->cam;
 
     glUseProgram(shader->program_handle);
-    UpdateCamera(&screen->cam, window->width, window->height);
+    UpdateCamera(cam, window->width, window->height);
 
     glUniformMatrix3fv(screen->transform_loc, 1, GL_FALSE, &screen->cam.transform.m[0][0]);
     if(selected)
@@ -115,18 +144,26 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         RenderEyeRays(mesh, selected);
     }
 
-    R32 max_x = world->size.x;
-    R32 max_y = world->size.y;
     R32 thickness = 0.2f;
-    Vec2 u = V2(0,0);
-    U32 outer_color = Vec4ToHex(0.4f, 0.4f, 0.4f, 1.0f);
-    for(I32 x_chunk = 0; x_chunk < world->x_chunks; x_chunk++)
+
+    R32 min_scale = 4.0f;
+    I32 subdivs = 5;
+    if(cam->scale > min_scale)
     {
-        R32 x = x_chunk*world->chunk_size;
-        PushRect(mesh, V2(x-thickness/2.0f, 0), V2(thickness, max_x), u, u, outer_color);
+        R32 factor = log2f(cam->scale) - log2f(min_scale);
+        R32 alpha = Clamp(0.0f, factor, 1.0f);
+        U32 color = Vec4ToHex(alpha, 0.3f, 0.3f, 0.3f);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
     }
 
-    if(screen->show_chunks)
+    if(cam->scale > 1.0f)
+    {
+        R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
+        U32 color = Vec4ToHex(alpha, 0.4f, 0.4f, 0.4f);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, thickness, color);
+    }
+
+    if(screen->show_chunk_occupancy)
     {
         RenderChunks(world, mesh, &screen->cam);
     }
@@ -253,7 +290,7 @@ void
 DoStatisticsWindow(SimulationScreen* screen)
 {
     World* world = screen->world;
-    ImGui::Checkbox("Show chunks", &screen->show_chunks);
+    ImGui::Checkbox("Show chunk occupancy", &screen->show_chunk_occupancy);
 
     ImPlotFlags updatetime_plot_flags = ImPlotFlags_NoBoxSelect | 
                         ImPlotFlags_NoInputs | 

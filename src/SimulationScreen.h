@@ -30,7 +30,7 @@ struct SimulationScreen
     int updates_per_frame = 1;
     R32 time = 0.0f;
 
-    bool show_chunks = true;
+    bool show_chunk_occupancy = false;
     bool show_debug_window = true;
     bool show_edit_window = true;
     bool show_statistic_window = true;
