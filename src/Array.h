@@ -6,8 +6,8 @@
 #include "AnymUtil.h"
 #include "Memory.h"
 
-// Simple std::vector without slow debug build and slightly different
-// implementation. No constructors or destructors called on contents. Made for
+// Simple array with a maximum capacity and current size.
+// No constructors or destructors called on contents. Made for
 // plain datatypes.
 template <typename T>
 struct Array
@@ -189,6 +189,8 @@ struct Array
     }
 };
 
+// A kind of std::vector but without c++ destructors and other nonsense. Also
+// meant for plain old datatypes.
 template <typename T>
 struct DynamicArray : public Array<T>
 {

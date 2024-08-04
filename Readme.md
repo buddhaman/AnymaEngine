@@ -21,7 +21,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 ### Large scale TODO
  - Switch to HandmadeMath linear algebra library.
- - Make neural network library.
  - Break world up in chunks and process chunks using multithreading.
  - Make cute renderer.
  - Make the world absolutely huge and do processing by chunk offsets to prevent floating point errors.
@@ -36,6 +35,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Tracking lineage.
  - Showing the entire state of the brain and genes.
  - Make a circular buffer.
+ - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 
 #### TODO
 - Fix reproduction rate calculation.
@@ -60,6 +60,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make color header with list of colors and color helper functions.
 
 ### Done
+- Make neural network library.
 - Implement alpha blending.
 - Icons for imgui.
 - Make a startup screen to start simulation with new persistent parameters.
