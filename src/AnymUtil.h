@@ -106,3 +106,32 @@ RandomNormalPairDebug()
     R32 factor = sqrtf(-2*logf(s)/s);
     return V2(factor*x, factor*y);
 }
+
+static inline Vec4
+HexToVec4(U32 hex)
+{
+    Vec4 color;
+    color.r = ((hex >> 24) & 0xFF) / 255.0f;
+    color.g = ((hex >> 16) & 0xFF) / 255.0f;
+    color.b = ((hex >> 8) & 0xFF) / 255.0f;
+    color.a = (hex & 0xFF) / 255.0f;
+    return color;
+}
+
+static inline uint32_t
+Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
+{
+    uint32_t hex = 0;
+
+    uint8_t rb = (uint8_t)(roundf(r * 255.0f));
+    uint8_t gb = (uint8_t)(roundf(g * 255.0f));
+    uint8_t bb = (uint8_t)(roundf(b * 255.0f));
+    uint8_t ab = (uint8_t)(roundf(a * 255.0f));
+
+    hex |= (rb << 24);
+    hex |= (gb << 16);
+    hex |= (bb << 8);
+    hex |= ab;
+
+    return hex;
+}

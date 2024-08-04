@@ -115,6 +115,17 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         RenderEyeRays(mesh, selected);
     }
 
+    R32 max_x = world->size.x;
+    R32 max_y = world->size.y;
+    R32 thickness = 0.2f;
+    Vec2 u = V2(0,0);
+    U32 outer_color = Vec4ToHex(0.4f, 0.4f, 0.4f, 1.0f);
+    for(I32 x_chunk = 0; x_chunk < world->x_chunks; x_chunk++)
+    {
+        R32 x = x_chunk*world->chunk_size;
+        PushRect(mesh, V2(x-thickness/2.0f, 0), V2(thickness, max_x), u, u, outer_color);
+    }
+
     if(screen->show_chunks)
     {
         RenderChunks(world, mesh, &screen->cam);
