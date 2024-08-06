@@ -423,7 +423,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
 }
 
 void 
-RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam)
+DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam)
 {
     Vec2 chunk_dims = V2(world->chunk_size, world->chunk_size);
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)

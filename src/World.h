@@ -119,7 +119,7 @@ void
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void 
-RenderChunks(World* world, Mesh2D* mesh, Camera2D* cam);
+DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam);
 
 void
 SortAgentsIntoMultipleChunks(World* world);

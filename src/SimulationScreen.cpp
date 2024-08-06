@@ -165,8 +165,9 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
 
     if(screen->show_chunk_occupancy)
     {
-        RenderChunks(world, mesh, &screen->cam);
+        DrawChunks(world, mesh, &screen->cam);
     }
+
     RenderWorld(world, mesh, &screen->cam);
 
     BufferData(mesh, GL_DYNAMIC_DRAW);
