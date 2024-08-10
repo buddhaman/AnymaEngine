@@ -163,6 +163,53 @@ PushNGon(Mesh2D *mesh,
     }
 }
 
+void 
+PushLineNGon(Mesh2D *mesh, Vec2 center, R32 inner_radius, R32 outer_radius, int n, R32 orientation, Vec2 u_orig, U32 color)
+{
+    int npoints = n + 1;
+
+    U32 inner_start_idx = mesh->vertex_buffer.size;
+    U32 outer_start_idx = inner_start_idx + npoints;
+
+    R32 angdiff = 2 * M_PI / (npoints - 1);
+
+    // Generate vertices for the inner N-gon
+    for (int i = 0; i < npoints; ++i)
+    {
+        R32 angle = angdiff * i + orientation;
+        R32 s = sinf(angle);
+        R32 c = cosf(angle);
+
+        Vec2 point = center + V2(c, s) * inner_radius;
+        PushVertex(mesh, point, u_orig, color);
+    }
+
+    // Generate vertices for the outer N-gon
+    for (int i = 0; i < npoints; ++i)
+    {
+        R32 angle = angdiff * i + orientation;
+        R32 s = sinf(angle);
+        R32 c = cosf(angle);
+
+        Vec2 point = center + V2(c, s) * outer_radius;
+        PushVertex(mesh, point, u_orig, color);
+    }
+
+    // Generate indices to form triangles between the inner and outer N-gons
+    for (int i = 0; i < npoints - 1; ++i)
+    {
+        // First triangle
+        PushIndex(mesh, inner_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i + 1);
+
+        // Second triangle 
+        PushIndex(mesh, inner_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i + 1);
+        PushIndex(mesh, inner_start_idx + i + 1);
+    }
+}
+
 void
 BufferData(Mesh2D* mesh, U32 drawMode)
 {

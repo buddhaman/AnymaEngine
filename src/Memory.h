@@ -89,7 +89,6 @@ ZeroArena(MemoryArena* arena)
     memset(arena->base, 0, arena->used);
 }
 
-
 template <typename T>
 struct BittedMemoryPool
 {

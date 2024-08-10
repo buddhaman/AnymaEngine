@@ -130,7 +130,6 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
 {
     Shader* shader = &screen->shader;
     Mesh2D* mesh = &screen->dynamic_mesh;
-    Agent* selected = screen->selected;
     World* world = screen->world;
     Camera2D* cam = &screen->cam;
 
@@ -138,10 +137,23 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     UpdateCamera(cam, window->width, window->height);
 
     glUniformMatrix3fv(screen->transform_loc, 1, GL_FALSE, &screen->cam.transform.m[0][0]);
-    if(selected)
+    if(screen->selected_agent)
     {
-        PushRect(mesh, selected->pos+V2(1,1), V2(1,1), V2(0,0), V2(0,0), 0xffaa77ff);
-        RenderEyeRays(mesh, selected);
+        R32 time_factor = 0.25f*sinf(screen->time*10);
+        R32 radius = screen->selected_agent->radius + screen->extra_selection_radius + time_factor;
+        R32 line_width = 0.4f;
+        U32 color = 0xffaa77ff;
+        PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
+        RenderEyeRays(mesh, screen->selected_agent);
+    }
+
+    if(screen->hovered_agent)
+    {
+        R32 time_factor = 0.25f*sinf(screen->time*10);
+        R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
+        R32 line_width = 0.4f;
+        U32 color = 0xff88aaff;
+        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
     }
 
     R32 thickness = 0.2f;
@@ -339,9 +351,9 @@ DoStatisticsWindow(SimulationScreen* screen)
     }
 
     ImGuiChunkDistribution(screen->world);
-    if(screen->selected)
+    if(screen->selected_agent)
     {
-        ImGuiBrainVisualizer(screen->selected->brain);
+        ImGuiBrainVisualizer(screen->selected_agent->brain);
     }
 }
 
@@ -354,6 +366,9 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     screen->update_times.Shift(-1);
     screen->update_times[screen->update_times.size-1] = window->update_millis;
+
+    // TODO: Do not hardcode this. 1.0f/60.0f;
+    screen->time +=  1.0f/60.0f;
 
     ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu("Window"))
@@ -378,10 +393,10 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     {
         ImGui::Begin(ICON_LC_BUG " Debug and Agents");
         DoDebugInfo(screen, window);
-        if(screen->selected)
+        if(screen->selected_agent)
         {
             ImGui::SeparatorText("Selected agent");
-            DoAgentInfo(screen, screen->selected);
+            DoAgentInfo(screen, screen->selected_agent);
         }
         ImGui::End();
     }
@@ -409,6 +424,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     Vec2 world_mouse_pos = MouseToWorld(&screen->cam, input, window->width, window->height);
     ImGuiIO& io = ImGui::GetIO();
+    screen->hovered_agent = nullptr;
     if(!io.WantCaptureMouse)
     {
         if(IsKeyDown(input, InputAction_W))
@@ -424,10 +440,10 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
         }
 
+        screen->hovered_agent = SelectFromWorld(world, world_mouse_pos, screen->extra_selection_radius);
         if(IsMouseClicked(input, 0))
         {
-            Agent* found = SelectFromWorld(world, world_mouse_pos, 1.0f);
-            screen->selected = found;
+            screen->selected_agent = screen->hovered_agent;
         }
 
         cam->scale = cam->scale *= powf(1.05f, input->mouse_scroll);

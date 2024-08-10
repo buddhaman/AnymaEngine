@@ -38,7 +38,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 
 #### TODO
-- Create some background in the world, it looks boring right now. 
 - Highlight currently hovered agent.
 - Show indicator when herbivore is hurt.
 - Fix reproduction rate calculation.
@@ -63,6 +62,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make color header with list of colors and color helper functions.
 
 ### Done
+- Create some background in the world, it looks boring right now. 
 - Make neural network library.
 - Implement alpha blending.
 - Icons for imgui.

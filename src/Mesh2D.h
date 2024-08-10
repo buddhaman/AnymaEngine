@@ -55,6 +55,9 @@ void
 PushNGon(Mesh2D *mesh, Vec2 pos, R32 radius, I32 n, R32 orientation, Vec2 u_orig, U32 color);
 
 void
+PushLineNGon(Mesh2D *mesh, Vec2 pos, R32 inner_radius, R32 outer_radius, int n, R32 orientation, Vec2 u_orig, U32 color);
+
+void
 PushNGon(Mesh2D *mesh, Vec2 pos, I32 n, Vec2 axis0, Vec2 axis1, Vec2 u_orig, U32 color);
 
 void

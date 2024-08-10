@@ -12,7 +12,9 @@ struct SimulationScreen
     World* world;
     Mesh2D dynamic_mesh;
 
-    Agent* selected = nullptr;
+    R32 extra_selection_radius = 1.0f;
+    Agent* hovered_agent = nullptr;
+    Agent* selected_agent = nullptr;
 
     MemoryArena* world_arena;
 
