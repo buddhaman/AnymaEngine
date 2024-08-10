@@ -38,7 +38,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 
 #### TODO
-- Highlight currently hovered agent.
+- FIX BUG: SelectFromWorld often has idx out of range.
 - Show indicator when herbivore is hurt.
 - Fix reproduction rate calculation.
 - Implement my own std::function.
@@ -62,6 +62,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make color header with list of colors and color helper functions.
 
 ### Done
+- Highlight currently hovered agent.
 - Create some background in the world, it looks boring right now. 
 - Make neural network library.
 - Implement alpha blending.
