@@ -261,6 +261,7 @@ EditSettings(SimulationScreen* screen)
     {
         screen->overlay = static_cast<ColorOverlay>(currentItem);
     }
+    ImGui::Checkbox("Show chunk occupancy", &screen->show_chunk_occupancy);
 }
 
 static void
@@ -318,7 +319,6 @@ void
 DoStatisticsWindow(SimulationScreen* screen)
 {
     World* world = screen->world;
-    ImGui::Checkbox("Show chunk occupancy", &screen->show_chunk_occupancy);
 
     ImPlotFlags updatetime_plot_flags = ImPlotFlags_NoBoxSelect | 
                         ImPlotFlags_NoInputs | 

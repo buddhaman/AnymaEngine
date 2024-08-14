@@ -143,3 +143,6 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 ### Ideas
 - For an overview of how the world is evolving, create a kind of sampling minimap. Dont render each individual creature but take a couple of samples for each pixel using the bsp-tree and take the average color. Store these frames and show as animation.
 - Show overlays: Make coloring of genes to show genetic distance of different agents.
+
+### Bugs
+- No agents leads to deadlock?
