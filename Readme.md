@@ -36,6 +36,10 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Showing the entire state of the brain and genes.
  - Make a circular buffer.
  - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
+ - IDEA: Create a kind of business rule table where you can set rules like: 
+    - Required speed for carnivores to do damage to herbivores
+    - Allow sprinting, how much energy to take on a sprint?
+    - Do carnivores get a reproduction boost if their population is low?
 
 #### TODO
 - FIX BUG: SelectFromWorld often has idx out of range.

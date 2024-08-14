@@ -52,6 +52,9 @@ struct Agent
     I32 energy;
     I32 ticks_alive;
 
+    // This is the color used to identify the gene. For visualization.
+    U32 gene_color;
+
     bool is_alive;
 };
 

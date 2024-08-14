@@ -45,6 +45,9 @@ static void
 DoScreenWorldUpdate(SimulationScreen* screen)
 {
     World* world = screen->world;
+
+    UpdateWorldChanges(world);
+
     #if 0
     SortAgentsIntoMultipleChunks(screen->world);
     //screen->thread_pool->AddJob(new std::function<void()>([screen, world](){
@@ -92,7 +95,6 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     }
     //thread_pool->WaitForFinish();
 
-    UpdateWorldChanges(world);
 
     #endif
 }
@@ -137,6 +139,17 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     UpdateCamera(cam, window->width, window->height);
 
     glUniformMatrix3fv(screen->transform_loc, 1, GL_FALSE, &screen->cam.transform.m[0][0]);
+
+    // Only difference between these if statements is the color but thats done on purpose.
+    if(screen->hovered_agent)
+    {
+        R32 time_factor = 0.25f*sinf(screen->time*10);
+        R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
+        R32 line_width = 0.4f;
+        U32 color = 0xff88aaff;
+        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
+    }
+
     if(screen->selected_agent)
     {
         R32 time_factor = 0.25f*sinf(screen->time*10);
@@ -145,15 +158,6 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         U32 color = 0xffaa77ff;
         PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
         RenderEyeRays(mesh, screen->selected_agent);
-    }
-
-    if(screen->hovered_agent)
-    {
-        R32 time_factor = 0.25f*sinf(screen->time*10);
-        R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
-        R32 line_width = 0.4f;
-        U32 color = 0xff88aaff;
-        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
     }
 
     R32 thickness = 0.2f;
@@ -180,7 +184,7 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         DrawChunks(world, mesh, &screen->cam);
     }
 
-    RenderWorld(world, mesh, &screen->cam);
+    RenderWorld(world, mesh, &screen->cam, screen->overlay);
 
     BufferData(mesh, GL_DYNAMIC_DRAW);
     Draw(mesh);
@@ -245,6 +249,17 @@ EditSettings(SimulationScreen* screen)
     if(ImGui::Button("Restart"))
     {
         RestartWorld(screen);
+    }
+
+    ImGui::SeparatorText("Visual");
+
+    // ComboBox for selecting ColorOverlay
+    const char* overlayItems[] = { "Agent Type", "Agent Genes" };
+    int currentItem = static_cast<int>(screen->overlay);
+
+    if (ImGui::Combo("Color Overlay", &currentItem, overlayItems, IM_ARRAYSIZE(overlayItems)))
+    {
+        screen->overlay = static_cast<ColorOverlay>(currentItem);
     }
 }
 

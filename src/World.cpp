@@ -359,7 +359,7 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 }
 
 void 
-RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
+RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overlay)
 {
     // Draw world as square
     R32 world_rect_width = 2.0f/cam->scale;
@@ -385,6 +385,21 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
         Vec2 perp = V2(dir.y, -dir.x);
         U32 herbivore_color = 0xff0ff000;
         U32 carnivore_color = 0xff0000ff;
+        U32 color;
+
+        // Overwrite for gene info
+        switch(color_overlay)
+        {
+            case ColorOverlay_AgentGenes:
+            {
+                color = agent->gene_color;
+            } break;
+
+            default:
+            {
+                color = agent->type==AgentType_Herbivore ? herbivore_color : carnivore_color;
+            } break;
+        }
 
         // TODO: Better just make two completely separate loops
         if(cam->scale > 3)
@@ -392,7 +407,6 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
             if(agent->type==AgentType_Carnivore)
             {
                 I32 sides = 3;
-                U32 color = carnivore_color;
                 R32 vel_len = V2Len(agent->vel); 
                 R32 r = agent->radius/vel_len;
                 Vec2 axis0 = agent->vel*r;
@@ -403,7 +417,6 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
             else
             {
                 I32 sides = 5;
-                U32 color = herbivore_color;
                 R32 vel_len = V2Len(agent->vel); 
                 R32 r = agent->radius/vel_len;
                 Vec2 axis0 = agent->vel*r;
@@ -415,7 +428,6 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam)
         }
         else
         {
-            U32 color = agent->type == AgentType_Carnivore ? carnivore_color : herbivore_color;
             I32 sides = 3;
             PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, color);
         }
@@ -513,6 +525,23 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     I64 offset = 0;
     brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
     agent->brain = brain;
+
+    // Here the gene is known, calculate a nice color to visualize the gene.
+    R32 color_calc[3] = {0,0,0};
+    for(int i = 0; i < brain->gene.n; i++)
+    {
+        color_calc[i%3] += Abs(brain->gene[i]);
+    }
+
+    // Stupid way to calculate max.
+    R32 max_color = Max(color_calc[0], Max(color_calc[1], color_calc[2]));
+    for(int i = 0; i < 3; i++)
+    {
+        color_calc[i] /= max_color;
+    }
+
+    R32 hue = fmodf(color_calc[0]*480.0f, 360.0f);
+    agent->gene_color = HSVAToRGBA(hue, color_calc[1], color_calc[2], 1.0f);
 
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type) + (int)RandomR32Debug(-80, 40);
     agent->energy = GetInitialEnergy(world, agent->type);

@@ -37,6 +37,7 @@ struct SimulationScreen
     bool show_edit_window = true;
     bool show_statistic_window = true;
     bool show_control_window = true;
+    ColorOverlay overlay = ColorOverlay_AgentType;
 
     SimulationSettings settings;
 

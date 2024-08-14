@@ -73,6 +73,9 @@ template <typename T>
 T Min(T a, T b) { return a < b ? a : b; }
 
 template <typename T>
+T Abs(T v) { return v < 0 ? -v : v; }
+
+template <typename T>
 T Clamp(T min, T val, T max)
 {
     if(val < min) return min;
@@ -118,20 +121,66 @@ HexToVec4(U32 hex)
     return color;
 }
 
-static inline uint32_t
+static inline U32
 Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
 {
     uint32_t hex = 0;
 
-    uint8_t rb = (uint8_t)(roundf(r * 255.0f));
-    uint8_t gb = (uint8_t)(roundf(g * 255.0f));
-    uint8_t bb = (uint8_t)(roundf(b * 255.0f));
-    uint8_t ab = (uint8_t)(roundf(a * 255.0f));
+    U8 rb = (U8)(roundf(r * 255.0f));
+    U8 gb = (U8)(roundf(g * 255.0f));
+    U8 bb = (U8)(roundf(b * 255.0f));
+    U8 ab = (U8)(roundf(a * 255.0f));
 
-    hex |= (rb << 24);
-    hex |= (gb << 16);
-    hex |= (bb << 8);
-    hex |= ab;
+    hex |= (ab << 24);
+    hex |= (bb << 16);
+    hex |= (gb << 8);
+    hex |= rb;
 
     return hex;
 }
+
+// h - hue is 0 - 360 (degrees)
+static inline U32
+HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
+{
+    R32 r = 0.0f, g = 0.0f, b = 0.0f;
+
+    // Convert HSV to RGB
+    R32 c = v * s; // Chroma
+    R32 x = c * (1.0f - Abs(fmod(h / 60.0f, 2.0f) - 1.0f));
+    R32 m = v - c;
+
+    if (0.0f <= h && h < 60.0f) {
+        r = c;
+        g = x;
+        b = 0.0f;
+    } else if (60.0f <= h && h < 120.0f) {
+        r = x;
+        g = c;
+        b = 0.0f;
+    } else if (120.0f <= h && h < 180.0f) {
+        r = 0.0f;
+        g = c;
+        b = x;
+    } else if (180.0f <= h && h < 240.0f) {
+        r = 0.0f;
+        g = x;
+        b = c;
+    } else if (240.0f <= h && h < 300.0f) {
+        r = x;
+        g = 0.0f;
+        b = c;
+    } else {
+        r = c;
+        g = 0.0f;
+        b = x;
+    }
+
+    r += m;
+    g += m;
+    b += m;
+
+    // Convert the RGB values to hex using the Vec4ToHex function
+    return Vec4ToHex(r, g, b, a);
+}
+
