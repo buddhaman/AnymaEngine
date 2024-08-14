@@ -42,8 +42,9 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
     - Do carnivores get a reproduction boost if their population is low?
 
 #### TODO
+- Configure amount of eyes and fov.
 - Show indicator when herbivore is hurt.
-- Fix reproduction rate calculation.
+- Edit reproduction rate calculation, more offspring if population is low for instance.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
@@ -59,6 +60,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make list of common colors.
 
 ### Done
+- Show overlays: Make coloring of genes to show genetic distance of different agents.
 - Make color helper functions.
 - Better agent selection, give feedback on agent hitboxes.
 - Plot low dimensional version of genes.
@@ -141,7 +143,8 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 
 ### Ideas
 - For an overview of how the world is evolving, create a kind of sampling minimap. Dont render each individual creature but take a couple of samples for each pixel using the bsp-tree and take the average color. Store these frames and show as animation.
-- Show overlays: Make coloring of genes to show genetic distance of different agents.
+- Set business rules for evolution.
+- Make interesting presets, make it easier for the user.
 
 ### Bugs
 - No agents leads to deadlock?

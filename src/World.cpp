@@ -495,7 +495,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     MemoryArena* brain_arena = world->lifespan_arena;
 
     // Eyes
-    int n_eyes = 4;
+    int n_eyes = 9;
     R32 agent_fov = 0.6f;
     agent->eyes = CreateArray<AgentEye>(brain_arena, n_eyes);
     for(int i = 0; i < n_eyes; i++)

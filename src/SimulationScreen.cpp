@@ -168,14 +168,14 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     {
         R32 factor = log2f(cam->scale) - log2f(min_scale);
         R32 alpha = Clamp(0.0f, factor, 1.0f);
-        U32 color = Vec4ToHex(alpha, 0.3f, 0.3f, 0.3f);
+        U32 color = Vec4ToHex(0.3f, 0.3f, 0.3f, alpha);
         DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
     }
 
     if(cam->scale > 1.0f)
     {
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
-        U32 color = Vec4ToHex(alpha, 0.4f, 0.4f, 0.4f);
+        U32 color = Vec4ToHex(0.4f, 0.4f, 0.4f, alpha);
         DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, thickness, color);
     }
 
