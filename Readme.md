@@ -42,30 +42,29 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
     - Do carnivores get a reproduction boost if their population is low?
 
 #### TODO
-- FIX BUG: SelectFromWorld often has idx out of range.
 - Show indicator when herbivore is hurt.
 - Fix reproduction rate calculation.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
-- Compare two agent genes.
 - Refactor update function in world.cpp.
 - Make active and inactive chunks.
-- Draw active chunks.
 - Fix agents popping into view.
 - Draw scale with some text too. 
-- Plot low dimensional version of genes.
 - Show agents in chunk in debug window. 
 - Consistently call everything either draw or render. 
-- Better agent selection, give feedback on agent hitboxes.
 - Make random number generator.
 - Make texture region.
-- Pass tex_orig and tex_size as texture region.
-- Make chunks selectable.
 - Global empty texture for convenience.
-- Make color header with list of colors and color helper functions.
+- Make list of common colors.
 
 ### Done
+- Make color helper functions.
+- Better agent selection, give feedback on agent hitboxes.
+- Plot low dimensional version of genes.
+- Draw active chunks.
+- Compare two agent genes.
+- FIX BUG: SelectFromWorld often has idx out of range.
 - Highlight currently hovered agent.
 - Create some background in the world, it looks boring right now. 
 - Make neural network library.
