@@ -89,6 +89,8 @@ ZeroArena(MemoryArena* arena)
     memset(arena->base, 0, arena->used);
 }
 
+// This is only really relevant when the overhead of tracking used blocks is too
+// large. Never really useful, TODO: Implement a simple normal memory pool.
 template <typename T>
 struct BittedMemoryPool
 {

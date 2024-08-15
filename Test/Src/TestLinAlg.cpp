@@ -46,7 +46,7 @@ TEST_CASE("Vector operations", "[VecR32]")
 TEST_CASE("Allocation")
 {
     VecR32 a = VecR32Create(arena, 12);
-    a.Apply([](int i, R32 x) -> R32 {return i;});
+    //a.Apply([](int i, R32 x) -> R32 {return i;});
 
     VecR32 b = VecR32Create(arena, 12);
     b.Apply([](R32 x) -> R32 {return 2;});
