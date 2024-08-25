@@ -137,31 +137,9 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
 
     glUseProgram(shader->program_handle);
     UpdateCamera(cam, window->width, window->height);
-
     glUniformMatrix3fv(screen->transform_loc, 1, GL_FALSE, &screen->cam.transform.m[0][0]);
 
-    // Only difference between these if statements is the color but thats done on purpose.
-    if(screen->hovered_agent)
-    {
-        R32 time_factor = 0.25f*sinf(screen->time*10);
-        R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
-        R32 line_width = 0.4f;
-        U32 color = 0xff88aaff;
-        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
-    }
-
-    if(screen->selected_agent)
-    {
-        R32 time_factor = 0.25f*sinf(screen->time*10);
-        R32 radius = screen->selected_agent->radius + screen->extra_selection_radius + time_factor;
-        R32 line_width = 0.4f;
-        U32 color = 0xffaa77ff;
-        PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
-        RenderEyeRays(mesh, screen->selected_agent);
-    }
-
     R32 thickness = 0.2f;
-
     R32 min_scale = 4.0f;
     I32 subdivs = 5;
     if(cam->scale > min_scale)
@@ -182,6 +160,26 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     if(screen->show_chunk_occupancy)
     {
         DrawChunks(world, mesh, &screen->cam);
+    }
+
+    // Only difference between these if statements is the color but thats done on purpose.
+    if(screen->hovered_agent)
+    {
+        R32 time_factor = 0.25f*sinf(screen->time*10);
+        R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
+        R32 line_width = 0.4f;
+        U32 color = 0xff88aaff;
+        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
+    }
+
+    if(screen->selected_agent)
+    {
+        R32 time_factor = 0.25f*sinf(screen->time*10);
+        R32 radius = screen->selected_agent->radius + screen->extra_selection_radius + time_factor;
+        R32 line_width = 0.4f;
+        U32 color = 0xffaa77ff;
+        PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
+        RenderEyeRays(mesh, screen->selected_agent);
     }
 
     RenderWorld(world, mesh, &screen->cam, screen->overlay);

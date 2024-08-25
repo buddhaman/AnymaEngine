@@ -4,11 +4,12 @@ option(USE_ASAN "Enable AddressSanitizer" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "-static-libgcc -static-libstdc++ -g")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
-endif()
+
+# if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#     set(CMAKE_CXX_FLAGS_DEBUG "-static-libgcc -static-libstdc++ -g")
+# elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+#     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+# endif()
 
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
 set(VCPKG_CRT_LINKAGE static)

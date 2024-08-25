@@ -63,6 +63,7 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
 - Make list of common colors.
 
 ### Done
+- Configure energy transfer on hit.
 - Show overlays: Make coloring of genes to show genetic distance of different agents.
 - Make color helper functions.
 - Better agent selection, give feedback on agent hitboxes.
