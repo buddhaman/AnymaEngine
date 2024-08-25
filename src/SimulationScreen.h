@@ -39,8 +39,6 @@ struct SimulationScreen
     bool show_control_window = true;
     ColorOverlay overlay = ColorOverlay_AgentType;
 
-    SimulationSettings settings;
-
     ThreadPool* thread_pool;
     
     SimulationScreen() : update_times(120), num_carnivores(120), num_herbivores(120) {};

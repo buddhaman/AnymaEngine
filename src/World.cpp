@@ -290,8 +290,8 @@ HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
 {
     Assert(herbivore->type==AgentType_Herbivore);
     Assert(carnivore->type==AgentType_Carnivore);
-    herbivore->energy-=5;
-    carnivore->energy+=5;
+    herbivore->energy-=global_settings.energy_transfer_on_hit;
+    carnivore->energy+=global_settings.energy_transfer_on_hit;
 }
 
 static inline void
@@ -630,8 +630,9 @@ ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
 }
 
 World* 
-CreateWorld(MemoryArena* arena, SimulationSettings* settings)
+CreateWorld(MemoryArena* arena)
 {
+    SimulationSettings* settings = &global_settings;
     World* world = PushStruct(arena, World);
     *world = World{};
     world->arena = arena;

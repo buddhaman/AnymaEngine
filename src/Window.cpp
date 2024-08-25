@@ -112,7 +112,7 @@ WindowBegin(Window* window)
 
     // Start ImGui Frame
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(window->window);
+    ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
     // Create central dockspace for imgui.

@@ -152,5 +152,5 @@ void
 ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
 
 World*
-CreateWorld(MemoryArena* arena, SimulationSettings* settings);
+CreateWorld(MemoryArena* arena);
 

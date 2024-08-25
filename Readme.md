@@ -42,8 +42,11 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
     - Do carnivores get a reproduction boost if their population is low?
 
 #### TODO
+- Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Show indicator when herbivore is hurt.
+- Recoil, or however you wanna call it when a herbivore is hurt. 
+- Actual charge/attack for carnivore.
 - Edit reproduction rate calculation, more offspring if population is low for instance.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.

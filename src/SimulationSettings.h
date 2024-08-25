@@ -20,4 +20,8 @@ struct SimulationSettings
     int x_chunks = DEFAULT_AXIS_CHUNKS;
     int y_chunks = DEFAULT_AXIS_CHUNKS;
     R32 default_mutation_rate = 0.004f;
+
+    I32 energy_transfer_on_hit = 4;
 };
+
+inline SimulationSettings global_settings;

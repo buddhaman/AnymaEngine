@@ -217,7 +217,7 @@ void
 EditSettings(SimulationScreen* screen)
 {
     ImGui::SeparatorText("World settings");
-    SimulationSettings* settings = &screen->settings;
+    SimulationSettings* settings = &global_settings;
     World* world = screen->world;
     bool changed = false;
     changed |= ImGuiInputInt("Max agents", &settings->max_agents, 1, 256000);
@@ -226,6 +226,7 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 256);
     changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 256);
     changed |= ImGuiInputFloat("Mutation rate", &world->mutation_rate, 0.0f, 1.0f);
+    changed |= ImGuiInputInt("Energy on hit", &settings->energy_transfer_on_hit, 1, 10);
     (void)changed; // Not used yet/anymore.
 
     if(ImGui::Button("Add herbivore"))
@@ -349,7 +350,8 @@ DoStatisticsWindow(SimulationScreen* screen)
     DynamicArray<R32> bottom(screen->num_herbivores.size);
     bottom.FillAndSetValue(0);
 
-    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, screen->settings.max_agents, ImPlotCond_Always);
+    I32 max_agents = global_settings.max_agents;
+    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, max_agents, ImPlotCond_Always);
     if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
     {
         ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
@@ -456,6 +458,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         }
 
         screen->hovered_agent = SelectFromWorld(world, world_mouse_pos, screen->extra_selection_radius);
+
         if(IsMouseClicked(input, 0))
         {
             screen->selected_agent = screen->hovered_agent;
@@ -479,7 +482,7 @@ void
 RestartWorld(SimulationScreen* screen)
 {
     ClearArena(screen->world_arena);
-    screen->world = CreateWorld(screen->world_arena, &screen->settings);
+    screen->world = CreateWorld(screen->world_arena);
 }
 
 void
