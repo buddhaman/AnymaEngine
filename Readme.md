@@ -41,12 +41,19 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
     - Allow sprinting, how much energy to take on a sprint?
     - Do carnivores get a reproduction boost if their population is low?
 
+#### Design
+
+Ideas for charge / attack:
+- Give both carnivores and herbivores the ability to sprint, but for carnivores this is the only way to
+  attack a herbivore. Sprinting can either deplete total energy, or there can be a seperate sprint energy 
+  that just fills over time.
+
 #### TODO
+- Give carnivore agents a charge/attack procedure that is controlled by a neuron. This costs energy.
+- Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Show indicator when herbivore is hurt.
-- Recoil, or however you wanna call it when a herbivore is hurt. 
-- Actual charge/attack for carnivore.
 - Edit reproduction rate calculation, more offspring if population is low for instance.
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.

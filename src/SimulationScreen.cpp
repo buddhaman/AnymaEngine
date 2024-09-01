@@ -152,7 +152,6 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
 
     if(cam->scale > 1.0f)
     {
-
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
         U32 color = Vec4ToHex(0.4f, 0.4f, 0.4f, alpha);
         DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, thickness, color);
@@ -334,7 +333,7 @@ DoStatisticsWindow(SimulationScreen* screen)
     }
 
     // Collect population info
-    if((screen->track_population_per-=screen->updates_per_frame) <= 0)
+    if((screen->track_population_per-=screen->updates_per_frame) <= 0 && !screen->isPaused)
     {
         screen->track_population_per = 30;
         screen->num_herbivores.Shift(-1);
