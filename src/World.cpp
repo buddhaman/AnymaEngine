@@ -677,7 +677,9 @@ CreateWorld(MemoryArena* arena)
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
     world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
-    // Stupid way to calculate number of blocks 
+    // Stupid way to calculate number of blocks. This whole part is stupid, I
+    // just need a simple memory pool. Not this bitted thing I dont know why I
+    // made it.
     U32 n_blocks = max_agents/32+1;
     world->agent_pool = CreateBittedMemoryPool<Agent>(arena, n_blocks);
     world->brain_pool = CreateBittedMemoryPool<Brain>(arena, n_blocks);
