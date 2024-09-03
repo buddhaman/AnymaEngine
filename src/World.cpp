@@ -127,6 +127,7 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
         Agent* agent = world->agents[agent_idx];
         RayCollision collision;
         agent->brain->input.Set(0);
+
         // Raycasting and updating eye sensors.
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
@@ -533,7 +534,8 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
         color_calc[i%3] += Abs(brain->gene[i]);
     }
 
-    // Stupid way to calculate max.
+    // Stupid way to calculate max of 3 numbers. Should make library function
+    // for this.
     R32 max_color = Max(color_calc[0], Max(color_calc[1], color_calc[2]));
     for(int i = 0; i < 3; i++)
     {

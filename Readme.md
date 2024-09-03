@@ -58,7 +58,6 @@ Ideas for charge / attack:
 - Implement my own std::function.
 - OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
-- Refactor update function in world.cpp.
 - Make active and inactive chunks.
 - Fix agents popping into view.
 - Draw scale with some text too. 
