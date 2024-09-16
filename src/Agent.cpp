@@ -28,7 +28,6 @@ void
 UpdateMovement(World* world, Agent* agent)
 {
     R32 turn_speed = 0.2f;
-    //agent->orientation += RandomR32Debug(-dev, dev);
     agent->orientation += (agent->brain->output[0]-agent->brain->output[1])*turn_speed;
     R32 charge_threshold = 0.25f;
     R32 charge_output = agent->brain->output[3];
@@ -38,12 +37,19 @@ UpdateMovement(World* world, Agent* agent)
         // Start charging.
         agent->charge = global_settings.charge_duration;
         agent->charge_refractory = global_settings.charge_refractory_period + global_settings.charge_duration;
+        agent->energy -= 40;
     }
 
     R32 charge_amount = 0;
     if(agent->charge)
     {
+        agent->charge--;
         charge_amount = 1.0;
+    }
+
+    if(agent->charge_refractory)
+    {
+        agent->charge_refractory--;
     }
 
     R32 spec_speed = agent->type==AgentType_Carnivore ? 0.8f : 0.5f;

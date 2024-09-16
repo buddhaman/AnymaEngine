@@ -365,6 +365,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
     // Draw world as square
     R32 world_rect_width = 2.0f/cam->scale;
     PushLineRect(mesh, V2(0,0), world->size, world_rect_width, V2(0,0), V2(0,0), 0x88888888);
+
     // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
@@ -400,6 +401,16 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
             {
                 color = agent->type==AgentType_Herbivore ? herbivore_color : carnivore_color;
             } break;
+        }
+
+        // If charging then make color brighter, if refractory make darker
+        if(agent->charge)
+        {
+            color = 0xffffffff;
+        }
+        else if (agent->charge_refractory)
+        {
+            color = 0xff000000;
         }
 
         // TODO: Better just make two completely separate loops

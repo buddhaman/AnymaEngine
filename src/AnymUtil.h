@@ -121,7 +121,7 @@ HexToVec4(U32 hex)
     return color;
 }
 
-static inline U32
+static inline U32 
 Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
 {
     uint32_t hex = 0;
@@ -131,12 +131,24 @@ Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
     U8 bb = (U8)(roundf(b * 255.0f));
     U8 ab = (U8)(roundf(a * 255.0f));
 
-    hex |= (ab << 24);
-    hex |= (bb << 16);
-    hex |= (gb << 8);
-    hex |= rb;
+    hex |= (rb << 24);  // Red
+    hex |= (gb << 16);  // Green
+    hex |= (bb << 8);   // Blue
+    hex |= ab;          // Alpha
 
     return hex;
+}
+
+// Little stupid could be more efficient but easy to implement this way. I hope
+// the compiler turns it into something nice :)
+static inline U32
+ShadeColor(U32 hex, R32 shade)
+{
+    Vec4 color = HexToVec4(hex);
+    color.r *= shade;
+    color.g *= shade;
+    color.b *= shade;
+    return Vec4ToHex(color.r, color.g, color.b, color.a);
 }
 
 // h - hue is 0 - 360 (degrees)
