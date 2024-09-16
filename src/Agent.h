@@ -41,6 +41,8 @@ struct Agent
 
     R32 orientation;
     R32 radius;
+    I32 charge;
+    I32 charge_refractory;
 
     Array<AgentEye> eyes;
     Brain* brain;
