@@ -22,8 +22,8 @@ struct SimulationSettings
     R32 default_mutation_rate = 0.004f;
 
     I32 energy_transfer_on_hit = 4;
-    I32 charge_duration = 60;     // 60 per seconds.
-    I32 charge_refractory_period = 120;     // 60 per seconds.
+    I32 charge_duration = 20;     // 60 per second.
+    I32 charge_refractory_period = 240;     // 60 per second.
 };
 
 inline SimulationSettings global_settings;

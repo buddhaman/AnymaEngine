@@ -49,7 +49,7 @@ Ideas for charge / attack:
   that just fills over time.
 
 #### TODO
-- Give carnivore agents a charge/attack procedure that is controlled by a neuron. This costs energy.
+- Use the charge or refractory value to disable movement for herbivore agents.
 - Animate when an agent is in this stage.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
 - Make grass fields , energy in ground.
@@ -71,6 +71,7 @@ Ideas for charge / attack:
 - Make list of common colors.
 
 ### Done
+- Give carnivore agents a charge/attack procedure that is controlled by a neuron. This costs energy.
 - Configure energy transfer on hit.
 - Show overlays: Make coloring of genes to show genetic distance of different agents.
 - Make color helper functions.
