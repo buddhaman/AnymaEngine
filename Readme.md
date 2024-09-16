@@ -50,9 +50,11 @@ Ideas for charge / attack:
 
 #### TODO
 - Give carnivore agents a charge/attack procedure that is controlled by a neuron. This costs energy.
+- Animate when an agent is in this stage.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
+- Create real and simple memory pool with chunks
 - Show indicator when herbivore is hurt.
 - Edit reproduction rate calculation, more offspring if population is low for instance.
 - Implement my own std::function.
