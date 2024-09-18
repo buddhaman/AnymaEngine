@@ -302,6 +302,10 @@ HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
         // Actual hit!
         herbivore->energy-=global_settings.energy_transfer_on_hit;
         carnivore->energy+=global_settings.energy_transfer_on_hit;
+
+        // Set herbivore to refractory
+        herbivore->charge_refractory = global_settings.charge_refractory_period;
+
         return false;
     }
 

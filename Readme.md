@@ -49,7 +49,7 @@ Ideas for charge / attack:
   that just fills over time.
 
 #### TODO
-- Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
+- Show charge of agent in ui.
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Create real and simple memory pool with chunks
@@ -69,6 +69,7 @@ Ideas for charge / attack:
 - Make list of common colors.
 
 ### Done
+- Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
 - Use the charge or refractory value to disable movement for herbivore agents.
 - Fix colors everywhere, follow imgui layout.
 - Give carnivore agents a charge/attack procedure that is controlled by a neuron. This costs energy.

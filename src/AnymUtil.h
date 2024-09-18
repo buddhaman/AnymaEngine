@@ -110,14 +110,13 @@ RandomNormalPairDebug()
     return V2(factor*x, factor*y);
 }
 
-static inline Vec4
-ColorToVec4(U32 u32color)
+static inline Vec4 ColorToVec4(U32 u32color)
 {
     Vec4 color;
-    color.r = ((u32color) & 0xFF) / 255.0f;
-    color.g = ((u32color >> 8) & 0xFF) / 255.0f;
-    color.b = ((u32color >> 16) & 0xFF) / 255.0f;
-    color.a = (u32color & 24) / 255.0f;
+    color.r = ((u32color >> 24) & 0xFF) / 255.0f;
+    color.g = ((u32color >> 16) & 0xFF) / 255.0f;
+    color.b = ((u32color >> 8) & 0xFF) / 255.0f;
+    color.a = (u32color & 0xFF) / 255.0f;  
     return color;
 }
 
