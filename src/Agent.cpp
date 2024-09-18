@@ -58,9 +58,12 @@ UpdateMovement(World* world, Agent* agent)
     }
 
     R32 spec_speed = 0.5f;
+    R32 friction = 0.3f;
     R32 speed = agent->brain->output[2]*spec_speed*(1.0f+charge_amount);
     Vec2 dir = V2Polar(agent->orientation, 1.0f);
-    agent->vel = speed * dir;
+    Vec2 vel = speed * dir;
+    agent->vel *= friction;
+    agent->vel += vel;
     agent->pos += agent->vel;
 
     Vec2 offset = V2(0,0);

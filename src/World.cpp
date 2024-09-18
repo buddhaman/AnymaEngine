@@ -306,6 +306,9 @@ HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
         // Set herbivore to refractory
         herbivore->charge_refractory = global_settings.charge_refractory_period;
 
+        // Add a nice extra impulse to the herbivore
+        herbivore->vel += 10*carnivore->vel;
+
         return false;
     }
 
