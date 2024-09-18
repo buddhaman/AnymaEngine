@@ -111,18 +111,35 @@ RandomNormalPairDebug()
 }
 
 static inline Vec4
-HexToVec4(U32 hex)
+ColorToVec4(U32 u32color)
 {
     Vec4 color;
-    color.r = ((hex >> 24) & 0xFF) / 255.0f;
-    color.g = ((hex >> 16) & 0xFF) / 255.0f;
-    color.b = ((hex >> 8) & 0xFF) / 255.0f;
-    color.a = (hex & 0xFF) / 255.0f;
+    color.r = ((u32color) & 0xFF) / 255.0f;
+    color.g = ((u32color >> 8) & 0xFF) / 255.0f;
+    color.b = ((u32color >> 16) & 0xFF) / 255.0f;
+    color.a = (u32color & 24) / 255.0f;
     return color;
 }
 
 static inline U32 
-Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
+RGBAColor(U8 r, U8 g, U8 b, U8 a)
+{
+    return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+static inline U32 
+HexToColor(U32 hex)
+{
+    U32 r = (hex >> 24) & 0xFF;  
+    U32 g = (hex >> 16) & 0xFF; 
+    U32 b = (hex >> 8) & 0xFF; 
+    U32 a = hex & 0xFF;       
+    
+    return RGBAColor(r, g, b, a);
+}
+
+static inline U32 
+Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
 {
     uint32_t hex = 0;
 
@@ -131,24 +148,13 @@ Vec4ToHex(R32 r, R32 g, R32 b, R32 a)
     U8 bb = (U8)(roundf(b * 255.0f));
     U8 ab = (U8)(roundf(a * 255.0f));
 
-    hex |= (rb << 24);  // Red
-    hex |= (gb << 16);  // Green
-    hex |= (bb << 8);   // Blue
-    hex |= ab;          // Alpha
-
-    return hex;
+    return RGBAColor(rb, gb, bb, ab);
 }
 
-// Little stupid could be more efficient but easy to implement this way. I hope
-// the compiler turns it into something nice :)
-static inline U32
-ShadeColor(U32 hex, R32 shade)
+static inline U32 
+Vec4ToColor(Vec4 color)
 {
-    Vec4 color = HexToVec4(hex);
-    color.r *= shade;
-    color.g *= shade;
-    color.b *= shade;
-    return Vec4ToHex(color.r, color.g, color.b, color.a);
+    return Vec4ToColor(color.r, color.g, color.b, color.a);
 }
 
 // h - hue is 0 - 360 (degrees)
@@ -203,6 +209,6 @@ HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
     b += m;
 
     // Convert the RGB values to hex using the Vec4ToHex function
-    return Vec4ToHex(r, g, b, a);
+    return Vec4ToColor(r, g, b, a);
 }
 

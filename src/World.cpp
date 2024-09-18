@@ -362,9 +362,9 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
     R32 eye_d = r*0.4f;
     R32 eye_r = r*0.4f;
     R32 eye_orientation = agent->orientation;
-    U32 eye_color = 0xffffffff;
+    U32 eye_color = RGBAColor(255, 255, 255, 255);
 
-    U32 pupil_color = 0xff000000;
+    U32 pupil_color = RGBAColor(0,0,0,255);
     R32 pupil_r = eye_r*0.7f;
 
     // Eyes
@@ -381,7 +381,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
 {
     // Draw world as square
     R32 world_rect_width = 2.0f/cam->scale;
-    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, V2(0,0), V2(0,0), 0x88888888);
+    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, V2(0,0), V2(0,0), RGBAColor(150, 150, 150, 150));
 
     // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
@@ -402,16 +402,16 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
         Vec2 uv = V2(0,0);
         Vec2 dir = V2Polar(agent->orientation, 1.0f);
         Vec2 perp = V2(dir.y, -dir.x);
-        U32 herbivore_color = 0xff0ff000;
-        U32 carnivore_color = 0xff0000ff;
-        U32 color;
+        Vec4 herbivore_color = V4(0, 1, 0, 1);
+        Vec4 carnivore_color = V4(1, 0, 0, 1);
+        Vec4 color;
 
         // Overwrite for gene info
         switch(color_overlay)
         {
             case ColorOverlay_AgentGenes:
             {
-                color = agent->gene_color;
+                color = ColorToVec4(agent->gene_color);
             } break;
 
             default:
@@ -420,14 +420,16 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
             } break;
         }
 
-        // If charging then make color brighter, if refractory make darker
         if(IsCharging(agent))
         {
-            color = 0xffffffff;
+            // If charging we know its a carnivore now. Set bright red.
+            color = V4(1.0f, 0.3f, 0.3f, 1.0f);
+            color.a = 1.0f;
         }
         else if (IsRefractory(agent))
         {
-            color = 0xff000000;
+            color = 0.5f * color;
+            color.a = 1.0f;
         }
 
         // TODO: Better just make two completely separate loops
@@ -441,7 +443,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
                 axis0=(axis0*(1.0+vel_len));
-                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, color);
+                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             else
             {
@@ -451,14 +453,14 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
                 axis0=(axis0*(1.0+vel_len));
-                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, color);
+                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             RenderDetails(mesh, agent);
         }
         else
         {
             I32 sides = 3;
-            PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, color);
+            PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, Vec4ToColor(color));
         }
     }
 }
@@ -470,7 +472,7 @@ DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        U32 color = chunk->agent_indices.size > 0 ? 0xff00ff00 : 0x66666666;
+        U32 color = chunk->agent_indices.size > 0 ? RGBAColor(0, 255, 0, 255) : RGBAColor(80, 80, 80, 80);
         PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), color);
     }
 }

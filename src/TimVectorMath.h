@@ -391,6 +391,82 @@ V3AngleBetween(Vec3 a, Vec3 b)
 	return acosf(V3Dot(a, b) / (V3Len(a) * V3Len(b)));
 }
 
+// V4
+
+// Vec4 arithmetic operations
+
+static inline Vec4
+V4Add(Vec4 a, Vec4 b)
+{
+    return {{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}};
+}
+
+static inline Vec4
+V4AddS(Vec4 a, float s)
+{
+    return {{a.x + s, a.y + s, a.z + s, a.w + s}};
+}
+
+static inline Vec4
+V4Sub(Vec4 a, Vec4 b)
+{
+    return {{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}};
+}
+
+static inline Vec4
+V4SubS(Vec4 a, float s)
+{
+    return {{a.x - s, a.y - s, a.z - s, a.w - s}};
+}
+
+static inline Vec4
+V4Mul(Vec4 a, Vec4 b)
+{
+    return {{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}};
+}
+
+static inline Vec4
+V4MulS(Vec4 a, float s)
+{
+    return {{a.x * s, a.y * s, a.z * s, a.w * s}};
+}
+
+static inline Vec4
+V4Div(Vec4 a, Vec4 b)
+{
+    return {{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}};
+}
+
+static inline Vec4
+V4DivS(Vec4 a, float s)
+{
+    return {{a.x / s, a.y / s, a.z / s, a.w / s}};
+}
+
+// Vec4 vector operations
+
+static inline float
+V4Len(Vec4 v)
+{
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+}
+
+static inline float
+V4Dot(Vec4 a, Vec4 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+static inline Vec4
+V4Norm(Vec4 v)
+{
+    float len = V4Len(v);
+    if (len > 0)
+        return {{v.x / len, v.y / len, v.z / len, v.w / len}};
+    else
+        return {{0, 0, 0, 0}};
+}
+
 static inline Mat4
 M4Identity()
 {
@@ -497,9 +573,10 @@ M4Mul(Mat4 a, Mat4 b)
 }
 
 #ifdef __cplusplus
+// Vec2 operators
 static inline Vec2 operator-(Vec2 a)
 {
-	return V2(-a.x, -a.y);
+    return V2(-a.x, -a.y);
 }
 
 static inline Vec2 operator+(Vec2 a, Vec2 b) { return V2Add(a, b); }
@@ -513,10 +590,17 @@ static inline Vec2 operator/(Vec2 a, Vec2 b) { return V2Div(a, b); }
 static inline Vec2 operator/(Vec2 a, float b) { return V2DivS(a, b); }
 static inline Vec2 operator/(float a, Vec2 b) { return V2DivS(b, 1.0f/a); }
 
-static inline Vec2 operator+=(Vec2 &left, Vec2 right) { return left = V2Add(left, right); }
-static inline Vec2 operator-=(Vec2 &left, Vec2 right) { return left = V2Sub(left, right); }
+static inline Vec2& operator+=(Vec2 &left, Vec2 right) { return left = V2Add(left, right); }
+static inline Vec2& operator-=(Vec2 &left, Vec2 right) { return left = V2Sub(left, right); }
+static inline Vec2& operator*=(Vec2 &left, float right) { return left = V2MulS(left, right); }
+static inline Vec2& operator/=(Vec2 &left, float right) { return left = V2DivS(left, right); }
 
-// Vec3
+// Vec3 operators
+static inline Vec3 operator-(Vec3 a)
+{
+    return V3(-a.x, -a.y, -a.z);
+}
+
 static inline Vec3 operator+(Vec3 a, Vec3 b) { return V3Add(a, b); }
 static inline Vec3 operator-(Vec3 a, Vec3 b) { return V3Sub(a, b); }
 
@@ -524,8 +608,36 @@ static inline Vec3 operator*(Vec3 a, Vec3 b) { return V3Mul(a, b); }
 static inline Vec3 operator*(Vec3 a, float b) { return V3MulS(a, b); }
 static inline Vec3 operator*(float a, Vec3 b) { return V3MulS(b, a); }
 
-static inline Vec3 operator+=(Vec3 &left, Vec3 right) { return left = V3Add(left, right); }
-static inline Vec3 operator-=(Vec3 &left, Vec3 right) { return left = V3Sub(left, right); }
+static inline Vec3 operator/(Vec3 a, Vec3 b) { return V3Div(a, b); }
+static inline Vec3 operator/(Vec3 a, float b) { return V3DivS(a, b); }
+static inline Vec3 operator/(float a, Vec3 b) { return V3DivS(b, 1.0f/a); }
+
+static inline Vec3& operator+=(Vec3 &left, Vec3 right) { return left = V3Add(left, right); }
+static inline Vec3& operator-=(Vec3 &left, Vec3 right) { return left = V3Sub(left, right); }
+static inline Vec3& operator*=(Vec3 &left, float right) { return left = V3MulS(left, right); }
+static inline Vec3& operator/=(Vec3 &left, float right) { return left = V3DivS(left, right); }
+
+// Vec4 operators
+static inline Vec4 operator-(Vec4 a)
+{
+    return V4(-a.x, -a.y, -a.z, -a.w);
+}
+
+static inline Vec4 operator+(Vec4 a, Vec4 b) { return V4Add(a, b); }
+static inline Vec4 operator-(Vec4 a, Vec4 b) { return V4Sub(a, b); }
+
+static inline Vec4 operator*(Vec4 a, Vec4 b) { return V4Mul(a, b); }
+static inline Vec4 operator*(Vec4 a, float b) { return V4MulS(a, b); }
+static inline Vec4 operator*(float a, Vec4 b) { return V4MulS(b, a); }
+
+static inline Vec4 operator/(Vec4 a, Vec4 b) { return V4Div(a, b); }
+static inline Vec4 operator/(Vec4 a, float b) { return V4DivS(a, b); }
+static inline Vec4 operator/(float a, Vec4 b) { return V4DivS(b, 1.0f/a); }
+
+static inline Vec4& operator+=(Vec4 &left, Vec4 right) { return left = V4Add(left, right); }
+static inline Vec4& operator-=(Vec4 &left, Vec4 right) { return left = V4Sub(left, right); }
+static inline Vec4& operator*=(Vec4 &left, float right) { return left = V4MulS(left, right); }
+static inline Vec4& operator/=(Vec4 &left, float right) { return left = V4DivS(left, right); }
 
 #endif
 

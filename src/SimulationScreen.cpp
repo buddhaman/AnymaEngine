@@ -36,8 +36,8 @@ const char* fragment_shader_source = R"glsl(
     
     void main() 
     {
-        vec3 gammaCorrectedColor = pow(v_color.rgb, vec3(1.0/2.2));
-        frag_color = vec4(gammaCorrectedColor, v_color.a);
+        vec3 gammaCorrectedColor = pow(v_color.abg, vec3(1.0/2.2));
+        frag_color = vec4(gammaCorrectedColor, v_color.r);
     }
 )glsl";
 
@@ -146,14 +146,14 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     {
         R32 factor = log2f(cam->scale) - log2f(min_scale);
         R32 alpha = Clamp(0.0f, factor, 1.0f);
-        U32 color = Vec4ToHex(0.3f, 0.3f, 0.3f, alpha);
+        U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
         DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
     }
 
     if(cam->scale > 1.0f)
     {
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
-        U32 color = Vec4ToHex(0.4f, 0.4f, 0.4f, alpha);
+        U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
         DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, thickness, color);
     }
 
