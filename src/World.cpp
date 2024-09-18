@@ -286,13 +286,26 @@ UpdateWorld(World* world)
     }
 }
 
-void
+bool
 HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
 {
     Assert(herbivore->type==AgentType_Herbivore);
     Assert(carnivore->type==AgentType_Carnivore);
-    herbivore->energy-=global_settings.energy_transfer_on_hit;
-    carnivore->energy+=global_settings.energy_transfer_on_hit;
+
+    if(IsRefractory(herbivore))
+    {
+        return false;
+    }
+
+    if(IsCharging(carnivore))
+    {
+        // Actual hit!
+        herbivore->energy-=global_settings.energy_transfer_on_hit;
+        carnivore->energy+=global_settings.energy_transfer_on_hit;
+        return false;
+    }
+
+    return true;
 }
 
 static inline void
@@ -303,19 +316,23 @@ CheckAgentCollisions(Agent* agent0, Agent* agent1)
     R32 radsum = agent0->radius+agent1->radius;
     if(l2 < radsum*radsum)
     {
+        bool resolve = true;
         if(agent0->type==AgentType_Carnivore && agent1->type==AgentType_Herbivore)
         {
-            HerbivoreCarnivoreCollision(agent1, agent0);
+            resolve = HerbivoreCarnivoreCollision(agent1, agent0);
         }
         else if(agent0->type==AgentType_Herbivore && agent1->type==AgentType_Carnivore)
         {
-            HerbivoreCarnivoreCollision(agent0, agent1);
+            resolve = HerbivoreCarnivoreCollision(agent0, agent1);
         }
         // Resolve collision
-        R32 l = sqrtf(l2);
-        R32 amount = radsum-l;
-        agent1->pos += amount*diff/2.0f;
-        agent0->pos -= amount*diff/2.0f;
+        if(resolve)
+        {
+            R32 l = sqrtf(l2);
+            R32 amount = radsum-l;
+            agent1->pos += amount*diff/2.0f;
+            agent0->pos -= amount*diff/2.0f;
+        }
     }
 }
 
@@ -404,11 +421,11 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
         }
 
         // If charging then make color brighter, if refractory make darker
-        if(agent->charge)
+        if(IsCharging(agent))
         {
             color = 0xffffffff;
         }
-        else if (agent->charge_refractory)
+        else if (IsRefractory(agent))
         {
             color = 0xff000000;
         }

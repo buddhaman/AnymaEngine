@@ -70,7 +70,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     }
 
     ThreadPool* thread_pool = screen->thread_pool;
-    int num_ranges = thread_pool->workers.size;
+    int num_ranges = world->agents.size > thread_pool->workers.size ? thread_pool->workers.size : 1;
     DynamicArray<int> ranges(num_ranges+1);
     int range_size = world->agents.size / num_ranges;
     for(int i = 0; i < num_ranges; i++)
@@ -225,7 +225,7 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 256);
     changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 256);
     changed |= ImGuiInputFloat("Mutation rate", &world->mutation_rate, 0.0f, 1.0f);
-    changed |= ImGuiInputInt("Energy on hit", &settings->energy_transfer_on_hit, 1, 10);
+    changed |= ImGuiInputInt("Energy on hit", &settings->energy_transfer_on_hit, 1, 1000);
     (void)changed; // Not used yet/anymore.
 
     if(ImGui::Button("Add herbivore"))

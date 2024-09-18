@@ -49,6 +49,7 @@ Ideas for charge / attack:
   that just fills over time.
 
 #### TODO
+- Fix colors everywhere, follow imgui layout.
 - Use the charge or refractory value to disable movement for herbivore agents.
 - Animate when an agent is in this stage.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?

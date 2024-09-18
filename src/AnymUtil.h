@@ -162,27 +162,37 @@ HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
     R32 x = c * (1.0f - Abs(fmod(h / 60.0f, 2.0f) - 1.0f));
     R32 m = v - c;
 
-    if (0.0f <= h && h < 60.0f) {
+    if (0.0f <= h && h < 60.0f) 
+    {
         r = c;
         g = x;
         b = 0.0f;
-    } else if (60.0f <= h && h < 120.0f) {
+    } 
+    else if (60.0f <= h && h < 120.0f) 
+    {
         r = x;
         g = c;
         b = 0.0f;
-    } else if (120.0f <= h && h < 180.0f) {
+    } 
+    else if (120.0f <= h && h < 180.0f) 
+    {
         r = 0.0f;
         g = c;
         b = x;
-    } else if (180.0f <= h && h < 240.0f) {
+    } 
+    else if (180.0f <= h && h < 240.0f) 
+    {
         r = 0.0f;
         g = x;
         b = c;
-    } else if (240.0f <= h && h < 300.0f) {
+    } 
+    else if (240.0f <= h && h < 300.0f) 
+    {
         r = x;
         g = 0.0f;
         b = c;
-    } else {
+    } else 
+    {
         r = c;
         g = 0.0f;
         b = x;

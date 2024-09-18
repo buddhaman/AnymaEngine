@@ -89,3 +89,18 @@ GetTicksUntilReproduction(World* world, AgentType type);
 
 I32
 GetInitialEnergy(World* world, AgentType type);
+
+static inline bool
+IsCharging(Agent* agent)
+{
+    return agent->charge;
+}
+
+static inline bool
+IsRefractory(Agent* agent)
+{
+    return agent->charge_refractory != 0;
+}
+
+
+
