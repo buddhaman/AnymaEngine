@@ -180,7 +180,6 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         U32 color = 0xffaa77ff;
         PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
         RenderEyeRays(mesh, screen->selected_agent);
-        std::cout << "I just got selected " <<  screen->selected_agent << std::endl;
     }
 
     RenderWorld(world, mesh, &screen->cam, screen->overlay);

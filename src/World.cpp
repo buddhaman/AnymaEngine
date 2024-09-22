@@ -172,14 +172,17 @@ UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx)
         if(agent->ticks_until_reproduce <= 0)
         {
             agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-            Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
-            int more = agent->type==AgentType_Carnivore ? 4 : 2;
-            int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
-            for(int i = 0; i < n_rep; i++)
+            if(world->num_agenttype[agent->type] < global_settings.max_agents*0.9f)
             {
-                if(CanAddAgent(world, at_pos))
+                Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
+                int more = agent->type==AgentType_Carnivore ? 4 : 2;
+                int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
+                for(int i = 0; i < n_rep; i++)
                 {
-                    AddAgent(world, agent->type, at_pos, agent);
+                    if(CanAddAgent(world, at_pos))
+                    {
+                        AddAgent(world, agent->type, at_pos, agent);
+                    }
                 }
             }
         }
