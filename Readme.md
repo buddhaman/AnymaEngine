@@ -49,6 +49,9 @@ Ideas for charge / attack:
   that just fills over time.
 
 #### TODO
+- Make particles when agent gets killed or dies.
+- Show health when zoomed in.
+- Show charge when zoomed in.
 - Show charge of agent in ui.
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.

@@ -387,6 +387,18 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 }
 
 void 
+RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
+{
+    R32 r = agent->radius;
+    R32 full_bar_width = r*2;
+    R32 bar_height = r/2.0f;
+    // Divide by herbivore initial energy since this is more than carnivore initial energy.
+    R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)world->carnivore_initial_energy);
+    Vec2 u = V2(0,0);
+    PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, u, RGBAColor(0, 255, 0, 255));
+}
+
+void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overlay)
 {
     // Draw world as square
@@ -466,6 +478,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             RenderDetails(mesh, agent);
+            RenderHealth(mesh, world, agent);
         }
         else
         {

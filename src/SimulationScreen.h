@@ -37,6 +37,9 @@ struct SimulationScreen
     bool show_edit_window = true;
     bool show_statistic_window = true;
     bool show_control_window = true;
+
+    bool show_health = true;
+
     ColorOverlay overlay = ColorOverlay_AgentType;
 
     ThreadPool* thread_pool;

@@ -122,6 +122,9 @@ void
 RenderDetails(Mesh2D* mesh, Agent* agent);
 
 void 
+RenderHealth(Mesh2D* mesh, Agent* agent);
+
+void 
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overlay = ColorOverlay_AgentType);
 
 void 
