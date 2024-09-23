@@ -95,6 +95,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     }
     //thread_pool->WaitForFinish();
 
+    UpdateParticles(world);
 
     #endif
 }
@@ -456,8 +457,6 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
             //R32 vel = 0.8f;
             //TrySpawnParticle(world, world_mouse_pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.8f, RGBAColor(255, 0, 255, 255));
         }
-
-        UpdateParticles(world);
 
         screen->hovered_agent = SelectFromWorld(world, world_mouse_pos, screen->extra_selection_radius);
 
