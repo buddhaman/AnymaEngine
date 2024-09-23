@@ -171,11 +171,11 @@ UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx)
                 && InBounds(cam->bounds, agent->pos))
             {
                 // Try spawn particle
-                R32 vel = 0.8f;
+                R32 vel = 1.4f;
                 U32 color = GetAgentColor(agent->type);
                 for(int i = 0; i < 5; i++)
                 {
-                    TrySpawnParticle(world, agent->pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.8f, color);
+                    TrySpawnParticle(world, agent->pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.45f, color);
                 }
             }
             RemoveAgent(world, agent_idx);
@@ -509,7 +509,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
             Particle& p = world->particles[particle_idx];
             I32 sides = 5;
             R32 vel_len = V2Len(p.vel); 
-            R32 r = p.lifetime/vel_len;
+            R32 r = 1.2f*p.lifetime/vel_len;
             Vec2 axis0 = p.vel*r;
             Vec2 axis1 = V2(-axis0.y, axis0.x);
             axis0=(axis0*(1.0+vel_len));
@@ -733,6 +733,14 @@ TrySpawnParticle(World* world, Vec2 pos, Vec2 vel, R32 lifetime, U32 color)
 void
 UpdateParticles(World* world)
 {
+    // Clear all particles if no particles should be spawned. Particles are only
+    // cosmetic.
+    if(!world->spawn_particles)
+    {
+        world->particles.Clear();
+        return;
+    }
+
     // Update particles 
     for(int particle_idx = 0; particle_idx < world->particles.size; particle_idx++)
     {
