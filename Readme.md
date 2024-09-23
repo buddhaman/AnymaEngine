@@ -49,10 +49,10 @@ Ideas for charge / attack:
   that just fills over time.
 
 #### TODO
-- Make particles when agent gets killed or dies.
-- Show health when zoomed in.
 - Show charge when zoomed in.
 - Show charge of agent in ui.
+- Port to webassembly and run online.
+- Move game-engine related stuff to different folder and turn into reusable game-engine.
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Create real and simple memory pool with chunks
@@ -72,6 +72,8 @@ Ideas for charge / attack:
 - Make list of common colors.
 
 ### Done
+- Make particles when agent gets killed or dies.
+- Show health when zoomed in.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
 - Use the charge or refractory value to disable movement for herbivore agents.
 - Fix colors everywhere, follow imgui layout.
