@@ -8,6 +8,7 @@
 #include "Camera2D.h"
 #include "Math.h"
 #include "SimulationSettings.h"
+#include "ParticleSystem.h"
 
 enum ColorOverlay
 {
@@ -57,6 +58,9 @@ struct World
     MemoryArena* lifespan_arena_old;
     I64 lifespan_arena_swap_ticks;
     I64 max_lifespan;
+
+    bool spawn_particles;
+    Array<Particle> particles;
 
     BittedMemoryPool<Agent>* agent_pool;
     BittedMemoryPool<Brain>* brain_pool;
@@ -137,7 +141,7 @@ void
 UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx);
 
 void
-UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx);
+UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx);
 
 void
 UpdateWorldChanges(World* world);
@@ -153,6 +157,12 @@ SelectFromWorld(World* world, Vec2 pos, R32 extra_radius = 0.0f);
 
 void
 ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
+
+Particle* 
+TrySpawnParticle(World* world, Vec2 pos, Vec2 vel, R32 lifetime, U32 color);
+
+void
+UpdateParticles(World* world);
 
 World*
 CreateWorld(MemoryArena* arena);

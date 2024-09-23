@@ -90,7 +90,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     for(int i = 0; i < ranges.size-1; i++)
     {
         //thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
-        UpdateAgentBehavior(world, ranges[i], ranges[i+1]);
+        UpdateAgentBehavior(&screen->cam, world, ranges[i], ranges[i+1]);
         //}));
     }
     //thread_pool->WaitForFinish();
@@ -272,6 +272,7 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGui::Text("Update: %.2f millis", window->update_millis);
     ImGui::Text("Camera scale: %.2f", screen->cam.scale);
     ImGui::Text("Number of cores: %lld", screen->thread_pool->workers.size);
+    ImGui::Text("Number of particles: %lld", world->particles.size);
     ImGuiMemoryArena(world->arena, "Static memory");
     ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
     ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
@@ -452,8 +453,11 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
             Vec2 diff = input->mouse_delta / (cam->scale);
             cam->pos.x -= diff.x;
             cam->pos.y += diff.y;
-
+            //R32 vel = 0.8f;
+            //TrySpawnParticle(world, world_mouse_pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.8f, RGBAColor(255, 0, 255, 255));
         }
+
+        UpdateParticles(world);
 
         screen->hovered_agent = SelectFromWorld(world, world_mouse_pos, screen->extra_selection_radius);
 
@@ -467,6 +471,9 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 
     if(!screen->isPaused)
     {
+        // Only spawn particles if we are not speeding up.
+        world->spawn_particles = screen->updates_per_frame==1;
+
         for(int i = 0; i < screen->updates_per_frame; i++)
         {
             DoScreenWorldUpdate(screen);

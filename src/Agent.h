@@ -65,12 +65,10 @@ GetAgentColor(AgentType type)
 {
     switch(type)
     {
-    case AgentType_None: return 0xffffffff;
-    case AgentType_Carnivore: return 0xff0000ff;
-    case AgentType_Herbivore: return 0xff00ff00;
+    case AgentType_Carnivore: return RGBAColor(255, 0, 0, 255);
+    case AgentType_Herbivore: return RGBAColor(0, 255, 0, 255);
     default: return 0xffffffff;
     }
-    return 0xffffffff;
 }
 
 static inline void

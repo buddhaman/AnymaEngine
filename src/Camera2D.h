@@ -2,11 +2,16 @@
 
 #include "AnymUtil.h"
 #include "InputHandler.h"
+#include "Math.h"
 
 struct Camera2D
 {
     Vec2 pos = V2(0,0);
     Vec2 size = V2(0,0);
+
+    // This one is read-only. Useful to have.
+    Rect bounds;
+
     R32 scale = 1.0f;
     Mat3 transform;
     bool isDragging;

@@ -155,7 +155,7 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
 }
 
 void
-UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx)
+UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx)
 {
     for(I32 agent_idx = from_idx; agent_idx < to_idx; agent_idx++)
     {
@@ -166,6 +166,18 @@ UpdateAgentBehavior(World* world, I32 from_idx, I32 to_idx)
         agent->ticks_alive++;
         if(agent->energy <= 0 || agent->ticks_alive >= world->max_lifespan)
         {
+            if(world->spawn_particles 
+                && cam->scale > 3
+                && InBounds(cam->bounds, agent->pos))
+            {
+                // Try spawn particle
+                R32 vel = 0.8f;
+                U32 color = GetAgentColor(agent->type);
+                for(int i = 0; i < 5; i++)
+                {
+                    TrySpawnParticle(world, agent->pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.8f, color);
+                }
+            }
             RemoveAgent(world, agent_idx);
         }
         agent->ticks_until_reproduce--;
@@ -410,7 +422,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = world->agents[agent_idx];
-        if(InBounds({cam->pos-cam->size/2.0f, cam->size}, agent->pos))
+        if(InBounds(cam->bounds, agent->pos))
         {
             world->visible_agent_indices.PushBack(agent_idx);
         }
@@ -479,11 +491,29 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
             }
             RenderDetails(mesh, agent);
             RenderHealth(mesh, world, agent);
+
         }
         else
         {
             I32 sides = 3;
             PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, Vec4ToColor(color));
+        }
+    }
+
+    // Render particles
+    if(cam->scale > 3)
+    {
+        Vec2 uv = V2(0,0);
+        for(int particle_idx = 0; particle_idx < world->particles.size; particle_idx++)
+        {
+            Particle& p = world->particles[particle_idx];
+            I32 sides = 5;
+            R32 vel_len = V2Len(p.vel); 
+            R32 r = p.lifetime/vel_len;
+            Vec2 axis0 = p.vel*r;
+            Vec2 axis1 = V2(-axis0.y, axis0.x);
+            axis0=(axis0*(1.0+vel_len));
+            PushNGon(mesh, p.pos, sides, axis0, axis1, uv, p.color);
         }
     }
 }
@@ -508,7 +538,6 @@ ClearChunks(World* world)
         world->chunks[chunk_idx].agent_indices.Clear();
     } 
 }
-
 
 void
 SortAgentsIntoMultipleChunks(World* world)
@@ -612,6 +641,7 @@ RemoveAgent(World* world, U32 agent_idx)
     world->num_agenttype[agent->type]--;
 
     world->removed_agent_indices.PushBack(agent_idx);
+
 }
 
 Agent* 
@@ -684,6 +714,44 @@ ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
     }
 }
 
+Particle *
+TrySpawnParticle(World* world, Vec2 pos, Vec2 vel, R32 lifetime, U32 color)
+{
+    if(world->particles.IsFull())
+    {
+        return nullptr;
+    }
+
+    Particle* p = world->particles.PushBack();
+    p->pos = pos;
+    p->vel = vel;
+    p->lifetime = lifetime;
+    p->color = color;
+    return p;
+}
+
+void
+UpdateParticles(World* world)
+{
+    // Update particles 
+    for(int particle_idx = 0; particle_idx < world->particles.size; particle_idx++)
+    {
+        Particle& p = world->particles[particle_idx];
+        p.lifetime -= 1.0f/60.0f;
+        p.pos += p.vel;
+    }
+
+    // Remove particles at end of lifetime.
+    for(int particle_idx = world->particles.size-1; particle_idx >= 0; particle_idx--)
+    {
+        Particle& p = world->particles[particle_idx];
+        if(p.lifetime <= 0.0f)
+        {
+            world->particles.RemoveIndexUnordered(particle_idx);
+        }
+    }
+}
+
 World* 
 CreateWorld(MemoryArena* arena)
 {
@@ -731,6 +799,9 @@ CreateWorld(MemoryArena* arena)
     world->agents = CreateArray<Agent*>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
     world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
+
+    world->spawn_particles = true;
+    world->particles = CreateArray<Particle>(1024);
 
     // Stupid way to calculate number of blocks. This whole part is stupid, I
     // just need a simple memory pool. Not this bitted thing I dont know why I

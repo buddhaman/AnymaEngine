@@ -7,6 +7,7 @@ UpdateCamera(Camera2D *camera, int screen_width, int screen_height)
     R32 yScale = 2.0f*camera->scale/screen_height;
     camera->size = V2(screen_width / camera->scale, screen_height/camera->scale);
     camera->transform = M3TranslationAndScale(-camera->pos, xScale, yScale);
+    camera->bounds = {camera->pos - camera->size/2.0f, camera->size};
 }
 
 void
