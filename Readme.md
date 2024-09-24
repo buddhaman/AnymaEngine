@@ -51,6 +51,11 @@ Ideas for charge / attack:
 #### TODO
 - Show charge when zoomed in.
 - Show charge of agent in ui.
+- Make checkbox whether to show health bar in world.
+- Show graphs of deaths and births.
+- Store most succesful agents. (Requires herbivores to collect plants).
+- Edit total lifespan of agents.
+- Remove health bar in world with checkbox.
 - Port to webassembly and run online.
 - Move game-engine related stuff to different folder and turn into reusable game-engine.
 - Make grass fields , energy in ground.
