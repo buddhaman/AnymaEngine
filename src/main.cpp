@@ -21,6 +21,8 @@
 #include "imgui_impl_sdl2.cpp"
 #include "imgui_impl_opengl3.cpp"
 
+#include "gl3w.cpp"
+
 #include "AnymUtil.h"
 #include "Agent.h"
 #include "Array.h"
