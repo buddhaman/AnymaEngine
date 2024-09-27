@@ -245,8 +245,8 @@ struct DynamicArray : public Array<T>
         return data+size-1;
     }
 
-    inline void PushBack(const T& t) { T* newT = IncreaseSize(size+1) ; *newT = t; }
-    inline T* PushBack() { T* newT = IncreaseSize(size+1); return newT; }
+    inline void PushBack(const T& t) { T* newt = IncreaseSize(size+1) ; *newt = t; }
+    inline T* PushBack() { T* newt = IncreaseSize(size+1); return newt; }
 };
 
 template <typename T> Array<T>

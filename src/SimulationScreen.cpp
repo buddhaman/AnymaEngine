@@ -1,7 +1,6 @@
 #include <functional>
 #include <thread>
 
-#include <GL/glew.h>
 #include <imgui.h>
 #include <implot.h>
 
@@ -89,11 +88,8 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     
     for(int i = 0; i < ranges.size-1; i++)
     {
-        //thread_pool->AddJob(new std::function<void()>([i, world, &ranges](){
         UpdateAgentBehavior(&screen->cam, world, ranges[i], ranges[i+1]);
-        //}));
     }
-    //thread_pool->WaitForFinish();
 
     UpdateParticles(world);
 

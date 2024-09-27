@@ -57,7 +57,6 @@ Ideas for charge / attack:
 - Edit total lifespan of agents.
 - Remove health bar in world with checkbox.
 - Port to webassembly and run online.
-- Move game-engine related stuff to different folder and turn into reusable game-engine.
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Create real and simple memory pool with chunks
@@ -171,4 +170,10 @@ Ideas for charge / attack:
 - Make interesting presets, make it easier for the user.
 
 ### Bugs
-- No agents leads to deadlock?
+- No agents leads to deadlock? SOLVED
+
+### Engine and more games.
+- Move game-engine related stuff to different folder and turn into reusable game-engine.
+- Create a game like super world box. Make complex behavior and create a behavior tree editor for fast iteration.
+  - Create a custom interpreted langauge for creating behavior trees.
+- Online game where you manage your little land and need to trade or fight with neighbouring countries. On a server WASM.

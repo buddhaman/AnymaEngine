@@ -4,6 +4,8 @@
 
 #include "InputHandler.h"
 
+#undef CreateWindow
+
 struct Window
 {
     int width;

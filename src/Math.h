@@ -29,7 +29,7 @@ struct RayCollision
 
 // Assume ray is normalized
 static inline bool
-RayCircleIntersect(Ray ray, Circle circle, RayCollision* colInfo)
+RayCircleIntersect(Ray ray, Circle circle, RayCollision* col_info)
 {
     //Vec2 intersection = V2(0,0);
     Vec2 diff = circle.pos-ray.pos;
@@ -38,8 +38,8 @@ RayCircleIntersect(Ray ray, Circle circle, RayCollision* colInfo)
     if(l2 < circle.radius*circle.radius)
     {
         // Ray is inside the circle. 
-        colInfo->intersection = ray.pos;
-        colInfo->distance = 0.0f;
+        col_info->intersection = ray.pos;
+        col_info->distance = 0.0f;
         return true;
     }
 
@@ -54,8 +54,8 @@ RayCircleIntersect(Ray ray, Circle circle, RayCollision* colInfo)
     {
         // Intersection
         R32 entry = sqrtf(circle.radius*circle.radius - nearest_d2);
-        colInfo->intersection = nearest_to_center - entry*ray.dir;
-        colInfo->distance = dp - entry;
+        col_info->intersection = nearest_to_center - entry*ray.dir;
+        col_info->distance = dp - entry;
         return true;
     }
 

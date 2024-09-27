@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "Shader.h"
 
 static inline U32

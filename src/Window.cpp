@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <GL/glew.h>
+#include <gl3w.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
@@ -9,7 +9,7 @@
 #include "Window.h"
 #include "Lucide.h"
 
-void GLAPIENTRY MessageCallback(GLenum source,
+void MessageCallback(GLenum source,
                                 GLenum type,
                                 GLuint id,
                                 GLenum severity,
@@ -185,7 +185,7 @@ CreateWindow(int width, int height)
         std::cerr << "Warning: Unable to disable VSync! SDL Error: " << SDL_GetError() << std::endl;
     }
 
-    if (glewInit() != GLEW_OK) 
+    if (gl3wInit() != GL3W_OK) 
     {
         SDL_DestroyWindow(window->window);
         SDL_Quit();

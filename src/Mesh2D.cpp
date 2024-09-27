@@ -1,5 +1,3 @@
-#include <GL/glew.h>
-
 #include "Mesh2D.h"
 
 void
