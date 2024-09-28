@@ -39,6 +39,10 @@ Brain update rate will be 1 / 6 of the physics update rate.
 #### TODO
 - Show charge when zoomed in.
 - Show charge of agent in ui.
+- OPTION: Change sensor info, give angle and distance of nearest same species and nearest opponent. 
+- OPTION: Pheromones for herbivores.
+- OPTION: Evolve possibility for pheromones.
+- OPTION: Put food in the ground and signal food availablity by pheromones. LIKE ANTS!
 - Make checkbox whether to show health bar in world.
 - Show graphs of deaths and births.
 - Store most succesful agents. (Requires herbivores to collect plants).

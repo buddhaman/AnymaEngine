@@ -772,8 +772,8 @@ CreateWorld(MemoryArena* arena)
     world->y_chunks = settings->y_chunks;
     world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
 
-    world->lifespan_arena = CreateSubArena(arena, MegaBytes(32));
-    world->lifespan_arena_old = CreateSubArena(arena, MegaBytes(32));
+    world->lifespan_arena = CreateSubArena(arena, MegaBytes(64));
+    world->lifespan_arena_old = CreateSubArena(arena, MegaBytes(64));
 
     int max_agents = settings->max_agents;
     int n_initial_agents = settings->n_initial_agents;
