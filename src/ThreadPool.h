@@ -113,28 +113,24 @@ struct ThreadPool
 
     std::condition_variable jobs_done_condition;
     std::mutex jobs_done_mutex;
-    std::atomic<I32> num_jobs = 0;
+    I32 num_jobs = 0;
 
-    void
-    AddJob(std::function<void()>* execute)
+    void AddJob(std::function<void()>* execute)
     {
+        std::unique_lock<std::mutex> lock(jobs_done_mutex);
         num_jobs++;
         Worker* worker = workers[at_worker];
-        at_worker++;
-        if(at_worker >= workers.size)
-        {
-            at_worker = 0;
-        }
+        at_worker = (at_worker + 1) % workers.size;
 
         Job job;
-        job.id.id = at_id;
-        at_id++;
+        job.id.id = at_id++;
         job.execute = execute;
 
-        // This lock is not needed. Just keep it here for now.
-        worker->queue_mutex.lock();
-        worker->queue.Push(job);
-        worker->queue_mutex.unlock();
+        {
+            std::lock_guard<std::mutex> queue_lock(worker->queue_mutex);
+            worker->queue.Push(job);
+        }
+        worker->cond_var.notify_one();
     }
 
     void
@@ -150,15 +146,19 @@ struct ThreadPool
     }
 };
 
-static void
+static void 
 Execute(ThreadPool* pool, Worker* worker, Job job)
 {
     (*job.execute)();
     delete job.execute;
-    pool->num_jobs--;
-    if(pool->num_jobs == 0)
+
     {
-        pool->jobs_done_condition.notify_all();
+        std::unique_lock<std::mutex> lock(pool->jobs_done_mutex);
+        pool->num_jobs--;
+        if(pool->num_jobs == 0)
+        {
+            pool->jobs_done_condition.notify_all();
+        }
     }
 }
 

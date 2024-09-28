@@ -7,15 +7,9 @@ This will be the most large scale and fastest evolution simulation out there.
 Brain update rate will be 1 / 6 of the physics update rate.
 
 ## Building
-Make sure you have cmake, vcpkg and all necessary c++ development tools for your operating system.
- - Go to the root directory.
- - Make a folder ./build
- - `cd build`
- - `cmake ..`
+~~Make sure you have cmake, vcpkg and all necessary c++ development tools for your operating system.~~
 
- this will generate a build folder with a visual studio solution file if you are on windows. Open this file or you can build using cmake
-
- - `cmake --build . --config Release`
+ Cmake is gone! Simply run build.bat in an x64 command window (you get this command window when installing visual studio).
 
  --- 
 
@@ -35,18 +29,12 @@ Make sure you have cmake, vcpkg and all necessary c++ development tools for your
  - Tracking lineage.
  - Showing the entire state of the brain and genes.
  - Make a circular buffer.
- - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
  - IDEA: Create a kind of business rule table where you can set rules like: 
     - Required speed for carnivores to do damage to herbivores
     - Allow sprinting, how much energy to take on a sprint?
     - Do carnivores get a reproduction boost if their population is low?
 
 #### Design
-
-Ideas for charge / attack:
-- Give both carnivores and herbivores the ability to sprint, but for carnivores this is the only way to
-  attack a herbivore. Sprinting can either deplete total energy, or there can be a seperate sprint energy 
-  that just fills over time.
 
 #### TODO
 - Show charge when zoomed in.
@@ -76,6 +64,7 @@ Ideas for charge / attack:
 - Make list of common colors.
 
 ### Done
+ - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 - Make particles when agent gets killed or dies.
 - Show health when zoomed in.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
