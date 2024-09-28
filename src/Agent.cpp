@@ -27,7 +27,7 @@ GetInitialEnergy(World* world, AgentType type)
 void
 UpdateMovement(World* world, Agent* agent)
 {
-    R32 turn_speed = 0.2f;
+    R32 turn_speed = 0.05f;
     agent->orientation += (agent->brain->output[0]-agent->brain->output[1])*turn_speed;
     R32 charge_threshold = 0.25f;
     R32 charge_output = agent->brain->output[3];
@@ -57,7 +57,7 @@ UpdateMovement(World* world, Agent* agent)
         }
     }
 
-    R32 spec_speed = 0.5f;
+    R32 spec_speed = 0.25f;
     R32 friction = 0.3f;
     R32 speed = agent->brain->output[2]*spec_speed*(1.0f+charge_amount);
     Vec2 dir = V2Polar(agent->orientation, 1.0f);

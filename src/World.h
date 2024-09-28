@@ -47,8 +47,6 @@ struct World
     I32 herbivore_reproduction_ticks;
     I32 herbivore_initial_energy;
 
-    R32 mutation_rate;
-
     I64 ticks;
 
     I32 num_agenttype[AgentType_Num];
