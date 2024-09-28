@@ -1,6 +1,8 @@
 #include <iostream>
 
+#ifndef __EMSCRIPTEN__
 #include <gl3w.h>
+#endif
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
@@ -8,23 +10,6 @@
 
 #include "Window.h"
 #include "Lucide.h"
-
-void MessageCallback(GLenum source,
-                                GLenum type,
-                                GLuint id,
-                                GLenum severity,
-                                GLsizei length,
-                                const GLchar* message,
-                                const void* userParam) 
-{
-    // Ignore non-significant error/warning codes
-    if (type == GL_DEBUG_TYPE_ERROR) {
-        std::cerr << "GL CALLBACK: " << (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "") 
-                  << " type = " << type 
-                  << ", severity = " << severity 
-                  << ", message = " << message << std::endl;
-    }
-}
 
 static inline void 
 HandleInput(Window* window)
@@ -162,9 +147,9 @@ CreateWindow(int width, int height)
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
     // Use OpenGL 3.3 core profile
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4); // 4x MSAA
 
@@ -185,16 +170,17 @@ CreateWindow(int width, int height)
         std::cerr << "Warning: Unable to disable VSync! SDL Error: " << SDL_GetError() << std::endl;
     }
 
+#ifndef __EMSCRIPTEN__
     if (gl3wInit() != GL3W_OK) 
     {
         SDL_DestroyWindow(window->window);
         SDL_Quit();
         return nullptr;
     }
+#endif
 
     // Enable debug output
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    // glEnable(GL_DEBUG_OUTPUT);
     // glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 
     // Setup alpha blending globally
@@ -213,13 +199,13 @@ CreateWindow(int width, int height)
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
 
     // Load imgui custom font.
-    const char* default_font_path = "assets/Roboto-Regular.ttf";  
+    const char* default_font_path = "Assets/Roboto-Regular.ttf";  
     float font_size = 18.0f;  
     ImFont* font = io.Fonts->AddFontFromFileTTF(default_font_path, font_size);
     io.Fonts->Build(); 
     io.FontDefault = font;
 
-    const char* icon_font_path = "assets/lucide.ttf";  
+    const char* icon_font_path = "Assets/lucide.ttf";  
     ImFontConfig font_config;
     font_config.MergeMode = true; 
     font_config.PixelSnapH = true; 

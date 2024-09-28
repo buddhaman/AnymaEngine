@@ -2,7 +2,7 @@
 
 #include "AnymUtil.h"
 #include "Array.h"
-#include "Math.h"
+#include "TMath.h"
 #include "Linalg.h"
 
 // Forward declarations

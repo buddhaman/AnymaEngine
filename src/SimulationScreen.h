@@ -5,7 +5,6 @@
 #include "Shader.h"
 #include "Window.h"
 #include "SimulationSettings.h"
-#include "ThreadPool.h"
 
 struct SimulationScreen
 {
@@ -42,7 +41,6 @@ struct SimulationScreen
 
     ColorOverlay overlay = ColorOverlay_AgentType;
 
-    ThreadPool* thread_pool;
     
     SimulationScreen() : update_times(120), num_carnivores(120), num_herbivores(120) {};
 };

@@ -18,12 +18,12 @@ struct Array
 
     inline void PushBack(const T& t) { Assert(size < capacity); data[size++] = t; }
     inline T* PushBack() { Assert(size < capacity); return data+size++; }
-    inline T& operator[](int idx) { Assert(idx >=0 && idx < size); return data[idx];}
-    inline T& At(int idx) { Assert(idx >=0 && idx < size); return data[idx];}
+    inline T& operator[](I64 idx) { Assert(idx >=0 && idx < size); return data[idx];}
+    inline T& At(I64 idx) { Assert(idx >=0 && idx < size); return data[idx];}
     inline void Fill() {size = capacity;}
-    inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
+    inline void FillAndSetValue(I64 value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
-    inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
+    inline void Swap(I64 idx0, I64 idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
     inline bool IsFull() { return size==capacity; }
     inline Array<T> View(I64 offset, I64 new_array_size)
     {
@@ -33,16 +33,16 @@ struct Array
     }
 
     // TODO: Remove all STL classes.
-    inline void Apply(std::function<void(R32& x)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
-    inline void Apply(std::function<void(int i, R32& x)> f) 
+    inline void Apply(std::function<void(R32& x)> f) { for(I64 i = 0; i < size; i++) { f(data[i]); } }
+    inline void Apply(std::function<void(I64 i, R32& x)> f) 
     {
-        for(int i = 0; i < size; i++) 
+        for(I64 i = 0; i < size; i++) 
         { 
             f(i, data[i]); 
         }
     }
 
-    inline void Shift(int shift, int fill=0) 
+    inline void Shift(I64 shift, int fill=0) 
     {
         if(shift==0 || size==0) return;
         if(abs(shift) >= size)
@@ -63,7 +63,7 @@ struct Array
         }
     }
 
-    inline void RemoveIndexUnordered(int idx) 
+    inline void RemoveIndexUnordered(I64 idx) 
     {
         Assert(idx >= 0 && idx < size);
         if(idx!=size-1)
@@ -73,7 +73,7 @@ struct Array
         this->size--;
     }
 
-    inline void RemoveIndex(int idx)
+    inline void RemoveIndex(I64 idx)
     {
         Assert(idx >= 0 && idx < size);
         if(idx!=size-1)
@@ -84,7 +84,7 @@ struct Array
     }
 
     // to_idx is inclusive
-    inline void RemoveRange(int from_idx, int to_idx)
+    inline void RemoveRange(I64 from_idx, I64 to_idx)
     {
         Assert(from_idx >= 0 && from_idx < size);
         Assert(to_idx >= 0 && to_idx < size);
@@ -96,9 +96,9 @@ struct Array
         size -= (to_idx - from_idx + 1);
     }
 
-    inline int IndexOf(T element)
+    inline I64 IndexOf(T element)
     {
-        for(int idx = 0; idx < size; idx++)
+        for(I64 idx = 0; idx < size; idx++)
         {
             if(data[idx]==element) 
             {
@@ -108,9 +108,9 @@ struct Array
         return -1;
     }
 
-    inline int RemoveUnordered(T element)
+    inline I64 RemoveUnordered(T element)
     {
-        int idx;
+        I64 idx;
         for(idx = 0; idx < size; idx++)
         {
             if(data[idx]==element) 
@@ -126,7 +126,7 @@ struct Array
     {
         if(size==0) return 0;
         T min = data[0];
-        for(int i = 1; i < size; i++) { if(data[i] < min) min = data[i]; }
+        for(I64 i = 1; i < size; i++) { if(data[i] < min) min = data[i]; }
         return min;
     }
 
@@ -134,7 +134,7 @@ struct Array
     {
         if(size==0) return 0;
         T max = data[0];
-        for(int i = 1; i < size; i++) { if(data[i] > max) max = data[i]; }
+        for(I64 i = 1; i < size; i++) { if(data[i] > max) max = data[i]; }
         return max;
     }
 
@@ -161,22 +161,22 @@ struct Array
     Iterator end() { return Iterator(data + size); }
 
     private:
-    void Quicksort(int low, int high, const std::function<int(T, T)>& compare) 
+    void Quicksort(I64 low, I64 high, const std::function<int(T, T)>& compare) 
     {
         if (low < high) 
         {
-            int pivot_idx = Partition(low, high, compare);
+            I64 pivot_idx = Partition(low, high, compare);
             Quicksort(low, pivot_idx - 1, compare);
             Quicksort(pivot_idx + 1, high, compare);
         }
     }
 
-    int Partition(int low, int high, const std::function<int(T, T)>& compare) 
+    I64 Partition(I64 low, I64 high, const std::function<int(T, T)>& compare) 
     {
         T pivot = data[high];
         int i = (low - 1);
 
-        for (int j = low; j <= high - 1; j++) 
+        for (I64 j = low; j <= high - 1; j++) 
         {
             if (compare(data[j], pivot) < 0) 
             {
@@ -234,7 +234,7 @@ struct DynamicArray : public Array<T>
         }
     }
 
-    inline T* IncreaseSize(int toSize)
+    inline T* IncreaseSize(I64 toSize)
     {
         if(toSize > capacity)
         {
@@ -250,7 +250,7 @@ struct DynamicArray : public Array<T>
 };
 
 template <typename T> Array<T>
-CreateArray(MemoryArena* arena, int capacity)
+CreateArray(MemoryArena* arena, I64 capacity)
 {
     Array<T> array;
     array.capacity = capacity;
@@ -259,7 +259,7 @@ CreateArray(MemoryArena* arena, int capacity)
 }
 
 template <typename T> Array<T>
-CreateArray_(void *dataMemory, int capacity)
+CreateArray_(void *dataMemory, I64 capacity)
 {
     Array<T> array = {0};
     array.capacity = capacity;

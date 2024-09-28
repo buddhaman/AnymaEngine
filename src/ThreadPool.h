@@ -3,6 +3,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include <thread>
 
 #include "AnymUtil.h"
 #include "Array.h"

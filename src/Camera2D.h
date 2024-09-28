@@ -2,7 +2,7 @@
 
 #include "AnymUtil.h"
 #include "InputHandler.h"
-#include "Math.h"
+#include "TMath.h"
 
 struct Camera2D
 {

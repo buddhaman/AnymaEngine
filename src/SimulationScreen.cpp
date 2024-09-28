@@ -4,40 +4,43 @@
 #include <imgui.h>
 #include <implot.h>
 
+#ifndef __EMSCRIPTEN__
+#include <gl3w.h>
+#endif
+
 #include "SimulationScreen.h"
 #include "DebugInfo.h"
 #include "Lucide.h"
 
-const char* vertex_shader_source = R"glsl(
-    #version 330 core
-    layout (location = 0) in vec2 a_position;
-    layout (location = 1) in vec2 a_texture;
-    layout (location = 2) in vec4 a_color;
+const char* vertex_shader_source = R"glsl(#version 300 es
+layout (location = 0) in vec2 a_position;
+layout (location = 1) in vec2 a_texture;
+layout (location = 2) in vec4 a_color;
 
-    uniform mat3 u_transform;
+uniform mat3 u_transform;
 
-    out vec4 v_color;
+out vec4 v_color;
 
-    void main() 
-    {
-        vec3 pos = u_transform * vec3(a_position, 1.0);
-        v_color = a_color;
-        gl_Position = vec4(pos.xy, 0.0, 1.0);
-    }
+void main() 
+{
+    vec3 pos = u_transform * vec3(a_position, 1.0);
+    v_color = a_color;
+    gl_Position = vec4(pos.xy, 0.0, 1.0);
+}
 )glsl";
 
-const char* fragment_shader_source = R"glsl(
-    #version 330 core
+const char* fragment_shader_source = R"glsl(#version 300 es
+precision mediump float;
 
-    in vec4 v_color;
+in vec4 v_color;
 
-    out vec4 frag_color;
+out vec4 frag_color;
     
-    void main() 
-    {
-        vec3 gammaCorrectedColor = pow(v_color.abg, vec3(1.0/2.2));
-        frag_color = vec4(gammaCorrectedColor, v_color.r);
-    }
+void main() 
+{
+    vec3 gammaCorrectedColor = pow(v_color.rgb, vec3(1.0/2.2));
+    frag_color = vec4(gammaCorrectedColor, v_color.a);
+}
 )glsl";
 
 static void
@@ -68,29 +71,17 @@ DoScreenWorldUpdate(SimulationScreen* screen)
         ChunkCollisions(world, x, y);
     }
 
-    ThreadPool* thread_pool = screen->thread_pool;
-    int num_ranges = world->agents.size > thread_pool->workers.size ? thread_pool->workers.size : 1;
-    DynamicArray<int> ranges(num_ranges+1);
-    int range_size = world->agents.size / num_ranges;
-    for(int i = 0; i < num_ranges; i++)
-    {
-        ranges.PushBack(range_size*i);
-    }
-    ranges.PushBack(world->agents.size);
+    // int num_ranges = world->agents.size > thread_pool->workers.size ? thread_pool->workers.size : 1;
+    // DynamicArray<int> ranges(num_ranges+1);
+    // int range_size = world->agents.size / num_ranges;
+    // for(int i = 0; i < num_ranges; i++)
+    // {
+    //     ranges.PushBack(range_size*i);
+    // }
+    // ranges.PushBack(world->agents.size);
 
-    for(int i = 0; i < ranges.size-1; i++)
-    {
-        thread_pool->AddJob(new std::function<void()>([i, world, &ranges]() {
-            UpdateAgentSensorsAndBrains(world, ranges[i], ranges[i+1]);
-        }));
-    }
-    thread_pool->StartAndWaitForFinish();
-    
-    for(int i = 0; i < ranges.size-1; i++)
-    {
-        UpdateAgentBehavior(&screen->cam, world, ranges[i], ranges[i+1]);
-    }
-
+    UpdateAgentSensorsAndBrains(world, 0, world->agents.size);
+    UpdateAgentBehavior(&screen->cam, world, 0, world->agents.size);
     UpdateParticles(world);
 
     #endif
@@ -268,7 +259,7 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGui::Text("FPS: %.0f", window->fps);
     ImGui::Text("Update: %.2f millis", window->update_millis);
     ImGui::Text("Camera scale: %.2f", screen->cam.scale);
-    ImGui::Text("Number of cores: %lld", screen->thread_pool->workers.size);
+    ///ImGui::Text("Number of cores: %lld", screen->thread_pool->workers.size);
     ImGui::Text("Number of particles: %lld", world->particles.size);
     ImGuiMemoryArena(world->arena, "Static memory");
     ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
@@ -504,5 +495,4 @@ InitSimulationScreen(SimulationScreen* screen)
     std::cout << "Num cores = " << num_cores << std::endl;
 
     U32 num_threads = Max(num_cores-1, 1);
-    screen->thread_pool = CreateThreadPool(num_threads);
 }
