@@ -19,7 +19,7 @@ struct SimulationSettings
     R32 chunk_size = 12.0f;
     int x_chunks = DEFAULT_AXIS_CHUNKS;
     int y_chunks = DEFAULT_AXIS_CHUNKS;
-    R32 default_mutation_rate = 0.004f;
+    R32 mutation_rate = 0.004f;
 
     I32 energy_transfer_on_hit = 350;
     I32 charge_duration = 20;     // 60 per second.

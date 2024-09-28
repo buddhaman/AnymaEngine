@@ -64,7 +64,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make list of common colors.
 
 ### Done
- - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
+#### RELEASE 4
+- Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 - Make particles when agent gets killed or dies.
 - Show health when zoomed in.
 - Recoil, or however you wanna call it when a herbivore is hurt. They cannot move unless they sprint?
