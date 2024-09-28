@@ -3,8 +3,8 @@ $ProjectName = "AnymaEngine"
 $ItchUser = "buddhaman"
 $ItchGame = "anyma-engine"
 $Channel = "win64-release"
-$BuildDir = "build/Release"
-$ZipName = "build/${ProjectName}_${Channel}.zip"
+$BuildDir = "Build/Release"
+$ZipName = "Build/${ProjectName}_${Channel}.zip"
 
 # Change to the script's directory
 Set-Location -Path $PSScriptRoot
