@@ -24,6 +24,12 @@ struct SimulationSettings
     I32 energy_transfer_on_hit = 350;
     I32 charge_duration = 20;     // 60 per second.
     I32 charge_refractory_period = 240;     // 60 per second.
+
+    I32 herbivore_reproduction_ticks = 60*10;
+    I32 herbivore_initial_energy = 60*11;;
+
+    I32 carnivore_reproduction_ticks = 60*26;
+    I32 carnivore_initial_energy = 60*25;
 };
 
 inline SimulationSettings global_settings;

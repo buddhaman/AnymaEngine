@@ -489,7 +489,7 @@ RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
     R32 full_bar_width = r*2;
     R32 bar_height = r/2.0f;
     // Divide by herbivore initial energy since this is more than carnivore initial energy.
-    R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)world->carnivore_initial_energy);
+    R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)global_settings.carnivore_initial_energy);
     Vec2 u = V2(0,0);
     PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, u, RGBAColor(0, 255, 0, 255));
 }
@@ -875,11 +875,6 @@ CreateWorld(MemoryArena* arena)
 
     world->max_lifespan = 60*60;
     world->lifespan_arena_swap_ticks = world->max_lifespan;
-    world->herbivore_reproduction_ticks = 60*10;
-    world->herbivore_initial_energy = 60*11;
-
-    world->carnivore_reproduction_ticks = 60*26;
-    world->carnivore_initial_energy = 60*25;
 
     world->max_eyes_per_agent = 6;
 

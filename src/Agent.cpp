@@ -7,8 +7,8 @@ GetTicksUntilReproduction(World* world, AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return world->carnivore_reproduction_ticks;
-    case AgentType_Herbivore: return world->herbivore_reproduction_ticks;
+    case AgentType_Carnivore: return global_settings.carnivore_reproduction_ticks;
+    case AgentType_Herbivore: return global_settings.herbivore_reproduction_ticks;
     default: return 0;
     }
 }
@@ -18,8 +18,8 @@ GetInitialEnergy(World* world, AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return world->carnivore_initial_energy;
-    case AgentType_Herbivore: return world->herbivore_initial_energy;
+    case AgentType_Carnivore: return global_settings.carnivore_initial_energy;
+    case AgentType_Herbivore: return global_settings.herbivore_initial_energy;
     default: return 0;
     }
 }

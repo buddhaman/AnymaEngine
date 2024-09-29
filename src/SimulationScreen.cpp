@@ -209,6 +209,15 @@ ImGuiInputInt(const char* text, int* value, int min, int max)
     return false;
 }
 
+static inline bool
+ImguiInputSecondsToTicks(const char* text, int* value, int min, int max)
+{
+    int second_value = *value/60;
+    bool result = ImGuiInputInt(text, &second_value, min, max);
+    *value = second_value*60;
+    return result;
+}
+
 void
 EditSettings(SimulationScreen* screen)
 {
@@ -223,6 +232,11 @@ EditSettings(SimulationScreen* screen)
     changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 256);
     changed |= ImGuiInputFloat("Mutation rate", &global_settings.mutation_rate, 0.0f, 1.0f);
     changed |= ImGuiInputInt("Energy on hit", &settings->energy_transfer_on_hit, 1, 8000);
+
+    changed |= ImguiInputSecondsToTicks("carnivore initial lifespan", &settings->carnivore_initial_energy, 1, 60);
+    changed |= ImguiInputSecondsToTicks("carnivore reproduction", &settings->carnivore_reproduction_ticks, 1, 00);
+    changed |= ImguiInputSecondsToTicks("herbivore initial lifespan", &settings->herbivore_initial_energy, 1, 60);
+    changed |= ImguiInputSecondsToTicks("herbivore reproduction", &settings->herbivore_reproduction_ticks, 1, 60);
     (void)changed; // Not used yet/anymore.
 
     if(ImGui::Button("Add herbivore"))
