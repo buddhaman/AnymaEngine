@@ -269,7 +269,7 @@ V2Dist(Vec2 a, Vec2 b)
 static inline Vec2
 V2Norm(Vec2 v)
 {
-	return V2MulS(v, 1.0 / V2Len(v));
+	return V2MulS(v, 1.0f / V2Len(v));
 }
 
 static inline Vec2

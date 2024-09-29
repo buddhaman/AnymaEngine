@@ -18,12 +18,12 @@ struct Array
 
     inline void PushBack(const T& t) { Assert(size < capacity); data[size++] = t; }
     inline T* PushBack() { Assert(size < capacity); return data+size++; }
-    inline T& operator[](int idx) { Assert(idx >=0 && idx < size); return data[idx];}
+    inline T& operator[](I64 idx) { Assert(idx >=0 && idx < size); return data[idx];}
     inline T& At(int idx) { Assert(idx >=0 && idx < size); return data[idx];}
     inline void Fill() {size = capacity;}
     inline void FillAndSetValue(int value) {size = capacity; memset(data, value, size*sizeof(T)); }
     inline void Clear() { size = 0;}
-    inline void Swap(int idx0, int idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
+    inline void Swap(I64 idx0, I64 idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
     inline bool IsFull() { return size==capacity; }
     inline Array<T> View(I64 offset, I64 new_array_size)
     {
@@ -161,22 +161,22 @@ struct Array
     Iterator end() { return Iterator(data + size); }
 
     private:
-    void Quicksort(int low, int high, const std::function<int(T, T)>& compare) 
+    void Quicksort(I64 low, I64 high, const std::function<int(T, T)>& compare) 
     {
         if (low < high) 
         {
-            int pivot_idx = Partition(low, high, compare);
+            I64 pivot_idx = Partition(low, high, compare);
             Quicksort(low, pivot_idx - 1, compare);
             Quicksort(pivot_idx + 1, high, compare);
         }
     }
 
-    int Partition(int low, int high, const std::function<int(T, T)>& compare) 
+    I64 Partition(I64 low, I64 high, const std::function<int(T, T)>& compare) 
     {
         T pivot = data[high];
-        int i = (low - 1);
+        I64 i = (low - 1);
 
-        for (int j = low; j <= high - 1; j++) 
+        for (I64 j = low; j <= high - 1; j++) 
         {
             if (compare(data[j], pivot) < 0) 
             {
@@ -234,7 +234,7 @@ struct DynamicArray : public Array<T>
         }
     }
 
-    inline T* IncreaseSize(int toSize)
+    inline T* IncreaseSize(I64 toSize)
     {
         if(toSize > capacity)
         {
@@ -250,7 +250,7 @@ struct DynamicArray : public Array<T>
 };
 
 template <typename T> Array<T>
-CreateArray(MemoryArena* arena, int capacity)
+CreateArray(MemoryArena* arena, I64 capacity)
 {
     Array<T> array;
     array.capacity = capacity;
@@ -259,7 +259,7 @@ CreateArray(MemoryArena* arena, int capacity)
 }
 
 template <typename T> Array<T>
-CreateArray_(void *dataMemory, int capacity)
+CreateArray_(void *dataMemory, I64 capacity)
 {
     Array<T> array = {0};
     array.capacity = capacity;

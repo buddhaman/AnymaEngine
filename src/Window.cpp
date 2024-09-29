@@ -58,14 +58,14 @@ HandleInput(Window* window)
 
         case SDL_MOUSEWHEEL:
         {
-            input->mouse_scroll = 5*event.wheel.y; // Adjust zoom level based on scroll
+            input->mouse_scroll = 5.0f*(R32)event.wheel.y; // Adjust zoom level based on scroll
         } break;
 
         case SDL_MOUSEMOTION:
         {
             // SDL reports mouse position and motion
-            input->mouse_pos = V2(event.motion.x, event.motion.y);
-            input->mouse_delta = V2(event.motion.xrel, event.motion.yrel);
+            input->mouse_pos = V2((R32)event.motion.x, (R32)event.motion.y);
+            input->mouse_delta = V2((R32)event.motion.xrel, (R32)event.motion.yrel);
         } break;
 
         }
@@ -90,7 +90,7 @@ DelayForFPS(Window* window)
     window->update_millis = 1000.0f*elapsed/(R32)freq;
     R32 millis_per_frame = 1000.0f/window->fps;
     R32 exact_delay = millis_per_frame - window->update_millis + window->carry_millis;
-    I32 delay = floor(exact_delay);
+    I32 delay = (int)exact_delay;
     window->carry_millis = Max(0.0f, (R32)(exact_delay - delay));
     if(delay > 0)
     {

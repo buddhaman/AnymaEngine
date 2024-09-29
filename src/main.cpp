@@ -76,7 +76,7 @@ PrintWorkingDirectory()
 int main(int argc, char** argv) 
 {
     // Initialize random seed once. This will be replaced by my own rng.
-    srand((time(nullptr)));
+    srand((U32)(time(nullptr)));
 
 #undef CreateWindow
     Window* window = CreateWindow(1280, 720);

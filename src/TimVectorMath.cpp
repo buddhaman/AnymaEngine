@@ -133,7 +133,7 @@ Mat4 M4Ortho(float left, float right, float bottom, float top, float back, float
  */
 Mat4 M4Perspective(float vertical_field_of_view_in_deg, float aspect_ratio, float near_view_distance, float far_view_distance)
 {
-	float fovy_in_rad = vertical_field_of_view_in_deg / 180 * M_PI;
+	float fovy_in_rad = vertical_field_of_view_in_deg / 180 * (float)M_PI;
 	float f = 1.0f / tanf(fovy_in_rad / 2.0f);
 	float ar = aspect_ratio;
 	float nd = near_view_distance, fd = far_view_distance;

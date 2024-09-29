@@ -476,7 +476,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 R32 r = agent->radius/vel_len;
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
-                axis0=(axis0*(1.0+vel_len));
+                axis0=(axis0*(1.0f+vel_len));
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             else
@@ -486,7 +486,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 R32 r = agent->radius/vel_len;
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
-                axis0=(axis0*(1.0+vel_len));
+                axis0=(axis0*(1.0f+vel_len));
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             RenderDetails(mesh, agent);
@@ -512,7 +512,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
             R32 r = 1.2f*p.lifetime/vel_len;
             Vec2 axis0 = p.vel*r;
             Vec2 axis1 = V2(-axis0.y, axis0.x);
-            axis0=(axis0*(1.0+vel_len));
+            axis0=(axis0*(1.0f+vel_len));
             PushNGon(mesh, p.pos, sides, axis0, axis1, uv, p.color);
         }
     }
@@ -566,7 +566,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     Agent* agent = world->agent_pool->Alloc();
     *agent = Agent{};
     world->agents.PushBack(agent);
-    int agent_idx = world->agents.size-1;
+    I64 agent_idx = world->agents.size-1;
     agent->pos = pos;
     agent->type = type;
     agent->radius = 1.2f;
@@ -750,7 +750,7 @@ UpdateParticles(World* world)
     }
 
     // Remove particles at end of lifetime.
-    for(int particle_idx = world->particles.size-1; particle_idx >= 0; particle_idx--)
+    for(int particle_idx = (int)world->particles.size-1; particle_idx >= 0; particle_idx--)
     {
         Particle& p = world->particles[particle_idx];
         if(p.lifetime <= 0.0f)
@@ -770,7 +770,7 @@ CreateWorld(MemoryArena* arena)
     world->chunk_size = settings->chunk_size;
     world->x_chunks = settings->x_chunks;
     world->y_chunks = settings->y_chunks;
-    world->size = world->chunk_size*V2(world->x_chunks, world->y_chunks);
+    world->size = world->chunk_size*V2((R32)world->x_chunks, (R32)world->y_chunks);
 
     world->lifespan_arena = CreateSubArena(arena, MegaBytes(64));
     world->lifespan_arena_old = CreateSubArena(arena, MegaBytes(64));
@@ -820,7 +820,7 @@ CreateWorld(MemoryArena* arena)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
         Agent* agent = AddAgent(world, type, RandomVec2Debug(V2(0,0), world->size));
-        agent->orientation = RandomR32Debug(-M_PI, M_PI);
+        agent->orientation = RandomR32Debug(-(R32)M_PI, -(R32)M_PI);
     }
     return world;
 }

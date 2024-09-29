@@ -1,4 +1,5 @@
 #include "Mesh2D.h"
+#include <gl3w.h>
 
 void
 PushVertex(Mesh2D* mesh, Vec2 pos, Vec2 texture_coords, U32 color)
@@ -22,7 +23,7 @@ PushQuad(Mesh2D* mesh,
          Vec2 p2, Vec2 uv2, 
          Vec2 p3, Vec2 uv3, U32 color)
 {
-    U32 lastIndex = mesh->vertex_buffer.size;
+    U32 lastIndex = (U32)mesh->vertex_buffer.size;
 
     PushVertex(mesh, p0, uv0, color);
     PushVertex(mesh, p1, uv1, color);
@@ -62,8 +63,8 @@ void
 PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color)
 {
     Vec2 diff = V2Sub(to, from);
-    R32 invl = 1.0/V2Len(diff);
-    Vec2 perp = V2(diff.y*invl*line_width/2.0, -diff.x*invl*line_width/2.0);
+    R32 invl = 1.0f/V2Len(diff);
+    Vec2 perp = V2(diff.y*invl*line_width/2.0f, -diff.x*invl*line_width/2.0f);
 
     PushQuad(mesh,
             V2Add(from, perp), 
@@ -107,10 +108,11 @@ PushNGon(Mesh2D *mesh,
         U32 color)
 {
     I32 npoints = n+1;
-    U32 last_idx = mesh->vertex_buffer.size;
-    R32 angdiff = 2*M_PI/(npoints-1);
+    U32 last_idx = (U32)mesh->vertex_buffer.size;
+    // TODO: Expand math library and make R32 PI constant.
+    R32 angdiff = 2*(R32)M_PI/(npoints-1);
     PushVertex(mesh, pos, u_orig, color);
-    for(U32 atPoint = 0;
+    for(int atPoint = 0;
             atPoint < npoints;
             atPoint++)
     {
@@ -118,7 +120,7 @@ PushNGon(Mesh2D *mesh,
         Vec2 point = V2Add(pos, V2Polar(angle, radius));
         PushVertex(mesh, point, u_orig, color);
     }
-    for(U32 at_point = 0;
+    for(int at_point = 0;
             at_point < npoints-1;
             at_point++)
     {
@@ -131,17 +133,17 @@ PushNGon(Mesh2D *mesh,
 void
 PushNGon(Mesh2D *mesh,
         Vec2 pos,
-        I32 n,
+        int n,
         Vec2 axis0, 
         Vec2 axis1, 
         Vec2 u_orig, 
         U32 color)
 {
-    I32 npoints = n+1;
-    U32 last_idx = mesh->vertex_buffer.size;
-    R32 angdiff = 2*M_PI/(npoints-1);
+    int npoints = n+1;
+    int last_idx = (int)mesh->vertex_buffer.size;
+    R32 angdiff = 2*(R32)M_PI/(npoints-1);
     PushVertex(mesh, pos, u_orig, color);
-    for(U32 atPoint = 0;
+    for(int atPoint = 0;
             atPoint < npoints;
             atPoint++)
     {
@@ -151,7 +153,7 @@ PushNGon(Mesh2D *mesh,
         Vec2 point = pos + axis0*c + axis1*s;
         PushVertex(mesh, point, u_orig, color);
     }
-    for(U32 at_point = 0;
+    for(int at_point = 0;
             at_point < npoints-1;
             at_point++)
     {
@@ -166,10 +168,10 @@ PushLineNGon(Mesh2D *mesh, Vec2 center, R32 inner_radius, R32 outer_radius, int 
 {
     int npoints = n + 1;
 
-    U32 inner_start_idx = mesh->vertex_buffer.size;
-    U32 outer_start_idx = inner_start_idx + npoints;
+    int inner_start_idx = (int)mesh->vertex_buffer.size;
+    int outer_start_idx = inner_start_idx + npoints;
 
-    R32 angdiff = 2 * M_PI / (npoints - 1);
+    R32 angdiff = 2 * (R32)M_PI / (npoints - 1);
 
     // Generate vertices for the inner N-gon
     for (int i = 0; i < npoints; ++i)
@@ -227,7 +229,7 @@ Draw(Mesh2D* mesh)
 {
     glBindVertexArray(mesh->vertex_array_handle);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer_handle); 
-    glDrawElements(GL_TRIANGLES, mesh->index_buffer.size, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, (int)mesh->index_buffer.size, GL_UNSIGNED_INT, nullptr);
 }
 
 void

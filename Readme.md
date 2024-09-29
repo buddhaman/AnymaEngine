@@ -9,7 +9,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 ## Building
 ~~Make sure you have cmake, vcpkg and all necessary c++ development tools for your operating system.~~
 
- Cmake is gone! Simply run build.bat in an x64 command window (you get this command window when installing visual studio).
+ Cmake is gone! Simply run build.bat in an x64 Native Tools Command Prompt (you get the x64 command window when installing visual studio).
 
  --- 
 
@@ -35,8 +35,24 @@ Brain update rate will be 1 / 6 of the physics update rate.
     - Do carnivores get a reproduction boost if their population is low?
 
 #### Design
+- Current direction: Give agents a body, but at the same time simplify even more. 
+- Gene encodes a body, rendered like football evo my previous project. The limbs will be connected to each other like spore, but its 2.5D.
+- Sensors will be even simpler. Simply relative angle and distance to the nearest agent of the same type and of another type. 
+- Bigger possible ruleset with agents that can send and receive signals.
+- The goal of the simulation is to create an ecosystem that is interesting to
+  look at. We might give agents properties like picking skills in an rpg. The
+  total amount of points is capped. This way they can occupy an ecological
+  niche.
+  IDEAS: 
+  - Shield, less damage received.
+  - Longevity.
+  - Reproduction rate.
+  - Speed.
+  - Resistance in a certain biome.
 
 #### TODO
+- Change rendering to 2.5D.
+- Add terain.
 - Show charge when zoomed in.
 - Show charge of agent in ui.
 - OPTION: Change sensor info, give angle and distance of nearest same species and nearest opponent. 

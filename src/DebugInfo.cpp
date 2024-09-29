@@ -34,12 +34,12 @@ ImGuiChunkBarGraph(World* world)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        chunk_agents.PushBack(chunk->agent_indices.size);
+        chunk_agents.PushBack((U32)chunk->agent_indices.size);
     }
     ImPlot::SetNextAxesToFit();
     if(ImPlot::BeginPlot("Number of agents per chunk", V2(-1, 200), chunk_bar_plot_flags))
     { 
-        ImPlot::PlotBars("Agents per chunk bar plot", chunk_agents.data, chunk_agents.size, 1);
+        ImPlot::PlotBars("Agents per chunk bar plot", chunk_agents.data, (int)chunk_agents.size, 1);
         ImPlot::EndPlot();
     }
 }
@@ -57,7 +57,7 @@ ImGuiChunkDistribution(World* world)
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
-        chunk_agents.PushBack(chunk->agent_indices.size);
+        chunk_agents.PushBack((int)chunk->agent_indices.size);
     }
 
     U32 min = chunk_agents.MinElement();
@@ -76,7 +76,7 @@ ImGuiChunkDistribution(World* world)
     if(ImPlot::BeginPlot("Distribution of agents per chunk.", V2(-1, 200), chunk_bar_plot_flags))
     { 
         ImPlot::SetupAxes("Number of Agents", "Number of Chunks");
-        ImPlot::PlotBars("ChunkDistr", bins.data, bins.size, 1);
+        ImPlot::PlotBars("ChunkDistr", bins.data, (int)bins.size, 1);
         ImPlot::EndPlot();
     }
     ImGui::Text("Minimum agents in a chunk: %u", min);

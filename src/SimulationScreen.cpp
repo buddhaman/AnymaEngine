@@ -69,14 +69,14 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     }
 
     ThreadPool* thread_pool = screen->thread_pool;
-    int num_ranges = world->agents.size > thread_pool->workers.size ? thread_pool->workers.size : 1;
+    int num_ranges = world->agents.size > thread_pool->workers.size ? (int)thread_pool->workers.size : 1;
     DynamicArray<int> ranges(num_ranges+1);
-    int range_size = world->agents.size / num_ranges;
+    int range_size = (int)world->agents.size / num_ranges;
     for(int i = 0; i < num_ranges; i++)
     {
         ranges.PushBack(range_size*i);
     }
-    ranges.PushBack(world->agents.size);
+    ranges.PushBack((int)world->agents.size);
 
     for(int i = 0; i < ranges.size-1; i++)
     {
@@ -322,10 +322,10 @@ DoStatisticsWindow(SimulationScreen* screen)
                         ImPlotFlags_NoFrame | 
                         ImPlotFlags_NoLegend;
 
-    ImPlot::SetNextAxesLimits(0, screen->update_times.size, 0, 80.0f, 0);
+    ImPlot::SetNextAxesLimits(0, (int)screen->update_times.size, 0, 80.0f, 0);
     if(ImPlot::BeginPlot("Frame update time", V2(-1, 200), updatetime_plot_flags))
     { 
-        ImPlot::PlotBars("Update time", screen->update_times.data, screen->update_times.size, 1);
+        ImPlot::PlotBars("Update time", screen->update_times.data, (int)screen->update_times.size, 1);
         ImPlot::EndPlot();
     }
 
@@ -334,30 +334,30 @@ DoStatisticsWindow(SimulationScreen* screen)
     {
         screen->track_population_per = 30;
         screen->num_herbivores.Shift(-1);
-        screen->num_herbivores[screen->num_herbivores.size-1] = world->num_agenttype[AgentType_Herbivore];
+        screen->num_herbivores[screen->num_herbivores.size-1] = (R32)world->num_agenttype[AgentType_Herbivore];
         screen->num_carnivores.Shift(-1);
-        screen->num_carnivores[screen->num_carnivores.size-1] = world->num_agenttype[AgentType_Carnivore];
+        screen->num_carnivores[screen->num_carnivores.size-1] = (R32)world->num_agenttype[AgentType_Carnivore];
     }
 
     DynamicArray<R32> x_axis(screen->num_herbivores.size);
     x_axis.Fill();
-    x_axis.Apply([](int i, R32& val) {val = i;});
+    x_axis.Apply([](int i, R32& val) {val = (R32)i;});
 
     DynamicArray<R32> bottom(screen->num_herbivores.size);
     bottom.FillAndSetValue(0);
 
     I32 max_agents = global_settings.max_agents;
-    ImPlot::SetNextAxesLimits(0, screen->num_herbivores.size, 0, max_agents, ImPlotCond_Always);
+    ImPlot::SetNextAxesLimits(0, (int)screen->num_herbivores.size, 0, max_agents, ImPlotCond_Always);
     if(ImPlot::BeginPlot("Population", V2(-1, 300), updatetime_plot_flags))
     {
         ImPlot::PushStyleColor(ImPlotCol_Fill, V4(1.0f, 0.3f, 0.3f, 0.6f));
-        ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, screen->num_carnivores.size);
+        ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, (int)screen->num_carnivores.size);
         ImPlot::PopStyleColor();
 
         bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
 
         ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.3f, 1.0f, 0.3f, 0.6f));
-        ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, screen->num_herbivores.size);
+        ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, (int)screen->num_herbivores.size);
         ImPlot::PopStyleColor();
 
         ImPlot::EndPlot();

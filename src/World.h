@@ -79,8 +79,8 @@ struct ChunkCoordinates
 static inline ChunkCoordinates
 GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
 { 
-    int x_chunk = floor(at.x/world->chunk_size);
-    int y_chunk = floor(at.y/world->chunk_size);
+    int x_chunk = (int)(at.x/world->chunk_size);
+    int y_chunk = (int)(at.y/world->chunk_size);
     x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return {(U32)x_chunk, (U32)y_chunk};
@@ -89,20 +89,20 @@ GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
 static inline I32
 GetXChunk(World* world, R32 x)
 { 
-    return floor(x/world->chunk_size); 
+    return (int)(x/world->chunk_size); 
 }
 
 static inline I32
 GetYChunk(World* world, R32 y)
 { 
-    return floor(y/world->chunk_size); 
+    return (int)(y/world->chunk_size); 
 }
 
 static inline Chunk* 
 GetChunkAt(World* world, Vec2 at)
 {
-    int x_chunk = floor(at.x/world->chunk_size);
-    int y_chunk = floor(at.y/world->chunk_size);
+    int x_chunk = (int)(at.x/world->chunk_size);
+    int y_chunk = (int)(at.y/world->chunk_size);
     x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
     y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
     return GetChunk(world, x_chunk, y_chunk);
