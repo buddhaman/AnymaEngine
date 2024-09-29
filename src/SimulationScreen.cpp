@@ -3,6 +3,7 @@
 
 #include <imgui.h>
 #include <implot.h>
+#include <gl3w.h>
 
 #include "SimulationScreen.h"
 #include "DebugInfo.h"

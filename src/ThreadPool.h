@@ -7,6 +7,8 @@
 #include "AnymUtil.h"
 #include "Array.h"
 
+#include "windows.h"
+
 // This will not use std::function when i impleented my own. Also all
 // c++ multithreading code will be replaced. 
 struct JobID { U32 id; };
@@ -65,7 +67,12 @@ struct Worker
     bool running = true;
     ThreadPool* pool;
 
-    Worker() : thread([this]{ this->Run(); }) {}
+    Worker(int id) : thread([this]{ this->Run(); }) 
+    {
+        std::string name = "AnymaWorker"+std::to_string(id);
+        SetThreadDescription(thread.native_handle(), std::wstring(name.begin(), name.end()).c_str());
+    }
+
     ~Worker() 
     { 
         if (thread.joinable()) 
@@ -91,13 +98,8 @@ struct Worker
     }
 };
 
-static Worker* 
-CreateWorker(ThreadPool* pool)
-{
-    Worker* worker = new Worker();
-    worker->pool = pool;
-    return worker;
-}
+Worker* 
+CreateWorker(ThreadPool* pool);
 
 static void
 DestroyWorker(Worker* worker)
@@ -184,4 +186,12 @@ DestroyThreadPool(ThreadPool* pool)
         worker->cond_var.notify_one();
         DestroyWorker(worker);
     }
+}
+
+Worker* 
+CreateWorker(ThreadPool* pool)
+{
+    Worker* worker = new Worker((int)pool->workers.size);
+    worker->pool = pool;
+    return worker;
 }
