@@ -59,7 +59,13 @@ struct Agent
     R32 fov;
     R32 sight_radius;
 
-    Agent* look_at;
+    R32 nearest_herbivore_distance;
+    R32 nearest_herbivore_angle;
+    Agent* nearest_herbivore;
+
+    R32 nearest_carnivore_distance;
+    R32 nearest_carnivore_angle;
+    Agent* nearest_carnivore;
 
     bool is_alive;
 };

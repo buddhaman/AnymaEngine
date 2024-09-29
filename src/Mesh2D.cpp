@@ -99,6 +99,29 @@ PushLineRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, R32 line_width, Vec2 u_orig, Vec
 }
 
 void
+PushCircularSector(Mesh2D* mesh, Vec2 center, R32 radius, int n, R32 min_angle, R32 max_angle, Vec2 u_orig, U32 color)
+{
+    R32 angdiff = (max_angle - min_angle) / (n - 1);
+    U32 last_idx = (U32)mesh->vertex_buffer.size;
+
+    PushVertex(mesh, center, u_orig, color);
+
+    for (I32 i = 0; i < n; ++i)
+    {
+        R32 angle = min_angle + angdiff * i;
+        Vec2 point = V2Add(center, V2Polar(angle, radius));
+        PushVertex(mesh, point, u_orig, color);
+    }
+
+    for (I32 i = 0; i < n - 1; ++i)
+    {
+        PushIndex(mesh, last_idx);         
+        PushIndex(mesh, last_idx + i + 1); 
+        PushIndex(mesh, last_idx + i + 2);
+    }
+}
+
+void
 PushNGon(Mesh2D *mesh,
         Vec2 pos,
         R32 radius, 

@@ -52,6 +52,9 @@ PushLineRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, R32 line_width, Vec2 u_orig, Vec
 
 // The u_orig texture coord does not really make any sense here.
 void
+PushCircularSector(Mesh2D* mesh, Vec2 center, R32 radius, int n, R32 min_angle, R32 max_angle, Vec2 u_orig, U32 color);
+
+void
 PushNGon(Mesh2D *mesh, Vec2 pos, R32 radius, I32 n, R32 orientation, Vec2 u_orig, U32 color);
 
 void

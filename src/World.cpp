@@ -125,10 +125,10 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
     for(I32 agent_idx = from_idx; agent_idx < to_idx; agent_idx++)
     {
         Agent* agent = world->agents[agent_idx];
-        RayCollision collision;
         agent->brain->input.Set(0);
-
 #if 0
+        RayCollision collision;
+
         // Raycasting and updating eye sensors.
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
@@ -151,14 +151,20 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
         }
         agent->brain->input[agent->brain->input.n-1] = 1.0f;
 #else      
-        // Instead find nearest agents and give the relative angle (in fov) and 
-        // TODO: Get only agents in the chunks that intersect the fov circle section
+
+        // Instead of casting a ray find nearest agents and give the relative angle (in fov) and 
+        // TODO: Get only agents in the chunks that intersect the fov circle
+        // section. Find nearest herbivore and nearest carnivore.
+        agent->nearest_carnivore = nullptr;
+        agent->nearest_herbivore = nullptr;
         R32 sight_radius = agent->sight_radius;
         int min_chunk_x = Max(0, GetXChunk(world, agent->pos.x - sight_radius));
         int min_chunk_y = Max(0, GetYChunk(world, agent->pos.y - sight_radius));
         int max_chunk_x = Min(world->x_chunks-1, GetXChunk(world, agent->pos.x + sight_radius));
         int max_chunk_y = Min(world->y_chunks-1, GetYChunk(world, agent->pos.y + sight_radius));
-        R32 nearest = sight_radius;
+        // We dont take square cause later we want to take agent radius into account.
+        agent->nearest_carnivore_distance = sight_radius;
+        agent->nearest_herbivore_distance = sight_radius;
         for(int y_chunk = min_chunk_y; y_chunk <= max_chunk_y; y_chunk++)
         for(int x_chunk = min_chunk_x; x_chunk <= max_chunk_x; x_chunk++)
         {
@@ -174,16 +180,45 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
                 if(-agent->fov < real_diff && real_diff < agent->fov)
                 {
                     R32 distance2 = V2Len2(diff);
-                    R32 l = nearest;
-                    if(distance2 < l*l)
+
+                    // Set as nearest carnivore or herbivore if possible.
+                    if(other->type==AgentType_Carnivore)
                     {
-                        // Visible
-                        nearest = sqrtf(distance2);
-                        agent->look_at = other;
+                        R32 l = agent->nearest_carnivore_distance;
+                        if(distance2 < l*l)
+                        {
+                            // Visible
+                            agent->nearest_carnivore_distance = sqrtf(distance2);
+                            agent->nearest_carnivore_angle = real_diff;
+                            agent->nearest_carnivore = other;
+                        }
+                    }
+                    else
+                    {
+                        R32 l = agent->nearest_herbivore_distance;
+                        if(distance2 < l*l)
+                        {
+                            // Visible
+                            agent->nearest_herbivore_distance = sqrtf(distance2);
+                            agent->nearest_herbivore_angle = real_diff;
+                            agent->nearest_herbivore = other;
+                        }
                     }
                 }
             }
         }
+
+        // Set brain parameters based on nearest herbivore and carnivore.
+        R32 carn_distance_activation = 1.0f - 2.0f*agent->nearest_carnivore_distance/sight_radius;
+        R32 carn_angle_activation = agent->nearest_carnivore_angle / agent->fov;
+        R32 herb_distance_activation = 1.0f - 2.0f*agent->nearest_herbivore_distance/sight_radius;
+        R32 herb_angle_activation = agent->nearest_herbivore_angle / agent->fov;
+        Brain* brain = agent->brain;
+        brain->input[0] = carn_distance_activation;
+        brain->input[1] = carn_angle_activation;
+        brain->input[2] = herb_distance_activation;
+        brain->input[3] = herb_angle_activation;
+        brain->input[4] = sinf((R32)(world->ticks / 60.0f));
 #endif
 
         UpdateBrain(agent);
@@ -405,6 +440,18 @@ RenderEyeRays(Mesh2D* mesh, Agent* agent)
         U32 color = GetAgentColor(eye->hit_type);
         PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, color);
     }
+
+    // Draw fov cone
+    PushCircularSector(mesh, agent->pos, agent->sight_radius, 24, agent->orientation-agent->fov, agent->orientation+agent->fov, V2(0,0), RGBAColor(255, 255, 255, 50));
+
+    if(agent->nearest_carnivore)
+    {
+        PushLine(mesh, agent->pos, agent->nearest_carnivore->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(255, 0, 0, 255));
+    }
+    if(agent->nearest_herbivore)
+    {
+        PushLine(mesh, agent->pos, agent->nearest_herbivore->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(0, 255, 0, 255));
+    }
 }
 
 void
@@ -445,10 +492,6 @@ RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
     R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)world->carnivore_initial_energy);
     Vec2 u = V2(0,0);
     PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, u, RGBAColor(0, 255, 0, 255));
-    if(agent->look_at)
-    {
-        PushLine(mesh, agent->pos, agent->look_at->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(255, 255, 255, 255));
-    }
 }
 
 void 
@@ -518,6 +561,9 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
                 axis0=(axis0*(1.0f+vel_len));
+                // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+                axis0 = V2Polar(agent->orientation, agent->radius);
+                axis1 = V2(-axis0.y, axis0.x);
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             else
@@ -528,6 +574,9 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 Vec2 axis0 = agent->vel*r;
                 Vec2 axis1 = V2(-axis0.y, axis0.x);
                 axis0=(axis0*(1.0f+vel_len));
+                // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+                axis0 = V2Polar(agent->orientation, agent->radius);
+                axis1 = V2(-axis0.y, axis0.x);
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
             RenderDetails(mesh, agent);
@@ -614,8 +663,9 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->id = 1;          // TODO: Use entity ids
     agent->is_alive = true;
     agent->fov = 0.6f;
-    agent->look_at = nullptr;
-    agent->sight_radius = 100;
+    agent->nearest_carnivore = nullptr;
+    agent->nearest_herbivore = nullptr;
+    agent->sight_radius = 40;
     
     world->num_agenttype[type]++;
 
@@ -684,7 +734,6 @@ RemoveAgent(World* world, U32 agent_idx)
     world->num_agenttype[agent->type]--;
 
     world->removed_agent_indices.PushBack(agent_idx);
-
 }
 
 Agent* 

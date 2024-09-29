@@ -331,7 +331,9 @@ DoStatisticsWindow(SimulationScreen* screen)
     }
 
     // Collect population info
-    if((screen->track_population_per-=screen->updates_per_frame) <= 0 && !screen->isPaused)
+    screen->track_population_per-=screen->updates_per_frame;
+    bool shouldCollect = screen->track_population_per < 0;
+    if(shouldCollect && !screen->isPaused)
     {
         screen->track_population_per = 30;
         screen->num_herbivores.Shift(-1);
