@@ -31,7 +31,7 @@
 #include "External.h"
 #include "InputHandler.h"
 #include "Linalg.h"
-#include "Math.h"
+#include "TMath.h"
 #include "Memory.h"
 #include "Mesh2D.h"
 #include "ParticleSystem.h"

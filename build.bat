@@ -30,13 +30,11 @@ if "%BUILD_TYPE%"=="Release" (
     del /Q %OUTPUT_DIR%\*.obj
 )
 
-rem Compile and main.cpp into object files and output to build folder
-cl /Fo:%OUTPUT_DIR%\ /Fe:%OUTPUT_DIR%\anyma.exe /Fd:%OUTPUT_DIR%\anyma.pdb %COMPILER_OPTS% %INCLUDE_OPTS% Src\Main.cpp %LIB_OPTS%
+rem Compile and link Anyma.cpp into object files and output to build folder
+cl /Fo:%OUTPUT_DIR%\ /Fe:%OUTPUT_DIR%\anyma.exe /Fd:%OUTPUT_DIR%\anyma.pdb %COMPILER_OPTS% %INCLUDE_OPTS% Src\Anyma.cpp %LIB_OPTS%
 
 rem Copy Assets folder to output directory
 xcopy /E /I /Y Assets %OUTPUT_DIR%\Assets
 
 rem Copy SDL2.dll to output directory
 copy /Y %SDL2_PATH%\lib\SDL2.dll %OUTPUT_DIR%\
-
-pause
