@@ -128,6 +128,7 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
         RayCollision collision;
         agent->brain->input.Set(0);
 
+#if 0
         // Raycasting and updating eye sensors.
         for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
         {
@@ -149,6 +150,41 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
             }
         }
         agent->brain->input[agent->brain->input.n-1] = 1.0f;
+#else      
+        // Instead find nearest agents and give the relative angle (in fov) and 
+        // TODO: Get only agents in the chunks that intersect the fov circle section
+        R32 sight_radius = agent->sight_radius;
+        int min_chunk_x = Max(0, GetXChunk(world, agent->pos.x - sight_radius));
+        int min_chunk_y = Max(0, GetYChunk(world, agent->pos.y - sight_radius));
+        int max_chunk_x = Min(world->x_chunks-1, GetXChunk(world, agent->pos.x + sight_radius));
+        int max_chunk_y = Min(world->y_chunks-1, GetYChunk(world, agent->pos.y + sight_radius));
+        R32 nearest = sight_radius;
+        for(int y_chunk = min_chunk_y; y_chunk <= max_chunk_y; y_chunk++)
+        for(int x_chunk = min_chunk_x; x_chunk <= max_chunk_x; x_chunk++)
+        {
+            // Iterate over all agents and check if they fall within the fov and radius.
+            Chunk* chunk = GetChunk(world, x_chunk, y_chunk);
+            for(U32 agent_idx : chunk->agent_indices)
+            {
+                Agent* other = world->agents[agent_idx];
+                if(other==agent) continue;
+                Vec2 diff = other->pos - agent->pos;
+                R32 angle_diff = atan2f(diff.y, diff.x);
+                R32 real_diff = NormalizeAngle(angle_diff - agent->orientation);
+                if(-agent->fov < real_diff && real_diff < agent->fov)
+                {
+                    R32 distance2 = V2Len2(diff);
+                    R32 l = nearest;
+                    if(distance2 < l*l)
+                    {
+                        // Visible
+                        nearest = sqrtf(distance2);
+                        agent->look_at = other;
+                    }
+                }
+            }
+        }
+#endif
 
         UpdateBrain(agent);
     }
@@ -396,6 +432,7 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
     // Pupils
     PushNGon(mesh, agent->pos+dir*eye_d+perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
     PushNGon(mesh, agent->pos+dir*eye_d-perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
+
 }
 
 void 
@@ -408,6 +445,10 @@ RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
     R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)world->carnivore_initial_energy);
     Vec2 u = V2(0,0);
     PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, u, RGBAColor(0, 255, 0, 255));
+    if(agent->look_at)
+    {
+        PushLine(mesh, agent->pos, agent->look_at->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(255, 255, 255, 255));
+    }
 }
 
 void 
@@ -572,6 +613,9 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->radius = 1.2f;
     agent->id = 1;          // TODO: Use entity ids
     agent->is_alive = true;
+    agent->fov = 0.6f;
+    agent->look_at = nullptr;
+    agent->sight_radius = 100;
     
     world->num_agenttype[type]++;
 
@@ -579,12 +623,11 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 
     // Eyes
     int n_eyes = 4;
-    R32 agent_fov = 0.6f;
     agent->eyes = CreateArray<AgentEye>(brain_arena, n_eyes);
     for(int i = 0; i < n_eyes; i++)
     {
         AgentEye* eye = agent->eyes.PushBack();
-        eye->orientation = -agent_fov/2.0f + i*agent_fov/(n_eyes-1);
+        eye->orientation = -agent->fov/2.0f + i*agent->fov/(n_eyes-1);
     }
 
     // Brain

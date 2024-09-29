@@ -73,3 +73,15 @@ InBounds(Rect bounds, Vec2 point)
     return true;
 }
 
+static inline R32 NormalizeAngle(R32 angle) 
+{
+    R32 twoPi = 2.0f * (R32)M_PI;
+    angle = fmod(angle + (R32)M_PI, twoPi);  // Shift the range to [0, 2π) by adding π
+    if (angle < 0) 
+    {
+        angle += twoPi;  // Ensure positive result in [0, 2π)
+    }
+    return angle - (R32)M_PI;  // Shift back to [-π, π]
+}
+
+

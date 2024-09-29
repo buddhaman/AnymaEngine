@@ -56,6 +56,10 @@ struct Agent
 
     // This is the color used to identify the gene. For visualization.
     U32 gene_color;
+    R32 fov;
+    R32 sight_radius;
+
+    Agent* look_at;
 
     bool is_alive;
 };

@@ -27,6 +27,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - Saving and loading the state of an entire world.
  - Tracking succesful agents.
  - Tracking lineage.
+ - Track generation number.
  - Showing the entire state of the brain and genes.
  - Make a circular buffer.
  - Port to webassembly and run online.
@@ -36,6 +37,9 @@ Brain update rate will be 1 / 6 of the physics update rate.
     - Do carnivores get a reproduction boost if their population is low?
 
 #### TODO
+- Custom text rendering.
+- Add different sensor type instead of eyes: nearest agent. 
+- Create simple entity system.
 - Change rendering to 2.5D.
 - Add terain.
 - Show charge when zoomed in.
