@@ -29,26 +29,11 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - Tracking lineage.
  - Showing the entire state of the brain and genes.
  - Make a circular buffer.
+ - Port to webassembly and run online.
  - IDEA: Create a kind of business rule table where you can set rules like: 
     - Required speed for carnivores to do damage to herbivores
     - Allow sprinting, how much energy to take on a sprint?
     - Do carnivores get a reproduction boost if their population is low?
-
-#### Design
-- Current direction: Give agents a body, but at the same time simplify even more. 
-- Gene encodes a body, rendered like football evo my previous project. The limbs will be connected to each other like spore, but its 2.5D.
-- Sensors will be even simpler. Simply relative angle and distance to the nearest agent of the same type and of another type. 
-- Bigger possible ruleset with agents that can send and receive signals.
-- The goal of the simulation is to create an ecosystem that is interesting to
-  look at. We might give agents properties like picking skills in an rpg. The
-  total amount of points is capped. This way they can occupy an ecological
-  niche.
-  IDEAS: 
-  - Shield, less damage received.
-  - Longevity.
-  - Reproduction rate.
-  - Speed.
-  - Resistance in a certain biome.
 
 #### TODO
 - Change rendering to 2.5D.
@@ -64,14 +49,12 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Store most succesful agents. (Requires herbivores to collect plants).
 - Edit total lifespan of agents.
 - Remove health bar in world with checkbox.
-- Port to webassembly and run online.
 - Make grass fields , energy in ground.
 - Configure amount of eyes and fov.
 - Create real and simple memory pool with chunks
 - Show indicator when herbivore is hurt.
 - Edit reproduction rate calculation, more offspring if population is low for instance.
 - Implement my own std::function.
-- OPTION: Boost or nerf agents if population is large.
 - Plotting utility functions.
 - Make active and inactive chunks.
 - Fix agents popping into view.
@@ -187,3 +170,28 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Create a game like super world box. Make complex behavior and create a behavior tree editor for fast iteration.
   - Create a custom interpreted langauge for creating behavior trees.
 - Online game where you manage your little land and need to trade or fight with neighbouring countries. On a server WASM.
+
+#### Design
+- Current direction: Give agents a body, but at the same time simplify even more. 
+- Gene encodes a body, rendered like football evo my previous project. The limbs will be connected to each other like spore, but its 2.5D.
+- Sensors will be even simpler. Simply relative angle and distance to the nearest agent of the same type and of another type. 
+- Bigger possible ruleset with agents that can send and receive signals.
+- The goal of the simulation is to create an ecosystem that is interesting to
+  look at. We might give agents properties like picking skills in an rpg. The
+  total amount of points is capped. This way they can occupy an ecological
+  niche.
+  IDEAS for properties: 
+  - Shield, less damage received.
+  - Longevity.
+  - Reproduction rate.
+  - Speed.
+  - Resistance in a certain biome.
+  - Attack range.
+  - Attack speed.
+  - Attack force.
+  - Pheromone placing.
+  - Pheromone sensing.
+  - Sexual reproduction.
+  - (Maybe): Meat or plant preference for continuous evolution from herbivore to carnivore.
+STYLE:
+ - 2.5D and draw an outline around each creature so they are visible even if the background is the same color.

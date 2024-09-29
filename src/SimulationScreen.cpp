@@ -489,7 +489,7 @@ RestartWorld(SimulationScreen* screen)
 void
 InitSimulationScreen(SimulationScreen* screen)
 {
-    screen->world_arena = CreateMemoryArena(MegaBytes(256));
+    screen->world_arena = CreateMemoryArena(MegaBytes(512));
 
     RestartWorld(screen);
     screen->cam.pos = screen->world->size/2.0f;

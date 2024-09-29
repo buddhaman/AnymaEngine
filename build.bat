@@ -7,7 +7,7 @@ set OPENGL_PATH=external\opengl
 rem Check for release or debug argument
 if "%1"=="release" (
     set BUILD_TYPE=Release
-    set COMPILER_OPTS=/O2 /MT /W3 /std:c++20
+    set COMPILER_OPTS=/O2 /MT /W3 /std:c++20 /DNDEBUG
     set OUTPUT_DIR=Build\Release
 ) else (
     set BUILD_TYPE=Debug
