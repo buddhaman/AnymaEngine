@@ -58,5 +58,19 @@ CreateShader(const char* vertex_shader_src, const char* fragment_shader_src)
     U32 fragment_shader = CreateAndCompileShaderSource(fragment_shader_src, GL_FRAGMENT_SHADER);
     shader.program_handle = CreateAndLinkShaderProgram(vertex_shader, fragment_shader);
 
+    shader.transform_loc = glGetUniformLocation(shader.program_handle, "u_transform");
+
     return shader;
+}
+
+void
+SetTransform(Shader* shader, R32* transform_matrix)
+{
+    glUniformMatrix3fv(shader->transform_loc, 1, GL_FALSE, transform_matrix);
+}
+
+void
+UseShader(Shader* shader)
+{
+    glUseProgram(shader->program_handle);
 }

@@ -32,15 +32,15 @@
 #include "InputHandler.h"
 #include "Linalg.h"
 #include "TMath.h"
+#include "TString.h"
 #include "Memory.h"
 #include "Mesh2D.h"
 #include "ParticleSystem.h"
 #include "Shader.h"
 #include "SimulationScreen.h"
 #include "SimulationSettings.h"
-#include "String.h"
 #include "ThreadPool.h"
-#include "String.h"
+#include "EditorScreen.h"
 
 #include "Agent.cpp"
 #include "Array.h"
@@ -58,6 +58,7 @@
 #include "TimVectorMath.cpp"
 #include "Window.cpp"
 #include "World.cpp"
+#include "EditorScreen.cpp"
 
 #include <direct.h>  
 
@@ -89,11 +90,26 @@ int main(int argc, char** argv)
     PrintWorkingDirectory();
 
     SimulationScreen screen;
+    EditorScreen editor;
+
     InitSimulationScreen(&screen);
     while (window->running) 
     {
         WindowBegin(window);
-        UpdateSimulationScreen(&screen, window);
+        switch(global_settings.current_phase)
+        {
+
+            case GamePhase_SimulationScreen: 
+            {
+                UpdateSimulationScreen(&screen, window);
+            } break;
+
+            case GamePhase_EditorScreen: 
+            {
+                UpdateEditorScreen(&editor, window);
+            } break;
+
+        }
         WindowEnd(window);
     }
     DestroyWindow(window);

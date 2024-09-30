@@ -8,9 +8,15 @@
 #define DEFAULT_MAX_AGENTS 6000
 #else
 #define DEFAULT_AXIS_CHUNKS 50
-#define DEFAULT_NUM_AGENTS 1000
-#define DEFAULT_MAX_AGENTS 1000
+#define DEFAULT_NUM_AGENTS 3000
+#define DEFAULT_MAX_AGENTS 3000
 #endif
+
+enum GamePhase
+{
+    GamePhase_SimulationScreen,
+    GamePhase_EditorScreen,
+};
 
 struct SimulationSettings
 {
@@ -30,6 +36,9 @@ struct SimulationSettings
 
     I32 carnivore_reproduction_ticks = 60*26;
     I32 carnivore_initial_energy = 60*25;
+
+    // Current phase settings
+    GamePhase current_phase = GamePhase_EditorScreen;
 };
 
 inline SimulationSettings global_settings;

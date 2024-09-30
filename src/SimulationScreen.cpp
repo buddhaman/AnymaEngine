@@ -9,37 +9,6 @@
 #include "DebugInfo.h"
 #include "Lucide.h"
 
-const char* vertex_shader_source = R"glsl(
-    #version 330 core
-    layout (location = 0) in vec2 a_position;
-    layout (location = 1) in vec2 a_texture;
-    layout (location = 2) in vec4 a_color;
-
-    uniform mat3 u_transform;
-
-    out vec4 v_color;
-
-    void main() 
-    {
-        vec3 pos = u_transform * vec3(a_position, 1.0);
-        v_color = a_color;
-        gl_Position = vec4(pos.xy, 0.0, 1.0);
-    }
-)glsl";
-
-const char* fragment_shader_source = R"glsl(
-    #version 330 core
-
-    in vec4 v_color;
-
-    out vec4 frag_color;
-    
-    void main() 
-    {
-        vec3 gammaCorrectedColor = pow(v_color.abg, vec3(1.0/2.2));
-        frag_color = vec4(gammaCorrectedColor, v_color.r);
-    }
-)glsl";
 
 static void
 DoScreenWorldUpdate(SimulationScreen* screen)
@@ -133,9 +102,9 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     World* world = screen->world;
     Camera2D* cam = &screen->cam;
 
-    glUseProgram(shader->program_handle);
+    UseShader(&screen->shader);
     UpdateCamera(cam, window->width, window->height);
-    glUniformMatrix3fv(screen->transform_loc, 1, GL_FALSE, &screen->cam.transform.m[0][0]);
+    SetTransform(shader, &cam->transform.m[0][0]);
 
     R32 thickness = 0.2f;
     R32 min_scale = 4.0f;
@@ -389,7 +358,7 @@ DoStatisticsWindow(SimulationScreen* screen)
     }
 }
 
-void
+int
 UpdateSimulationScreen(SimulationScreen* screen, Window* window)
 {
     InputHandler* input = &window->input;
@@ -414,7 +383,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         if(ImGui::MenuItem("Show statistics window", nullptr, &screen->show_statistic_window))
         {
         }
-        if(ImGui::MenuItem("Show control window", nullptr, &screen->show_statistic_window))
+        if(ImGui::MenuItem("Show control window", nullptr, &screen->show_control_window))
         {
         }
         ImGui::EndMenu();
@@ -495,6 +464,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     }
 
     DoScreenWorldRender(screen, window);
+    return 0;
 }
 
 void
@@ -512,8 +482,7 @@ InitSimulationScreen(SimulationScreen* screen)
     RestartWorld(screen);
     screen->cam.pos = screen->world->size/2.0f;
 
-    screen->shader = CreateShader(vertex_shader_source, fragment_shader_source);
-    screen->transform_loc = glGetUniformLocation(screen->shader.program_handle, "u_transform");
+    screen->shader = CreateShader();
 
     screen->update_times.FillAndSetValue(0);
     screen->num_carnivores.FillAndSetValue(0);

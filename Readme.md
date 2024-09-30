@@ -38,14 +38,15 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Sensor: Average direction and distance of a certain type of agent in the neighbourhood as sensor. 
 
 #### TODO
+- Make graph in real seconds as units.
 - FUN: Make a creature editor.
+- Modular sensor and actuator system + editor.
 - FUN: Make a mass-add feature.
 - FUN: Make a mass-death feature.
 - FUN: Make a mutation gun. Radiation.
 - Change to local coordinates instead of fov, this is easier to work with. 
 - Make boid-like inputs with average position and average velocity of nearby agents.
 - Change charge such that they can charge partly and agents get feedback on the amount of charge they have. 
-- Modular sensor and actuator system + editor.
 - Make carnivores brighter so you can see them better.
 - Custom text rendering.
 - Create simple entity system.
