@@ -213,12 +213,30 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
         R32 carn_angle_activation = agent->nearest_carnivore_angle / agent->fov;
         R32 herb_distance_activation = 1.0f - 2.0f*agent->nearest_herbivore_distance/sight_radius;
         R32 herb_angle_activation = agent->nearest_herbivore_angle / agent->fov;
+
+        // Calculate herbivore relative x and y velocity. For herbivores to flock and for carnivores to track.
+        Vec2 herb_vel = V2(0,0);
+        if(agent->nearest_herbivore)
+        {
+            Vec2 rely_axis = V2Polar(agent->orientation, 1.0);
+            Vec2 relx_axis = V2(-rely_axis.y, rely_axis.x);
+
+            // Transform other agents velocity into this agents' local coordinate system.
+            // TODO: Clamp this velocity so it does not become too big.
+            Agent* other = agent->nearest_herbivore;
+            herb_vel = V2(V2Dot(relx_axis, other->vel), V2Dot(rely_axis, other->vel));
+        }
+
         Brain* brain = agent->brain;
         brain->input[0] = carn_distance_activation;
         brain->input[1] = carn_angle_activation;
         brain->input[2] = herb_distance_activation;
         brain->input[3] = herb_angle_activation;
-        brain->input[4] = sinf((R32)(world->ticks / 60.0f));
+
+        // relative movement of nearest herbivore
+        brain->input[4] = herb_vel.x;
+        brain->input[5] = herb_vel.y;
+        //brain->input[4] = sinf((R32)(world->ticks / 60.0f));
 #endif
 
         UpdateBrain(agent);
@@ -662,7 +680,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->radius = 1.2f;
     agent->id = 1;          // TODO: Use entity ids
     agent->is_alive = true;
-    agent->fov = 0.6f;
+    agent->fov = type == AgentType_Carnivore ? 0.6f : 1.2f;
     agent->nearest_carnivore = nullptr;
     agent->nearest_herbivore = nullptr;
     agent->sight_radius = 40;

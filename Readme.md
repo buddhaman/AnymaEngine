@@ -35,12 +35,23 @@ Brain update rate will be 1 / 6 of the physics update rate.
     - Required speed for carnivores to do damage to herbivores
     - Allow sprinting, how much energy to take on a sprint?
     - Do carnivores get a reproduction boost if their population is low?
+ - IDEA: Sensor: Average direction and distance of a certain type of agent in the neighbourhood as sensor. 
 
 #### TODO
+- FUN: Make a creature editor.
+- FUN: Make a mass-add feature.
+- FUN: Make a mass-death feature.
+- FUN: Make a mutation gun. Radiation.
+- Change to local coordinates instead of fov, this is easier to work with. 
+- Make boid-like inputs with average position and average velocity of nearby agents.
+- Change charge such that they can charge partly and agents get feedback on the amount of charge they have. 
+- Modular sensor and actuator system + editor.
+- Make carnivores brighter so you can see them better.
 - Custom text rendering.
-- Add different sensor type instead of eyes: nearest agent. 
 - Create simple entity system.
+- STATS: Energy collected.
 - Change rendering to 2.5D.
+- Calculate frame update time and render time, use this to reccomend speedup or create adaptive speedup.
 - Add terain.
 - Show charge when zoomed in.
 - Show charge of agent in ui.
@@ -71,6 +82,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make list of common colors.
 
 ### Done
+- Add different sensor type instead of eyes: nearest agent. 
 #### RELEASE 4
 - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 
 - Make particles when agent gets killed or dies.

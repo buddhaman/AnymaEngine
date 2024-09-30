@@ -41,12 +41,6 @@ struct World
     Array<U32> visible_agent_indices;
     int max_eyes_per_agent;
 
-    I32 carnivore_reproduction_ticks;
-    I32 carnivore_initial_energy;
-
-    I32 herbivore_reproduction_ticks;
-    I32 herbivore_initial_energy;
-
     I64 ticks;
 
     I32 num_agenttype[AgentType_Num];
