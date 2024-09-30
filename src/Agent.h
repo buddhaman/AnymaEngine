@@ -50,6 +50,8 @@ struct Agent
     I32 charge;
     I32 charge_refractory;
 
+    AgentDetails* details;
+
     Array<AgentEye> eyes;
     Brain* brain;
 

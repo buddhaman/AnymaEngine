@@ -7,6 +7,11 @@
 
 #include "Agent.h"
 
+void
+RenderAgentDetails(Agent* agent)
+{
+}
+
 int
 UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
@@ -25,7 +30,17 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
-    
+    Agent agent;
+    agent.details = PushStruct(editor->editor_arena, AgentDetails);
+
+    UseShader(&editor->shader);
+    UpdateCamera(cam, window->width, window->height);
+    SetTransform(&editor->shader, &editor->cam.transform.m[0][0]);
+
+    PushCircularSector(mesh, V2(0,0), 10, 12, 0, (R32)M_PI, V2(0,0), RGBAColor(255, 0, 0, 255));
+    BufferData(mesh, GL_DYNAMIC_DRAW);
+    Draw(mesh);
+    Clear(mesh);
 
     return 0;
 }

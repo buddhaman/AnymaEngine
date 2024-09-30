@@ -90,9 +90,11 @@ int main(int argc, char** argv)
     PrintWorkingDirectory();
 
     SimulationScreen screen;
-    EditorScreen editor;
-
     InitSimulationScreen(&screen);
+
+    EditorScreen editor;
+    InitEditorScreen(&editor);
+
     while (window->running) 
     {
         WindowBegin(window);
