@@ -34,6 +34,12 @@ struct Brain
     VecR32 gene;
 };
 
+// This is the detailed struct that you see in high LOD.
+struct AgentDetails
+{
+
+};
+
 struct Agent
 {
     Vec2 pos; 

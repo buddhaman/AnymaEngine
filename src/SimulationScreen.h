@@ -46,7 +46,7 @@ struct SimulationScreen
     SimulationScreen() : update_times(120), num_carnivores(120), num_herbivores(120) {};
 };
 
-int
+void
 UpdateSimulationScreen(SimulationScreen* screen, Window* window);
 
 void

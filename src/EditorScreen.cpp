@@ -5,11 +5,14 @@
 #include "SimulationSettings.h"
 #include "Lucide.h"
 
+#include "Agent.h"
+
 int
 UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
     InputHandler* input = &window->input;
     Camera2D* cam = &editor->cam;
+    Mesh2D* mesh = &editor->dynamic_mesh;
 
     ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu("Window"))
@@ -22,7 +25,16 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
-
+    
 
     return 0;
+}
+
+void
+InitEditorScreen(EditorScreen* editor)
+{
+    // Might be a bit much memory for the editor.
+    editor->editor_arena = CreateMemoryArena(MegaBytes(32));
+    editor->shader = CreateShader();
+    editor->cam.pos = V2(0,0);
 }
