@@ -56,6 +56,9 @@ struct World
 
     BittedMemoryPool<Agent>* agent_pool;
     BittedMemoryPool<Brain>* brain_pool;
+
+    // Its easier to store the selected entity in World, even though it belongs to screen. 
+    // Here we can set it to null when it dies etc.
 };
 
 static inline Chunk* 
@@ -112,19 +115,19 @@ void
 UpdateWorld(World* world);
 
 void
-RenderEyeRays(Mesh2D* mesh, Agent* agent);
+RenderEyeRays(Mesh2D* mesh, Agent* agent, Vec2 uv);
 
 void
-RenderDetails(Mesh2D* mesh, Agent* agent);
+RenderDetails(Mesh2D* mesh, Agent* agent, Vec2 uv);
 
 void 
-RenderHealth(Mesh2D* mesh, Agent* agent);
+RenderHealth(Mesh2D* mesh, Agent* agent, Vec2 uv);
 
 void 
-RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overlay = ColorOverlay_AgentType);
+RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay color_overlay = ColorOverlay_AgentType);
 
 void 
-DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam);
+DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv);
 
 void
 SortAgentsIntoMultipleChunks(World* world);

@@ -21,10 +21,10 @@ void
 UpdateCamera(Camera2D *camera, int screenWidth, int screenHeight);
 
 void
-UpdateCameraScrollInput(InputHandler input, Camera2D *camera);
+UpdateCameraScrollInput(Camera2D *camera, InputHandler* input);
 
 void
-UpdateCameraDragInput(InputHandler input, Camera2D *camera);
+UpdateCameraDragInput(Camera2D *camera, InputHandler* input);
 
 void
 CameraStopDragging(Camera2D *camera);

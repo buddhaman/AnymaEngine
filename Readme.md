@@ -38,9 +38,11 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Sensor: Average direction and distance of a certain type of agent in the neighbourhood as sensor. 
 
 #### TODO
+- Render a detailed agent in the editor.
 - Make graph in real seconds as units.
 - FUN: Make a creature editor.
 - Modular sensor and actuator system + editor.
+- Refactor simulationscreen to use renderer.
 - FUN: Make a mass-add feature.
 - FUN: Make a mass-death feature.
 - FUN: Make a mutation gun. Radiation.
@@ -83,6 +85,10 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make list of common colors.
 
 ### Done
+- Create a renderer instead of passing all these meshes and textures around.
+- Use textures to draw a circle.
+- Get textures working and set default texture. 
+- Get camera working in editor.
 - Add different sensor type instead of eyes: nearest agent. 
 #### RELEASE 4
 - Remove CMAKE. I decided to use CMake for this project and i regret it. Very much. 

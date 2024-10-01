@@ -67,7 +67,7 @@ DoScreenWorldUpdate(SimulationScreen* screen)
 }
 
 static void
-DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_max, R32 grid_size, R32 thickness, U32 color)
+DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_max, R32 grid_size, Vec2 u, R32 thickness, U32 color)
 {
     Vec2 draw_min = V2(Max(cam_min.x, world_min.x), Max(cam_min.y, world_min.y));
     Vec2 draw_max = V2(Min(cam_max.x, world_max.x), Min(cam_max.y, world_max.y));
@@ -77,20 +77,18 @@ DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_ma
     I32 y_chunk_start = (I32)floor(draw_min.y / grid_size);
     I32 y_chunk_end = (I32)ceil(draw_max.y / grid_size);
 
-    Vec2 u = V2(0, 0);
-
     // Draw vertical lines
     for (I32 x_chunk = x_chunk_start; x_chunk <= x_chunk_end; x_chunk++)
     {
         R32 x = x_chunk * grid_size;
-        PushRect(mesh, V2(x - thickness / 2.0f, draw_min.y), V2(thickness, draw_max.y - draw_min.y), u, u, color);
+        PushRect(mesh, V2(x - thickness / 2.0f, draw_min.y), V2(thickness, draw_max.y - draw_min.y), u, V2(0,0), color);
     }
 
     // Draw horizontal lines
     for (I32 y_chunk = y_chunk_start; y_chunk <= y_chunk_end; y_chunk++)
     {
         R32 y = y_chunk * grid_size;
-        PushRect(mesh, V2(draw_min.x, y - thickness / 2.0f), V2(draw_max.x - draw_min.x, thickness), u, u, color);
+        PushRect(mesh, V2(draw_min.x, y - thickness / 2.0f), V2(draw_max.x - draw_min.x, thickness), u, V2(0,0), color);
     }
 }
 
@@ -103,30 +101,32 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
     Camera2D* cam = &screen->cam;
 
     UseShader(&screen->shader);
+    glBindTexture(GL_TEXTURE_2D, screen->atlas->handle);
     UpdateCamera(cam, window->width, window->height);
     SetTransform(shader, &cam->transform.m[0][0]);
 
     R32 thickness = 0.2f;
     R32 min_scale = 4.0f;
     I32 subdivs = 5;
+    Vec2 u = screen->square->pos;
     if(cam->scale > min_scale)
     {
         R32 factor = log2f(cam->scale) - log2f(min_scale);
         R32 alpha = Clamp(0.0f, factor, 1.0f);
         U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
-        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, u, thickness/3.0f, color);
     }
 
     if(cam->scale > 1.0f)
     {
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
         U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
-        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, thickness, color);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, u, thickness, color);
     }
 
     if(screen->show_chunk_occupancy)
     {
-        DrawChunks(world, mesh, &screen->cam);
+        DrawChunks(world, mesh, &screen->cam, u);
     }
 
     // Only difference between these if statements is the color but thats done on purpose.
@@ -136,7 +136,7 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         R32 radius = screen->hovered_agent->radius + screen->extra_selection_radius + time_factor;
         R32 line_width = 0.4f;
         U32 color = 0xff88aaff;
-        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
+        PushLineNGon(mesh, screen->hovered_agent->pos, radius, radius + line_width, 8, screen->time*3, u, color);
     }
 
     if(screen->selected_agent)
@@ -145,11 +145,11 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         R32 radius = screen->selected_agent->radius + screen->extra_selection_radius + time_factor;
         R32 line_width = 0.4f;
         U32 color = 0xffaa77ff;
-        PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, V2(0,0), color);
-        RenderEyeRays(mesh, screen->selected_agent);
+        PushLineNGon(mesh, screen->selected_agent->pos, radius, radius + line_width, 8, screen->time*3, u, color);
+        RenderEyeRays(mesh, screen->selected_agent, u);
     }
 
-    RenderWorld(world, mesh, &screen->cam, screen->overlay);
+    RenderWorld(world, mesh, &screen->cam, u, screen->overlay);
 
     BufferData(mesh, GL_DYNAMIC_DRAW);
     Draw(mesh);
@@ -428,28 +428,15 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
     screen->hovered_agent = nullptr;
     if(!io.WantCaptureMouse)
     {
-        if(IsKeyDown(input, InputAction_W))
-        {
-            cam->pos.y += .1f/cam->scale;
-        }
-
-        if(input->mousedown[0])
-        {
-            Vec2 diff = input->mouse_delta / (cam->scale);
-            cam->pos.x -= diff.x;
-            cam->pos.y += diff.y;
-            //R32 vel = 0.8f;
-            //TrySpawnParticle(world, world_mouse_pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.8f, RGBAColor(255, 0, 255, 255));
-        }
-
         screen->hovered_agent = SelectFromWorld(world, world_mouse_pos, screen->extra_selection_radius);
+
+        UpdateCameraDragInput(cam, input);
+        UpdateCameraScrollInput(cam, input);
 
         if(IsMouseClicked(input, 0))
         {
             screen->selected_agent = screen->hovered_agent;
         }
-
-        cam->scale = cam->scale *= powf(1.05f, input->mouse_scroll);
     }
 
     if(!screen->isPaused)
@@ -477,7 +464,7 @@ RestartWorld(SimulationScreen* screen)
 void
 InitSimulationScreen(SimulationScreen* screen)
 {
-    screen->world_arena = CreateMemoryArena(MegaBytes(512));
+    MemoryArena* arena = screen->world_arena = CreateMemoryArena(MegaBytes(512));
 
     RestartWorld(screen);
     screen->cam.pos = screen->world->size/2.0f;
@@ -487,6 +474,9 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->update_times.FillAndSetValue(0);
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
+
+    screen->atlas = MakeDefaultTexture(arena, 511);
+    screen->square = &screen->atlas->regions[1];
 
     I32 num_cores = std::thread::hardware_concurrency();
     std::cout << "Num cores = " << num_cores << std::endl;

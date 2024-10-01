@@ -11,15 +11,20 @@ UpdateCamera(Camera2D *camera, int screen_width, int screen_height)
 }
 
 void
-UpdateCameraScrollInput(Camera2D *camera)
+UpdateCameraScrollInput(Camera2D *camera, InputHandler* input)
 {
-
+    camera->scale = camera->scale *= powf(1.05f, input->mouse_scroll);
 }
 
 void
-UpdateCameraDragInput(Camera2D *camera)
+UpdateCameraDragInput(Camera2D *camera, InputHandler* input)
 {
-    
+    if(input->mousedown[0])
+    {
+        Vec2 diff = input->mouse_delta / (camera->scale);
+        camera->pos.x -= diff.x;
+        camera->pos.y += diff.y;
+    }
 }
 
 void

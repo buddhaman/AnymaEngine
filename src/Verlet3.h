@@ -11,7 +11,7 @@ struct Verlet3
     Vec3 old_pos;
 };
 
-struct VerletConstraint
+struct Verlet3Constraint
 {
     Verlet3* v0;
     Verlet3* v1;
@@ -29,7 +29,7 @@ void VerletUpdate(Verlet3* particle, float friction = 1.0f)
 }
 
 void 
-VerletSolve(VerletConstraint* constraint)
+VerletSolve(Verlet3Constraint* constraint)
 {
     // Calculate the vector between the two particles
     Vec3 delta = constraint->v1->pos - constraint->v0->pos;

@@ -4,13 +4,19 @@
 #include "Shader.h"
 #include "Window.h"
 #include "Camera2D.h"
+#include "Texture.h"
+#include "Renderer.h"
 
 struct EditorScreen
 {
-    Mesh2D dynamic_mesh;
     MemoryArena* editor_arena;
     Camera2D cam;
-    Shader shader;
+
+    TextureAtlas* atlas;
+
+    Renderer* renderer;
+
+    AgentDetails* agent_details;
 };
 
 int

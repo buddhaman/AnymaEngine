@@ -1,4 +1,5 @@
 #include <imgui.h>
+#include <gl3w.h>
 
 #include "AnymUtil.h"
 #include "EditorScreen.h"
@@ -17,8 +18,9 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
     InputHandler* input = &window->input;
     Camera2D* cam = &editor->cam;
-    Mesh2D* mesh = &editor->dynamic_mesh;
+    Renderer* renderer = editor->renderer;
 
+    // Do ui 
     ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu("Window"))
     {
@@ -30,17 +32,15 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
-    Agent agent;
-    agent.details = PushStruct(editor->editor_arena, AgentDetails);
+    ImGuiIO& imgui_io = ImGui::GetIO();
+    if(!imgui_io.WantCaptureMouse)
+    {
+        UpdateCameraScrollInput(cam, input);
+        UpdateCameraDragInput(cam, input);
+    }
 
-    UseShader(&editor->shader);
-    UpdateCamera(cam, window->width, window->height);
-    SetTransform(&editor->shader, &editor->cam.transform.m[0][0]);
 
-    PushCircularSector(mesh, V2(0,0), 10, 12, 0, (R32)M_PI, V2(0,0), RGBAColor(255, 0, 0, 255));
-    BufferData(mesh, GL_DYNAMIC_DRAW);
-    Draw(mesh);
-    Clear(mesh);
+    Render(renderer, cam, window->width, window->height);
 
     return 0;
 }
@@ -49,7 +49,8 @@ void
 InitEditorScreen(EditorScreen* editor)
 {
     // Might be a bit much memory for the editor.
-    editor->editor_arena = CreateMemoryArena(MegaBytes(32));
-    editor->shader = CreateShader();
+    MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(32));
     editor->cam.pos = V2(0,0);
+    editor->renderer = CreateRenderer(arena);
+    editor->agent_details = CreateAgentDetails(arena, V3(0, 0,0), 1.0f);
 }

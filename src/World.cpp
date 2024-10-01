@@ -448,35 +448,33 @@ CheckAgentCollisions(Agent* agent0, Agent* agent1)
 }
 
 void
-RenderEyeRays(Mesh2D* mesh, Agent* agent)
+RenderEyeRays(Mesh2D* mesh, Agent* agent, Vec2 uv)
 {
-    Vec2 uv = V2(0,0);
     for(int i = 0; i < agent->eyes.size; i++)
     {
         AgentEye* eye = &agent->eyes[i];
         R32 ray_width = 0.1f;
         U32 color = GetAgentColor(eye->hit_type);
-        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, uv, color);
+        PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, V2(0,0), color);
     }
 
     // Draw fov cone
-    PushCircularSector(mesh, agent->pos, agent->sight_radius, 24, agent->orientation-agent->fov, agent->orientation+agent->fov, V2(0,0), RGBAColor(255, 255, 255, 50));
+    PushCircularSector(mesh, agent->pos, agent->sight_radius, 24, agent->orientation-agent->fov, agent->orientation+agent->fov, uv, RGBAColor(255, 255, 255, 50));
 
     if(agent->nearest_carnivore)
     {
-        PushLine(mesh, agent->pos, agent->nearest_carnivore->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(255, 0, 0, 255));
+        PushLine(mesh, agent->pos, agent->nearest_carnivore->pos, 0.1f, uv, V2(0,0), RGBAColor(255, 0, 0, 255));
     }
     if(agent->nearest_herbivore)
     {
-        PushLine(mesh, agent->pos, agent->nearest_herbivore->pos, 0.1f, V2(0,0), V2(0,0), RGBAColor(0, 255, 0, 255));
+        PushLine(mesh, agent->pos, agent->nearest_herbivore->pos, 0.1f, uv, V2(0,0), RGBAColor(0, 255, 0, 255));
     }
 }
 
 void
-RenderDetails(Mesh2D* mesh, Agent* agent)
+RenderDetails(Mesh2D* mesh, Agent* agent, Vec2 uv)
 {
     R32 r = agent->radius;
-    Vec2 uv = V2(0,0);
     Vec2 dir = V2Polar(agent->orientation, 1.0f);
     Vec2 perp = V2(dir.y, -dir.x);
 
@@ -501,7 +499,7 @@ RenderDetails(Mesh2D* mesh, Agent* agent)
 }
 
 void 
-RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
+RenderHealth(Mesh2D* mesh, World* world, Agent* agent, Vec2 uv)
 {
     R32 r = agent->radius;
     R32 full_bar_width = r*2;
@@ -509,15 +507,15 @@ RenderHealth(Mesh2D* mesh, World* world, Agent* agent)
     // Divide by herbivore initial energy since this is more than carnivore initial energy.
     R32 health_width = full_bar_width*((R32)agent->energy) / ((R32)global_settings.carnivore_initial_energy);
     Vec2 u = V2(0,0);
-    PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, u, RGBAColor(0, 255, 0, 255));
+    PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, V2(0,0), RGBAColor(0, 255, 0, 255));
 }
 
 void 
-RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overlay)
+RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay color_overlay)
 {
     // Draw world as square
     R32 world_rect_width = 2.0f/cam->scale;
-    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, V2(0,0), V2(0,0), RGBAColor(150, 150, 150, 150));
+    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, uv, V2(0,0), RGBAColor(150, 150, 150, 150));
 
     // Which agents are visible. Omg this is stupid should be done using chunks.
     world->visible_agent_indices.Clear();
@@ -535,7 +533,6 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
         Agent* agent = world->agents[world->visible_agent_indices[i]];
 
         R32 r = agent->radius;
-        Vec2 uv = V2(0,0);
         Vec2 dir = V2Polar(agent->orientation, 1.0f);
         Vec2 perp = V2(dir.y, -dir.x);
         Vec4 herbivore_color = V4(0, 1, 0, 1);
@@ -597,8 +594,8 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
                 axis1 = V2(-axis0.y, axis0.x);
                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
             }
-            RenderDetails(mesh, agent);
-            RenderHealth(mesh, world, agent);
+            RenderDetails(mesh, agent, uv);
+            RenderHealth(mesh, world, agent, uv);
 
         }
         else
@@ -627,14 +624,14 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, ColorOverlay color_overla
 }
 
 void 
-DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam)
+DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv)
 {
     Vec2 chunk_dims = V2(world->chunk_size, world->chunk_size);
     for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
     {
         Chunk* chunk = &world->chunks[chunk_idx];
         U32 color = chunk->agent_indices.size > 0 ? RGBAColor(0, 255, 0, 255) : RGBAColor(80, 80, 80, 80);
-        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, V2(0,0), V2(0,0), color);
+        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, uv, V2(0,0), color);
     }
 }
 
