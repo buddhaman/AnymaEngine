@@ -168,8 +168,8 @@ MatR32Mul(MatR32 result, MatR32 a, MatR32 b)
 static inline void 
 MatR32VecMul(VecR32 result, MatR32 a, VecR32 v)
 {
-    Assert(a.w == v.n); // Ensure the matrix and vector can be multiplied
-    Assert(result.n == a.h); // Ensure result vector has correct dimension
+    Assert(a.w == v.n); 
+    Assert(result.n == a.h); 
     for(int i = 0; i < a.h; i++)
     {
         R32 sum = 0.0f;

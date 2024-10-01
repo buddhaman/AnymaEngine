@@ -36,9 +36,8 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
 
     Skeleton* skeleton = editor->skeleton;
 
-    Update(skeleton);
-
-    Render(renderer, skeleton);
+    UpdateSkeleton(skeleton);
+    RenderSkeleton(renderer, skeleton);
 
     // Render entire thing 
     Render(renderer, cam, window->width, window->height);
@@ -52,6 +51,7 @@ InitEditorScreen(EditorScreen* editor)
     // Might be a bit much memory for the editor.
     MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(32));
     editor->cam.pos = V2(0,0);
+    editor->cam.scale = 100;
     editor->renderer = CreateRenderer(arena);
     editor->skeleton = CreateSkeleton(arena, V3(0, 0,0), 1.0f);
 }

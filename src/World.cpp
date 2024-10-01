@@ -371,6 +371,8 @@ UpdateWorld(World* world)
     }
 
     // Process removed agents, sort indices descending and then actually remove.
+    // This is a std::function right now !!! stupid. Make it a function pointer
+    // or template or sth this sucks dude this sucks. 
     world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
     for(int remove_idx : world->removed_agent_indices)
     {

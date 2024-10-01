@@ -15,13 +15,13 @@ Verlet3*
 AddParticle(Skeleton* skeleton, Vec3 pos);
 
 void
-Update(Skeleton* skeleton);
+UpdateSkeleton(Skeleton* skeleton);
 
 Verlet3Constraint* 
 Connect(Skeleton* skeleton, int idx0, int idx1);
 
 void
-Render(Renderer* renderer, Skeleton* skeleton);
+RenderSkeleton(Renderer* renderer, Skeleton* skeleton);
 
 Skeleton*
 CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale);
