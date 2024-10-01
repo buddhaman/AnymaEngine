@@ -143,10 +143,10 @@ Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
 {
     U32 hex = 0;
 
-    U8 rb = (U8)(roundf(r * 255.0f));
-    U8 gb = (U8)(roundf(g * 255.0f));
-    U8 bb = (U8)(roundf(b * 255.0f));
-    U8 ab = (U8)(roundf(a * 255.0f));
+    U8 rb = (U8)((int)(r * 255.0f));
+    U8 gb = (U8)((int)(g * 255.0f));
+    U8 bb = (U8)((int)(b * 255.0f));
+    U8 ab = (U8)((int)(a * 255.0f));
 
     return RGBAColor(rb, gb, bb, ab);
 }
@@ -158,7 +158,7 @@ Vec4ToColor(Vec4 color)
 }
 
 // h - hue is 0 - 360 (degrees)
-constexpr U32
+inline static U32
 HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
 {
     R32 r = 0.0f, g = 0.0f, b = 0.0f;

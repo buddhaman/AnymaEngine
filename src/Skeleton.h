@@ -12,6 +12,9 @@ struct Skeleton
 };
 
 void
+AddParticle(Skeleton* skeleton, Vec3 pos);
+
+void
 Update(Skeleton* skeleton);
 
 void
