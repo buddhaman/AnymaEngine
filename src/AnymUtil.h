@@ -110,14 +110,15 @@ RandomNormalPairDebug()
     return V2(factor*x, factor*y);
 }
 
-static inline Vec4 ColorToVec4(U32 u32color)
+constexpr Vec4 
+ColorToVec4(U32 u32color)
 {
-    Vec4 color;
-    color.r = ((u32color >> 24) & 0xFF) / 255.0f;
-    color.g = ((u32color >> 16) & 0xFF) / 255.0f;
-    color.b = ((u32color >> 8) & 0xFF) / 255.0f;
-    color.a = (u32color & 0xFF) / 255.0f;  
-    return color;
+    return {
+        ((u32color >> 24) & 0xFF) / 255.0f,
+        ((u32color >> 16) & 0xFF) / 255.0f,
+        ((u32color >> 8) & 0xFF) / 255.0f,
+        (u32color & 0xFF) / 255.0f
+    };
 }
 
 constexpr U32
@@ -126,7 +127,7 @@ RGBAColor(U8 r, U8 g, U8 b, U8 a)
     return (r << 24) | (g << 16) | (b << 8) | a;
 }
 
-static inline U32 
+constexpr U32
 HexToColor(U32 hex)
 {
     U32 r = (hex >> 24) & 0xFF;  
@@ -137,7 +138,7 @@ HexToColor(U32 hex)
     return RGBAColor(r, g, b, a);
 }
 
-static inline U32 
+constexpr U32
 Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
 {
     U32 hex = 0;
@@ -150,14 +151,14 @@ Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
     return RGBAColor(rb, gb, bb, ab);
 }
 
-static inline U32 
+constexpr U32
 Vec4ToColor(Vec4 color)
 {
     return Vec4ToColor(color.r, color.g, color.b, color.a);
 }
 
 // h - hue is 0 - 360 (degrees)
-static inline U32
+constexpr U32
 HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
 {
     R32 r = 0.0f, g = 0.0f, b = 0.0f;
@@ -207,7 +208,6 @@ HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
     g += m;
     b += m;
 
-    // Convert the RGB values to hex using the Vec4ToHex function
     return Vec4ToColor(r, g, b, a);
 }
 
