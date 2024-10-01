@@ -39,6 +39,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         UpdateCameraDragInput(cam, input);
     }
 
+    // Render entire thing
     Render(renderer, cam, window->width, window->height);
 
     return 0;

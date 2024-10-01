@@ -120,7 +120,7 @@ static inline Vec4 ColorToVec4(U32 u32color)
     return color;
 }
 
-static inline U32 
+constexpr U32
 RGBAColor(U8 r, U8 g, U8 b, U8 a)
 {
     return (r << 24) | (g << 16) | (b << 8) | a;
@@ -140,7 +140,7 @@ HexToColor(U32 hex)
 static inline U32 
 Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
 {
-    uint32_t hex = 0;
+    U32 hex = 0;
 
     U8 rb = (U8)(roundf(r * 255.0f));
     U8 gb = (U8)(roundf(g * 255.0f));
@@ -211,3 +211,28 @@ HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
     return Vec4ToColor(r, g, b, a);
 }
 
+#ifndef COLORS_H
+#define COLORS_H
+
+// Common colors defined globally
+constexpr U32 Color_Red        = RGBAColor(255, 0, 0, 255);
+constexpr U32 Color_Green      = RGBAColor(0, 255, 0, 255);
+constexpr U32 Color_Blue       = RGBAColor(0, 0, 255, 255);
+constexpr U32 Color_Yellow     = RGBAColor(255, 255, 0, 255);
+constexpr U32 Color_Cyan       = RGBAColor(0, 255, 255, 255);
+constexpr U32 Color_Magenta    = RGBAColor(255, 0, 255, 255);
+constexpr U32 Color_White      = RGBAColor(255, 255, 255, 255);
+constexpr U32 Color_Black      = RGBAColor(0, 0, 0, 255);
+constexpr U32 Color_Gray       = RGBAColor(128, 128, 128, 255);
+constexpr U32 Color_Orange     = RGBAColor(255, 165, 0, 255);
+constexpr U32 Color_Purple     = RGBAColor(128, 0, 128, 255);
+constexpr U32 Color_Brown      = RGBAColor(165, 42, 42, 255);
+constexpr U32 Color_Pink       = RGBAColor(255, 192, 203, 255);
+constexpr U32 Color_Lime       = RGBAColor(0, 255, 0, 255);
+constexpr U32 Color_Aqua       = RGBAColor(0, 255, 255, 255);
+constexpr U32 Color_Silver     = RGBAColor(192, 192, 192, 255);
+constexpr U32 Color_Gold       = RGBAColor(255, 215, 0, 255);
+constexpr U32 Color_Indigo     = RGBAColor(75, 0, 130, 255);
+constexpr U32 Color_Violet     = RGBAColor(238, 130, 238, 255);
+
+#endif
