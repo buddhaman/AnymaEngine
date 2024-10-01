@@ -16,7 +16,7 @@ struct EditorScreen
 
     Renderer* renderer;
 
-    AgentDetails* agent_details;
+    Skeleton* agent_details;
 };
 
 int

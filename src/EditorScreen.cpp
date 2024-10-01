@@ -39,7 +39,6 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         UpdateCameraDragInput(cam, input);
     }
 
-
     Render(renderer, cam, window->width, window->height);
 
     return 0;
@@ -52,5 +51,5 @@ InitEditorScreen(EditorScreen* editor)
     MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(32));
     editor->cam.pos = V2(0,0);
     editor->renderer = CreateRenderer(arena);
-    editor->agent_details = CreateAgentDetails(arena, V3(0, 0,0), 1.0f);
+    editor->agent_details = CreateSkeleton(arena, V3(0, 0,0), 1.0f);
 }

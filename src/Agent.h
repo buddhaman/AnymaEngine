@@ -4,7 +4,7 @@
 #include "Array.h"
 #include "TMath.h"
 #include "Linalg.h"
-#include "Verlet3.h"
+#include "Skeleton.h"
 
 // Forward declarations
 struct World;
@@ -35,23 +35,6 @@ struct Brain
     VecR32 gene;
 };
 
-// This is the detailed struct that you see in high LOD.
-struct AgentDetails
-{
-    Array<Verlet3> particles;
-    Array<Verlet3Constraint> constraints;
-
-};
-
-// This should eventually be created by a memory pool ? 
-AgentDetails*
-CreateAgentDetails(MemoryArena* arena, Vec3 pos, R32 scale)
-{
-    AgentDetails* details = PushStruct(arena, AgentDetails);
-    *details = {0};
-    return details;
-}
-
 struct Agent
 {
     Vec2 pos; 
@@ -62,7 +45,7 @@ struct Agent
     I32 charge;
     I32 charge_refractory;
 
-    AgentDetails* details;
+    Skeleton* details;
 
     Array<AgentEye> eyes;
     Brain* brain;
