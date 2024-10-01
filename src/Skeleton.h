@@ -11,11 +11,14 @@ struct Skeleton
     Array<Verlet3Constraint> constraints;
 };
 
-void
+Verlet3* 
 AddParticle(Skeleton* skeleton, Vec3 pos);
 
 void
 Update(Skeleton* skeleton);
+
+Verlet3Constraint* 
+Connect(Skeleton* skeleton, int idx0, int idx1);
 
 void
 Render(Renderer* renderer, Skeleton* skeleton);

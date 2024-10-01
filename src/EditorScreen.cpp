@@ -8,11 +8,6 @@
 
 #include "Agent.h"
 
-void
-RenderAgentDetails(Agent* agent)
-{
-}
-
 int
 UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
@@ -40,6 +35,9 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
 
     Skeleton* skeleton = editor->skeleton;
+
+    Update(skeleton);
+
     Render(renderer, skeleton);
 
     // Render entire thing 

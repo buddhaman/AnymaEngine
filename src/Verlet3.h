@@ -19,19 +19,18 @@ struct Verlet3Constraint
 };
 
 // Friction is technically 1.0-friction. But this is my game I make the definitions HAHAHAHAHAH.
-void VerletUpdate(Verlet3* particle, float friction = 1.0f)
+static inline void 
+VerletUpdate(Verlet3* particle, float friction = 1.0f)
 {
-    // Calculate velocity as the difference between the current and old position
     Vec3 velocity = particle->pos - particle->old_pos;
     velocity *= friction;
     particle->old_pos = particle->pos;
     particle->pos += velocity;
 }
 
-void 
+static inline void
 VerletSolve(Verlet3Constraint* constraint)
 {
-    // Calculate the vector between the two particles
     Vec3 delta = constraint->v1->pos - constraint->v0->pos;
     float distance = V3Len(delta);
 
@@ -41,4 +40,10 @@ VerletSolve(Verlet3Constraint* constraint)
     Vec3 correction_vector = delta * 0.5f * correction;
     constraint->v0->pos += correction_vector; 
     constraint->v1->pos -= correction_vector;
+}
+
+static inline void
+AddImpulse(Verlet3* v, Vec3 impulse)
+{
+    v->old_pos -= impulse;
 }
