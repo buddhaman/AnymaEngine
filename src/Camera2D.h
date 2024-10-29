@@ -14,7 +14,7 @@ struct Camera2D
 
     R32 scale = 1.0f;
     Mat3 transform;
-    bool isDragging;
+    bool is_dragging;
 };
 
 void

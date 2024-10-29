@@ -24,7 +24,7 @@ UpdateSkeleton(Skeleton* skeleton)
 {
     for(Verlet3& p : skeleton->particles)
     {
-        VerletUpdate(&p, 0.97f);
+        VerletUpdate(&p, 0.99f);
     }
     for(Verlet3Constraint& c : skeleton->constraints)
     {
@@ -33,12 +33,18 @@ UpdateSkeleton(Skeleton* skeleton)
 }
 
 void
-RenderSkeleton(Renderer* renderer, Skeleton* skeleton)
+RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
 {
     R32 width = 0.1f;
+
     for(Verlet3Constraint& constraint : skeleton->constraints)
     {
-        RenderLine(renderer, constraint.v0->pos.xy, constraint.v1->pos.xy, width, Color_White);
+        RenderTrapezoid(renderer, constraint.v0->pos, width, constraint.v1->pos, width, Color_White);
+    }
+
+    for(Verlet3& v : skeleton->particles)
+    {
+        RenderCircle(renderer, v.pos, width, Color_White);
     }
 }
 
@@ -76,8 +82,8 @@ CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale)
     // Right hand 10
     Verlet3* v2 = AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale));
 
-    AddImpulse(v, V3(1,1,1));
-    AddImpulse(v2, V3(-1,-5,-1));
+     AddImpulse(v, V3(1,1,2));
+    // AddImpulse(v2, V3(-1,-5,-1));
 
     Connect(skeleton, 0, 1);
     Connect(skeleton, 1, 2);

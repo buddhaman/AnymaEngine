@@ -48,6 +48,9 @@ void
 PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color);
 
 void
+PushTrapezoid(Mesh2D *mesh, Vec2 from, R32 from_width, Vec2 to, R32 to_width, Vec2 u_orig, Vec2 u_size, U32 color);
+
+void
 PushLineRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color);
 
 // The u_orig texture coord does not really make any sense here.

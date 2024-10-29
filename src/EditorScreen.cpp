@@ -13,7 +13,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
     InputHandler* input = &window->input;
     Camera2D* cam = &editor->cam;
-    Renderer* renderer = editor->renderer;
+    TiltedRenderer* renderer = editor->renderer;
 
     // Do ui 
     ImGui::BeginMainMenuBar();
@@ -27,11 +27,26 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
+    R32 tilt_speed = 0.01f;
+
+    if(IsKeyDown(input, InputAction_W))
+    {
+        renderer->cam.angle += tilt_speed;
+    }
+    if(IsKeyDown(input, InputAction_S))
+    {
+        renderer->cam.angle -= tilt_speed;
+    }
+
+    renderer->cam.angle = Clamp(0.00f, renderer->cam.angle, PI_R32/2.0f-0.001f);
+
+    UpdateTiltedCamera(&editor->renderer->cam, window->width, window->height);
+
     ImGuiIO& imgui_io = ImGui::GetIO();
     if(!imgui_io.WantCaptureMouse)
     {
-        UpdateCameraScrollInput(cam, input);
-        UpdateCameraDragInput(cam, input);
+        UpdateTiltedCameraScrollInput(&editor->renderer->cam, input);
+        UpdateTiltedCameraDragInput(&editor->renderer->cam, input);
     }
 
     Skeleton* skeleton = editor->skeleton;
@@ -40,7 +55,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     RenderSkeleton(renderer, skeleton);
 
     // Render entire thing 
-    Render(renderer, cam, window->width, window->height);
+    Render(renderer->renderer, cam, window->width, window->height);
 
     return 0;
 }
@@ -51,7 +66,7 @@ InitEditorScreen(EditorScreen* editor)
     // Might be a bit much memory for the editor.
     MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(32));
     editor->cam.pos = V2(0,0);
-    editor->cam.scale = 100;
-    editor->renderer = CreateRenderer(arena);
-    editor->skeleton = CreateSkeleton(arena, V3(0, 0,0), 1.0f);
+    editor->cam.scale = 1;
+    editor->renderer = CreateTiltedRenderer(arena);
+    editor->skeleton = CreateSkeleton(arena, V3(0, 0, 0), 1.0f);
 }

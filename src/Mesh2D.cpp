@@ -75,6 +75,18 @@ PushLine(Mesh2D *mesh, Vec2 from, Vec2 to, R32 line_width, Vec2 u_orig, Vec2 u_s
 }
 
 void
+PushTrapezoid(Mesh2D *mesh, Vec2 from, R32 from_width, Vec2 to, R32 to_width, Vec2 u_orig, Vec2 u_size, U32 color)
+{
+    Vec2 diff = V2Sub(to, from);
+    R32 invl = 1.0f/V2Len(diff);
+    Vec2 perp = V2(diff.y*invl, -diff.x*invl);
+    R32 fromhw = from_width/2.0f;
+    R32 tohw = to_width/2.0f;
+
+    PushQuad(mesh, from + perp*fromhw, to + perp*fromhw, to - perp*tohw, from - perp*tohw, u_orig, u_size, color);
+}
+
+void
 PushLineRect(Mesh2D* mesh, Vec2 pos, Vec2 dims, R32 line_width, Vec2 u_orig, Vec2 u_size, U32 color)
 {
     PushRect(mesh, 

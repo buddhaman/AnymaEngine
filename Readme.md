@@ -38,6 +38,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Sensor: Average direction and distance of a certain type of agent in the neighbourhood as sensor. 
 
 #### TODO
+- Design a genome that encodes the morphology of a creature.
 - Render a detailed agent in the editor.
 - Make graph in real seconds as units.
 - FUN: Make a creature editor.
@@ -85,6 +86,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make list of common colors.
 
 ### Done
+- Make a camera looking down. 
 - Create a renderer instead of passing all these meshes and textures around.
 - Use textures to draw a circle.
 - Get textures working and set default texture. 

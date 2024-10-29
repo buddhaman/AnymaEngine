@@ -14,7 +14,7 @@ struct EditorScreen
 
     TextureAtlas* atlas;
 
-    Renderer* renderer;
+    TiltedRenderer* renderer;
 
     Skeleton* skeleton;
 };

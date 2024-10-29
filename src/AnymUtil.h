@@ -65,6 +65,10 @@ typedef double R64;
 static constexpr R32 R32_MAX = FLT_MAX;
 static constexpr R64 R64_MAX = DBL_MAX;
 
+static constexpr R32 PI_R32 = 3.1415927f;
+static constexpr R64 PI_R64 = 3.141592653589793;
+
+
 // Functions
 template <typename T>
 T Max(T a, T b) { return a < b ? b : a; }

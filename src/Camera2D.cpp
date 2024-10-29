@@ -30,7 +30,7 @@ UpdateCameraDragInput(Camera2D *camera, InputHandler* input)
 void
 CameraStopDragging(Camera2D *camera)
 {
-    camera->isDragging = 0;
+    camera->is_dragging = 0;
 }
 
 Vec2

@@ -21,7 +21,7 @@ Verlet3Constraint*
 Connect(Skeleton* skeleton, int idx0, int idx1);
 
 void
-RenderSkeleton(Renderer* renderer, Skeleton* skeleton);
+RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton);
 
 Skeleton*
 CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale);

@@ -25,6 +25,7 @@
 
 #include "AnymUtil.h"
 #include "Array.h"
+#include "TiltCamera.h"
 #include "Camera2D.h"
 #include "DebugInfo.h"
 #include "External.h"
@@ -48,6 +49,7 @@
 #include "Agent.cpp"
 #include "Array.h"
 #include "Camera2D.cpp"
+#include "TiltCamera.cpp"
 #include "DebugInfo.cpp"
 #include "External.cpp"
 #include "InputHandler.cpp"

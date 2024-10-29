@@ -53,6 +53,9 @@ HandleInput(Window* window)
             switch(event.key.keysym.scancode)
             {
                 case SDL_SCANCODE_W: input->keydown[InputAction_W]=down; break;
+                case SDL_SCANCODE_A: input->keydown[InputAction_A]=down; break;
+                case SDL_SCANCODE_S: input->keydown[InputAction_S]=down; break;
+                case SDL_SCANCODE_D: input->keydown[InputAction_D]=down; break;
             }
         } break;
 
