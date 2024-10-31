@@ -19,6 +19,27 @@ Connect(Skeleton* skeleton, int idx0, int idx1)
     return constraint;
 }
 
+Limb* 
+Connect(Skeleton* skeleton, int idx0, R32 width0, int idx1, R32 width1, U32 color)
+{
+    Limb* limb = skeleton->limbs.PushBack();
+    limb->constraint = Connect(skeleton, idx0, idx1);
+    limb->from_width = width0;
+    limb->to_width = width1;
+    limb->color = color;
+    return limb;
+}
+
+Joint* 
+AddJoint(Skeleton* skeleton, Vec3 pos, R32 r, U32 color)
+{
+    Joint* joint = skeleton->joints.PushBack();
+    joint->v = AddParticle(skeleton, pos);
+    joint->r = r;
+    joint->color = color;
+    return joint;
+}
+
 void
 UpdateSkeleton(Skeleton* skeleton)
 {
@@ -35,16 +56,33 @@ UpdateSkeleton(Skeleton* skeleton)
 void
 RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
 {
-    R32 width = 0.1f;
-
-    for(Verlet3Constraint& constraint : skeleton->constraints)
+    // Draw outline.
+    R32 outline = 0.1f;
+    U32 outline_color = Color_Black;
+    for(Limb& limb : skeleton->limbs)
     {
-        RenderTrapezoid(renderer, constraint.v0->pos, width, constraint.v1->pos, width, Color_White);
+        RenderTrapezoid(renderer, 
+                        limb.constraint->v0->pos, limb.from_width + outline*2, 
+                        limb.constraint->v1->pos, limb.to_width + outline*2, 
+                        outline_color);
+    }
+    for(Joint& joint : skeleton->joints)
+    {
+        RenderCircle(renderer, joint.v->pos, joint.r + outline, outline_color);
     }
 
-    for(Verlet3& v : skeleton->particles)
+    // Draw actual body.
+    for(Limb& limb : skeleton->limbs)
     {
-        RenderCircle(renderer, v.pos, width, Color_White);
+        RenderTrapezoid(renderer, 
+                        limb.constraint->v0->pos, limb.from_width, 
+                        limb.constraint->v1->pos, limb.to_width, 
+                        limb.color);
+    }
+
+    for(Joint& joint : skeleton->joints)
+    {
+        RenderCircle(renderer, joint.v->pos, joint.r, joint.color);
     }
 }
 
@@ -58,43 +96,47 @@ CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale)
 
     skeleton->particles = CreateArray<Verlet3>(arena, 12);
     skeleton->constraints = CreateArray<Verlet3Constraint>(arena, 20);
+    skeleton->joints = CreateArray<Joint>(arena, 12);
+    skeleton->limbs = CreateArray<Limb>(arena, 20);
+
+    U32 color = Color_White;
+    R32 r = 0.1f;
 
     // Head 0
-    Verlet3* v = AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 4.5f*scale));
+    Joint* v = AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 4.5f*scale), r*4, color);
     // Neck 1
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 4.0f*scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 4.0f*scale), r, color);
     // Waist 2
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale), r, color);
     // Left knee 3 
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + scale), r, color);
     // Left foot 4
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z), r, color);
     // Right knee 5
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + scale), r, color);
     // Right foot 6
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z), r, color);
     // Left elbow 7
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 3.0f*scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 3.0f*scale), r, color);
     // Left hand 8
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale), r, color);
     // Right elbow 9
-    AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 3.0f*scale));
+    AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 3.0f*scale), r, color);
     // Right hand 10
-    Verlet3* v2 = AddParticle(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale));
+    Joint* v2 = AddJoint(skeleton, V3(pos.x, pos.y, pos.z + 2.0f*scale), r, color);
 
-     AddImpulse(v, V3(1,1,2));
-    // AddImpulse(v2, V3(-1,-5,-1));
+    AddImpulse(v->v, 0.5f*V3(1,1,2));
 
-    Connect(skeleton, 0, 1);
-    Connect(skeleton, 1, 2);
-    Connect(skeleton, 2, 3);
-    Connect(skeleton, 3, 4);
-    Connect(skeleton, 2, 5);
-    Connect(skeleton, 5, 6);
-    Connect(skeleton, 1, 7);
-    Connect(skeleton, 7, 8);
-    Connect(skeleton, 1, 9);
-    Connect(skeleton, 9, 10);
+    Connect(skeleton, 0, r*4, 1, r, color);
+    Connect(skeleton, 1, r, 2, r, color);
+    Connect(skeleton, 2, r, 3, r, color);
+    Connect(skeleton, 3, r, 4, r, color);
+    Connect(skeleton, 2, r, 5, r, color);
+    Connect(skeleton, 5, r, 6, r, color);
+    Connect(skeleton, 1, r, 7, r, color);
+    Connect(skeleton, 7, r, 8, r, color);
+    Connect(skeleton, 1, r, 9, r, color);
+    Connect(skeleton, 9, r, 10, r, color);
 
     return skeleton;
 }

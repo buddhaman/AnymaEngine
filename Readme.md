@@ -36,6 +36,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
     - Allow sprinting, how much energy to take on a sprint?
     - Do carnivores get a reproduction boost if their population is low?
  - IDEA: Sensor: Average direction and distance of a certain type of agent in the neighbourhood as sensor. 
+ - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
 - Design a genome that encodes the morphology of a creature.

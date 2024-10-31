@@ -16,8 +16,8 @@ void
 RenderCircle(Renderer* renderer, Vec2 center, R32 radius, U32 color)
 {
     PushRect(&renderer->mesh, 
-             V2(center.x - radius/2.0f, center.y - radius/2.0f), 
-             V2(radius, radius), 
+             V2(center.x - radius, center.y - radius), 
+             V2(radius*2, radius*2), 
              renderer->circle->pos, renderer->circle->size, 
              color);
 }
@@ -84,5 +84,7 @@ RenderTrapezoid(TiltedRenderer* renderer, Vec3 from, R32 from_width, Vec3 to, R3
 void
 RenderCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color)
 {
-    RenderCircle(renderer->renderer, GetVec2(&renderer->cam, center), GetScaled(&renderer->cam, radius), color);
+    RenderCircle(renderer->renderer, 
+                 GetVec2(&renderer->cam, center), 
+                 GetScaled(&renderer->cam, radius), color);
 }

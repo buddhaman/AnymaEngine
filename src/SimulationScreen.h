@@ -17,6 +17,7 @@ struct SimulationScreen
     Agent* hovered_agent = nullptr;
     Agent* selected_agent = nullptr;
 
+    MemoryArena* screen_arena;
     MemoryArena* world_arena;
 
     Camera2D cam;

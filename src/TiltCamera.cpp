@@ -25,8 +25,7 @@ UpdateTiltedCameraDragInput(TiltedCamera* camera, InputHandler* input)
         R32 s = camera->s;
 
         camera->pos.x -= diff.x;
-
-        camera->pos.y += c * diff.y + s * diff.y;
+        camera->pos.y += diff.y / camera->c;
     }
 }
 

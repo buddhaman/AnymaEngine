@@ -83,7 +83,7 @@ PushTrapezoid(Mesh2D *mesh, Vec2 from, R32 from_width, Vec2 to, R32 to_width, Ve
     R32 fromhw = from_width/2.0f;
     R32 tohw = to_width/2.0f;
 
-    PushQuad(mesh, from + perp*fromhw, to + perp*fromhw, to - perp*tohw, from - perp*tohw, u_orig, u_size, color);
+    PushQuad(mesh, from + perp*fromhw, to + perp*tohw, to - perp*tohw, from - perp*fromhw, u_orig, u_size, color);
 }
 
 void

@@ -27,8 +27,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
-    R32 tilt_speed = 0.01f;
-
+    R32 tilt_speed = -0.01f;
     if(IsKeyDown(input, InputAction_W))
     {
         renderer->cam.angle += tilt_speed;
@@ -38,7 +37,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         renderer->cam.angle -= tilt_speed;
     }
 
-    renderer->cam.angle = Clamp(0.00f, renderer->cam.angle, PI_R32/2.0f-0.001f);
+    renderer->cam.angle = Clamp(-PI_R32/2.0f+0.001f, renderer->cam.angle, 0.0f);
 
     UpdateTiltedCamera(&editor->renderer->cam, window->width, window->height);
 

@@ -464,18 +464,17 @@ RestartWorld(SimulationScreen* screen)
 void
 InitSimulationScreen(SimulationScreen* screen)
 {
-    MemoryArena* arena = screen->world_arena = CreateMemoryArena(MegaBytes(512));
-
+    screen->world_arena = CreateMemoryArena(MegaBytes(512));
+    screen->screen_arena = CreateMemoryArena(MegaBytes(32));
     RestartWorld(screen);
+
     screen->cam.pos = screen->world->size/2.0f;
-
-    screen->shader = CreateShader();
-
     screen->update_times.FillAndSetValue(0);
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
 
-    screen->atlas = MakeDefaultTexture(arena, 511);
+    screen->shader = CreateShader();
+    screen->atlas = MakeDefaultTexture(screen->screen_arena, 511);
     screen->square = &screen->atlas->regions[1];
 
     I32 num_cores = std::thread::hardware_concurrency();
