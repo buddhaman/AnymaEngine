@@ -48,4 +48,4 @@ void
 RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton);
 
 Skeleton*
-CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale);
+CreateSkeleton(MemoryArena* arena, int max_joints, int max_limbs);

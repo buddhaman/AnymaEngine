@@ -5,6 +5,7 @@
 #include "TMath.h"
 #include "Linalg.h"
 #include "Skeleton.h"
+#include "Genome.h"
 
 // Forward declarations
 struct World;
@@ -69,6 +70,8 @@ struct Agent
     R32 nearest_carnivore_distance;
     R32 nearest_carnivore_angle;
     Agent* nearest_carnivore;
+
+    Array<GeneNode> gene_nodes;
 
     bool is_alive;
 };

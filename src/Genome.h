@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnymUtil.h"
+#include "Array.h"
 
 // Genome design:
 // Collection of nodes with references like karl sims? 
@@ -20,5 +21,11 @@ struct GeneNode
 
     R32 ang_diff;
     R32 len_diff;
+
+    // Store children as indices.
     Array<int> children;
 };
+
+Array<GeneNode>
+CreateGenes(MemoryArena* arena, int n_genes);
+

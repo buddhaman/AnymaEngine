@@ -67,5 +67,8 @@ InitEditorScreen(EditorScreen* editor)
     editor->cam.pos = V2(0,0);
     editor->cam.scale = 1;
     editor->renderer = CreateTiltedRenderer(arena);
-    editor->skeleton = CreateSkeleton(arena, V3(0, 0, 0), 1.0f);
+    Skeleton* skele = editor->skeleton = CreateSkeleton(arena, 12, 24);
+
+    
+
 }

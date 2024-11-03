@@ -88,16 +88,18 @@ RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
 
 // This should eventually be created by a memory pool ? 
 Skeleton*
-CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale)
+CreateSkeleton(MemoryArena* arena, int max_joints, int max_limbs)
 {
     // Scary D:>
     Skeleton* skeleton = PushStruct(arena, Skeleton);
     *skeleton = {0};
 
-    skeleton->particles = CreateArray<Verlet3>(arena, 12);
-    skeleton->constraints = CreateArray<Verlet3Constraint>(arena, 20);
-    skeleton->joints = CreateArray<Joint>(arena, 12);
-    skeleton->limbs = CreateArray<Limb>(arena, 20);
+    skeleton->particles = CreateArray<Verlet3>(arena, max_joints);
+    skeleton->constraints = CreateArray<Verlet3Constraint>(arena, max_limbs);
+    skeleton->joints = CreateArray<Joint>(arena, max_joints);
+    skeleton->limbs = CreateArray<Limb>(arena, max_limbs);
+
+    #if 0
 
     U32 color = Color_White;
     R32 r = 0.1f;
@@ -137,6 +139,8 @@ CreateSkeleton(MemoryArena* arena, Vec3 pos, R32 scale)
     Connect(skeleton, 7, r, 8, r, color);
     Connect(skeleton, 1, r, 9, r, color);
     Connect(skeleton, 9, r, 10, r, color);
+
+    #endif
 
     return skeleton;
 }
