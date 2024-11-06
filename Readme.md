@@ -39,6 +39,9 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
+- Design legs.
+- Design eyes.
+- Design mouth.
 - Design a genome that encodes the morphology of a creature.
 - Render a detailed agent in the editor.
 - Make graph in real seconds as units.

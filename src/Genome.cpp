@@ -12,8 +12,8 @@ CreateGenes(MemoryArena* arena, int n_genes)
         node->sat_diff = RandomR32Debug(0.5f, 1.0f);
         node->brightness_diff = RandomR32Debug(0.5f, 1.0f);
 
-        node->ang_diff = RandomR32Debug(-0.1f, 0.1f);
-        node->len_diff = RandomR32Debug(1.0f, 5.0f);
+        node->angle = RandomR32Debug(-0.1f, 0.1f);
+        node->length = RandomR32Debug(1.0f, 5.0f);
         node->children = CreateArray<int>(arena, n_genes);
 
         if(genes.size != n_genes)

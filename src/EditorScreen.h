@@ -17,6 +17,7 @@ struct EditorScreen
     TiltedRenderer* renderer;
 
     Skeleton* skeleton;
+    Array<GeneNode> genes;
 };
 
 int

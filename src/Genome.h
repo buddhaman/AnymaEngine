@@ -19,8 +19,8 @@ struct GeneNode
     R32 sat_diff;
     R32 brightness_diff;
 
-    R32 ang_diff;
-    R32 len_diff;
+    R32 angle;
+    R32 length;
 
     // Store children as indices.
     Array<int> children;

@@ -43,9 +43,10 @@ AddJoint(Skeleton* skeleton, Vec3 pos, R32 r, U32 color)
 void
 UpdateSkeleton(Skeleton* skeleton)
 {
+    float friction = 0.96f;
     for(Verlet3& p : skeleton->particles)
     {
-        VerletUpdate(&p, 0.99f);
+        VerletUpdate(&p, friction);
     }
     for(Verlet3Constraint& c : skeleton->constraints)
     {
@@ -59,16 +60,17 @@ RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
     // Draw outline.
     R32 outline = 0.1f;
     U32 outline_color = Color_Black;
+
+    for(Joint& joint : skeleton->joints)
+    {
+        RenderCircle(renderer, joint.v->pos, joint.r + outline, outline_color);
+    }
     for(Limb& limb : skeleton->limbs)
     {
         RenderTrapezoid(renderer, 
                         limb.constraint->v0->pos, limb.from_width + outline*2, 
                         limb.constraint->v1->pos, limb.to_width + outline*2, 
                         outline_color);
-    }
-    for(Joint& joint : skeleton->joints)
-    {
-        RenderCircle(renderer, joint.v->pos, joint.r + outline, outline_color);
     }
 
     // Draw actual body.
@@ -79,7 +81,6 @@ RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
                         limb.constraint->v1->pos, limb.to_width, 
                         limb.color);
     }
-
     for(Joint& joint : skeleton->joints)
     {
         RenderCircle(renderer, joint.v->pos, joint.r, joint.color);
