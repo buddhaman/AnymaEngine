@@ -42,7 +42,10 @@ struct Leg
     int idx;    
 
     // Target offset in current agent local coordinates.
-    Vec3 offset;
+    Vec3 target_offset;
+
+    // Current foot position in world coordinates, not local.
+    Vec3 foot_pos;
 
     // Max distance this foot can have to the calculated offset.
     R32 r;

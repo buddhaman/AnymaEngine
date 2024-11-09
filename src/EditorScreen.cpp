@@ -31,12 +31,22 @@ UpdateAgentSkeleton(Agent* agent)
         AddImpulse(j->v, V3(0,0,body_force));
     }
 
-    // Put all feet on the ground.
+    // Feet come in pairs. When one foot moves it switches radii.
     for(Leg& leg : agent->legs)
     {
         Joint* j = &skeleton->joints[leg.idx];
+        
+        Vec3 world_target = XForm(center, direction, leg.target_offset);
+
+        // distance of foot to target. If more than r then move foot.
+        R32 feet_diff = V3Len(world_target - leg.foot_pos);
+        if(feet_diff > leg.r)
+        {
+            leg.foot_pos = world_target;
+        }
+
         j->v->pos.z = 0;
-        j->v->pos = XForm(center, direction, leg.offset);
+        j->v->pos = leg.foot_pos;
     }
 
     // Move head up and set X,Y to proper agent x, y position
@@ -99,7 +109,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
     for(Leg& leg : agent->legs)
     {
-        Vec3 leg_pos = XForm(agent_pos, direction, leg.offset);
+        Vec3 leg_pos = XForm(agent_pos, direction, leg.target_offset);
         RenderCircle(renderer, leg_pos, 0.1f, Color_Green);
         RenderZLineCircle(renderer, leg_pos, leg.r, 0.03f, Color_Green);
     }
@@ -123,9 +133,9 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 
     // set idx to foot.
     leg->idx = (int)skele->joints.size-1;
-    leg->offset.xy = agent->body.target_positions[idx_in_body].xy;
-    leg->offset.y += dir*5;
-    leg->offset.z = 0.0f;
+    leg->target_offset.xy = agent->body.target_positions[idx_in_body].xy;
+    leg->target_offset.y += dir*5;
+    leg->target_offset.z = 0.0f;
     leg->r = 4.0f;
 
     Connect(skele, body_particle_idx, r*2, leg->idx-1, r*2, color);
