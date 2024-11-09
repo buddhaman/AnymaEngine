@@ -298,8 +298,6 @@ UpdateWorldChanges(World* world)
     for(int remove_idx : world->removed_agent_indices)
     {
         Agent* agent = world->agents[remove_idx];
-        world->brain_pool->Free(agent->brain);
-        world->agent_pool->Free(agent);
         world->agents.RemoveIndexUnordered(remove_idx);
     }
     world->removed_agent_indices.Clear();
@@ -313,6 +311,8 @@ UpdateWorldChanges(World* world)
     }
 }
 
+#if 0
+// Can this function be removed entirely????
 void 
 UpdateWorld(World* world)
 {
@@ -391,6 +391,7 @@ UpdateWorld(World* world)
         world->lifespan_arena_swap_ticks = world->max_lifespan;
     }
 }
+#endif
 
 bool
 HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
@@ -670,8 +671,7 @@ SortAgentsIntoMultipleChunks(World* world)
 Agent* 
 AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 {
-    Agent* agent = world->agent_pool->Alloc();
-    *agent = Agent{};
+    Agent* agent = PushNewStruct(world->lifespan_arena, Agent);
     world->agents.PushBack(agent);
     I64 agent_idx = world->agents.size-1;
     agent->pos = pos;
@@ -698,7 +698,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
-    Brain* brain = world->brain_pool->Alloc();
+    Brain* brain = PushNewStruct(world->lifespan_arena, Brain);
     int inputs = n_eyes*3+1;
     int outputs = 4;
     R32 mutation_rate = global_settings.mutation_rate;
@@ -919,8 +919,6 @@ CreateWorld(MemoryArena* arena)
     // Also, why do i have memorypools if i have the two lifespan arenas? cant i
     // just use the lifespan arenas and allocate whatever i want.
     U32 n_blocks = max_agents/32+1;
-    world->agent_pool = CreateBittedMemoryPool<Agent>(arena, n_blocks);
-    world->brain_pool = CreateBittedMemoryPool<Brain>(arena, n_blocks);
 
     for(int i = 0; i < n_initial_agents; i++)
     {

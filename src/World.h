@@ -54,11 +54,10 @@ struct World
     bool spawn_particles;
     Array<Particle> particles;
 
-    BittedMemoryPool<Agent>* agent_pool;
-    BittedMemoryPool<Brain>* brain_pool;
-
     // Its easier to store the selected entity in World, even though it belongs to screen. 
-    // Here we can set it to null when it dies etc.
+    // Here we can set it to null when it dies etc. Wait where is it? lol i lost it.
+    // Anyway now that i reaed this: its even better to store a generation
+    // number and compare this in screen. 
 };
 
 static inline Chunk* 
