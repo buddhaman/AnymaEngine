@@ -88,3 +88,17 @@ RenderCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color)
                  GetVec2(&renderer->cam, center), 
                  GetScaled(&renderer->cam, radius), color);
 }
+
+void
+RenderZLineCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, R32 line_width, U32 color)
+{
+    PushLineNGon(&renderer->renderer->mesh, 
+                 GetVec2(&renderer->cam, center), 
+                 GetScaled(&renderer->cam, radius-line_width/2.0f),
+                 GetScaled(&renderer->cam, radius+line_width/2.0f),
+                 24,
+                 V2(1, 0),
+                 V2(0, renderer->cam.c),
+                 renderer->renderer->square->pos,
+                 color);
+}

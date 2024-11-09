@@ -99,7 +99,9 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
     for(Leg& leg : agent->legs)
     {
-        RenderCircle(renderer, XForm(agent_pos, direction, leg.offset), 0.1f, Color_Green);
+        Vec3 leg_pos = XForm(agent_pos, direction, leg.offset);
+        RenderCircle(renderer, leg_pos, 0.1f, Color_Green);
+        RenderZLineCircle(renderer, leg_pos, leg.r, 0.03f, Color_Green);
     }
 
     // Render entire thing 
@@ -124,6 +126,7 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
     leg->offset.xy = agent->body.target_positions[idx_in_body].xy;
     leg->offset.y += dir*5;
     leg->offset.z = 0.0f;
+    leg->r = 4.0f;
 
     Connect(skele, body_particle_idx, r*2, leg->idx-1, r*2, color);
     Connect(skele, leg->idx-1, r*2, leg->idx, r*2, color);

@@ -43,6 +43,9 @@ struct Leg
 
     // Target offset in current agent local coordinates.
     Vec3 offset;
+
+    // Max distance this foot can have to the calculated offset.
+    R32 r;
 };
 
 struct Head

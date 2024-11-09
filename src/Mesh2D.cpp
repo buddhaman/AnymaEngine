@@ -246,6 +246,68 @@ PushLineNGon(Mesh2D *mesh, Vec2 center, R32 inner_radius, R32 outer_radius, int 
 }
 
 void
+PushLineNGon(Mesh2D *mesh,
+            Vec2 center,
+            R32 inner_radius,
+            R32 outer_radius,
+            int n,
+            Vec2 axis0,
+            Vec2 axis1,
+            Vec2 u_orig,
+            U32 color)
+{
+    int npoints = n + 1; // Close the loop
+    U32 inner_start_idx = (U32)mesh->vertex_buffer.size;
+    U32 outer_start_idx = inner_start_idx + npoints;
+
+    // Generate vertices for the inner N-gon
+    for(int i = 0; i < npoints; ++i)
+    {
+        R32 angle = 2.0f * (R32)M_PI * i / n;
+        R32 cos_a = cosf(angle);
+        R32 sin_a = sinf(angle);
+
+        // Apply axis transformation for squashed direction
+        Vec2 point = center + Vec2{
+            axis0.x * cos_a * inner_radius + axis1.x * sin_a * inner_radius,
+            axis0.y * cos_a * inner_radius + axis1.y * sin_a * inner_radius
+        };
+
+        PushVertex(mesh, point, u_orig, color);
+    }
+
+    // Generate vertices for the outer N-gon
+    for(int i = 0; i < npoints; ++i)
+    {
+        R32 angle = 2.0f * (R32)M_PI * i / n;
+        R32 cos_a = cosf(angle);
+        R32 sin_a = sinf(angle);
+
+        // Apply axis transformation for squashed direction
+        Vec2 point = center + Vec2{
+            axis0.x * cos_a * outer_radius + axis1.x * sin_a * outer_radius,
+            axis0.y * cos_a * outer_radius + axis1.y * sin_a * outer_radius
+        };
+
+        PushVertex(mesh, point, u_orig, color);
+    }
+
+    // Generate indices to form triangles between inner and outer N-gon
+    for(int i = 0; i < npoints - 1; ++i)
+    {
+        // First Triangle of the Quad
+        PushIndex(mesh, inner_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i + 1);
+
+        // Second Triangle of the Quad
+        PushIndex(mesh, inner_start_idx + i);
+        PushIndex(mesh, outer_start_idx + i + 1);
+        PushIndex(mesh, inner_start_idx + i + 1);
+    }
+}
+
+void
 BufferData(Mesh2D* mesh, U32 drawMode)
 {
     glBindVertexArray(mesh->vertex_array_handle);

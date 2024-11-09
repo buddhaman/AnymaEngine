@@ -50,3 +50,6 @@ RenderTrapezoid(TiltedRenderer* renderer, Vec3 from, R32 from_width, Vec3 to, R3
 
 void
 RenderCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color);
+
+void
+RenderZLineCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, R32 line_width, U32 color);
