@@ -311,88 +311,6 @@ UpdateWorldChanges(World* world)
     }
 }
 
-#if 0
-// Can this function be removed entirely????
-void 
-UpdateWorld(World* world)
-{
-    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
-    {
-        Agent* agent = world->agents[agent_idx];
-
-        RayCollision collision;
-        agent->brain->input.Set(0);
-        // Raycasting and updating eye sensors.
-        for(int eye_idx = 0; eye_idx < agent->eyes.size; eye_idx++)
-        {
-            AgentEye* eye = &agent->eyes[eye_idx];
-            // Update eye
-            Vec2 eye_dir = V2Polar(agent->orientation+eye->orientation, 1.0f);
-            eye->ray = {agent->pos, eye_dir};
-            eye->distance = 50.0f;
-            eye->hit_type = AgentType_None;
-            Agent* hit = CastRay(world, eye->ray, eye->distance, &collision, agent);
-            if(!hit) { continue; }
-
-            eye->distance = collision.distance;
-            eye->hit_type = hit->type;
-            if(eye->hit_type != 0)
-            {
-                agent->brain->input[eye_idx*3+eye->hit_type-1] = 1.0f;
-                agent->brain->input[eye_idx*3+2] = 1.2f*(1.0f - eye->distance/50.0f);
-            }
-        }
-        agent->brain->input[agent->brain->input.n-1] = 1.0f;
-
-        UpdateBrain(agent);
-        UpdateMovement(world, agent);
-
-        agent->energy--;
-        agent->ticks_alive++;
-        if(agent->energy <= 0 || agent->ticks_alive >= world->max_lifespan)
-        {
-            RemoveAgent(world, agent_idx);
-        }
-        agent->ticks_until_reproduce--;
-        if(agent->ticks_until_reproduce <= 0)
-        {
-            agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-            Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
-            int more = agent->type==AgentType_Carnivore ? 4 : 2;
-            int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
-            for(int i = 0; i < n_rep; i++)
-            {
-                if(CanAddAgent(world, at_pos))
-                {
-                    AddAgent(world, agent->type, at_pos, agent);
-                }
-            }
-        }
-    }
-
-    // Process removed agents, sort indices descending and then actually remove.
-    // This is a std::function right now !!! stupid. Make it a function pointer
-    // or template or sth this sucks dude this sucks. 
-    world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
-    for(int remove_idx : world->removed_agent_indices)
-    {
-        Agent* agent = world->agents[remove_idx];
-        world->brain_pool->Free(agent->brain);
-        world->agent_pool->Free(agent);
-        world->agents.RemoveIndexUnordered(remove_idx);
-    }
-    world->removed_agent_indices.Clear();
-
-    world->ticks++;
-    world->lifespan_arena_swap_ticks--;
-    if(world->lifespan_arena_swap_ticks <= 0)
-    {
-        SwapLifespanArenas(world);
-        world->lifespan_arena_swap_ticks = world->max_lifespan;
-    }
-}
-#endif
-
 bool
 HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
 {
@@ -686,11 +604,11 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     
     world->num_agenttype[type]++;
 
-    MemoryArena* brain_arena = world->lifespan_arena;
+    MemoryArena* arena = world->lifespan_arena;
 
     // Eyes
     int n_eyes = 4;
-    agent->eyes = CreateArray<AgentEye>(brain_arena, n_eyes);
+    agent->eyes = CreateArray<AgentEye>(arena, n_eyes);
     for(int i = 0; i < n_eyes; i++)
     {
         AgentEye* eye = agent->eyes.PushBack();
@@ -702,7 +620,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     int inputs = n_eyes*3+1;
     int outputs = 4;
     R32 mutation_rate = global_settings.mutation_rate;
-    brain->gene = VecR32Create(brain_arena, inputs*outputs);
+    brain->gene = VecR32Create(arena, inputs*outputs);
     if(parent)
     {
         brain->gene.CopyFrom(parent->brain->gene);
@@ -713,8 +631,8 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
         brain->gene.AddNormal(0, 0.5f);
     }
     brain->gene.AddNormal(0, mutation_rate);
-    brain->input = VecR32Create(brain_arena, inputs);
-    brain->output = VecR32Create(brain_arena, outputs);
+    brain->input = VecR32Create(arena, inputs);
+    brain->output = VecR32Create(arena, outputs);
     I64 offset = 0;
     brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
     agent->brain = brain;
@@ -912,13 +830,6 @@ CreateWorld(MemoryArena* arena)
 
     world->spawn_particles = true;
     world->particles = CreateArray<Particle>(1024);
-
-    // Stupid way to calculate number of blocks. This whole part is stupid, I
-    // just need a simple memory pool. Not this bitted thing I dont know why I
-    // made it.
-    // Also, why do i have memorypools if i have the two lifespan arenas? cant i
-    // just use the lifespan arenas and allocate whatever i want.
-    U32 n_blocks = max_agents/32+1;
 
     for(int i = 0; i < n_initial_agents; i++)
     {

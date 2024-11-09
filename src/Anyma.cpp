@@ -110,7 +110,6 @@ int main(int argc, char** argv)
         WindowBegin(window);
         switch(global_settings.current_phase)
         {
-
             case GamePhase_SimulationScreen: 
             {
                 UpdateSimulationScreen(&screen, window);
@@ -120,7 +119,6 @@ int main(int argc, char** argv)
             {
                 UpdateEditorScreen(&editor, window);
             } break;
-
         }
         WindowEnd(window);
     }
