@@ -85,4 +85,15 @@ NormalizeAngle(R32 angle)
     return angle - (R32)M_PI;  // Shift back to [-π, π]
 }
 
+// Find the global position of in with normalized forward. (Forward coincides with x axis for in)
+static inline Vec3
+XForm(Vec3 center, Vec2 forward, Vec3 in)
+{
+    Vec3 result;
+    result.x = center.x + in.x*forward.x - in.y*forward.y;
+    result.y = center.y + in.x*forward.y + in.y*forward.x;
+    result.z = center.z + in.z;
+    return result;
+}
+
 

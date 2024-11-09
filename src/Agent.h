@@ -40,6 +40,8 @@ struct Leg
 {
     // Idx of the end of the leg.
     int idx;    
+
+    // Target offset in current agent local coordinates.
     Vec3 offset;
 };
 

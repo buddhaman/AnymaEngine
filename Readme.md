@@ -224,3 +224,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
   - (Maybe): Meat or plant preference for continuous evolution from herbivore to carnivore.
 STYLE:
  - 2.5D and draw an outline around each creature so they are visible even if the background is the same color.
+
+##### Plugin system
+ - Lua or sth.
+
+ 
