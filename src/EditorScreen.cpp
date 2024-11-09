@@ -16,7 +16,8 @@ UpdateAgentSkeleton(Agent* agent)
     Vec2 direction = V2Polar(agent->orientation, 1.0f);
     agent->pos += direction * speed;
 
-    agent->orientation += 0.002f;
+    R32 turn_speed = 0.1f;
+    agent->orientation += RandomR32Debug(-turn_speed, turn_speed);
 
     Vec3 center;
     center.xy = agent->pos;
@@ -31,7 +32,7 @@ UpdateAgentSkeleton(Agent* agent)
         AddImpulse(j->v, V3(0,0,body_force));
     }
 
-    // Feet come in pairs. When one foot moves it switches radii.
+    // TODO: Feet come in pairs. When one foot moves it switches radii. Staggered walking.
     for(Leg& leg : agent->legs)
     {
         Joint* j = &skeleton->joints[leg.idx];
@@ -43,6 +44,7 @@ UpdateAgentSkeleton(Agent* agent)
         if(feet_diff > leg.r)
         {
             leg.foot_pos = world_target;
+            leg.foot_pos.xy += direction * RandomR32Debug(0.0f, leg.r);
         }
 
         j->v->pos.z = 0;
@@ -103,13 +105,29 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     UpdateAgentSkeleton(agent);
     RenderSkeleton(renderer, skeleton);
 
-    // Debug rendering
-    Vec2 direction = V2Polar(agent->orientation, 1.0f);
+    Vec3 direction = V3(0,0,0);
+    direction.xy = V2Polar(agent->orientation, 1.0f);
     Vec3 agent_pos = V3(agent->pos.x, agent->pos.y, 0);
+    
+    // Draw cute face
+    Vec3 head_pos = skeleton->joints[agent->head.idx].v->pos;
+    R32 eye_r = 1.0f;
+    R32 pupil_r = eye_r/3.0f;
+    R32 head_r = 2.0f;
+
+    Vec3 eye_left = XForm(head_pos, direction.xy, V3(1,-1,0));
+    Vec3 eye_right = XForm(head_pos, direction.xy, V3(1,1,0));
+
+    RenderCircle(renderer, eye_left, eye_r, Color_White);
+    RenderCircle(renderer, eye_right, eye_r, Color_White);
+    RenderCircle(renderer, eye_left, pupil_r, Color_Black);
+    RenderCircle(renderer, eye_right, pupil_r, Color_Black);
+
+    // Debug rendering
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
     for(Leg& leg : agent->legs)
     {
-        Vec3 leg_pos = XForm(agent_pos, direction, leg.target_offset);
+        Vec3 leg_pos = XForm(agent_pos, direction.xy, leg.target_offset);
         RenderCircle(renderer, leg_pos, 0.1f, Color_Green);
         RenderZLineCircle(renderer, leg_pos, leg.r, 0.03f, Color_Green);
     }
@@ -134,9 +152,9 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
     // set idx to foot.
     leg->idx = (int)skele->joints.size-1;
     leg->target_offset.xy = agent->body.target_positions[idx_in_body].xy;
-    leg->target_offset.y += dir*5;
+    leg->target_offset.y += dir*3;
     leg->target_offset.z = 0.0f;
-    leg->r = 4.0f;
+    leg->r = 2.0f;
 
     Connect(skele, body_particle_idx, r*2, leg->idx-1, r*2, color);
     Connect(skele, leg->idx-1, r*2, leg->idx, r*2, color);
