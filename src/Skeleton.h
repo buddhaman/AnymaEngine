@@ -27,6 +27,7 @@ struct Skeleton
 
     Array<Joint> joints;
     Array<Limb> limbs;
+    int blink = 0;
 };
 
 Verlet3* 

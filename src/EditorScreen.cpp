@@ -118,10 +118,21 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     Vec3 eye_left = XForm(head_pos, direction.xy, V3(1,-1,0));
     Vec3 eye_right = XForm(head_pos, direction.xy, V3(1,1,0));
 
-    RenderCircle(renderer, eye_left, eye_r, Color_White);
-    RenderCircle(renderer, eye_right, eye_r, Color_White);
-    RenderCircle(renderer, eye_left, pupil_r, Color_Black);
-    RenderCircle(renderer, eye_right, pupil_r, Color_Black);
+    if(RandomR32Debug(0, 1) < 0.015) skeleton->blink = 8;
+    if(skeleton->blink) skeleton->blink--;
+
+    if(!skeleton->blink)
+    {
+        RenderCircle(renderer, eye_left, eye_r, Color_White);
+        RenderCircle(renderer, eye_right, eye_r, Color_White);
+        RenderCircle(renderer, eye_left, pupil_r, Color_Black);
+        RenderCircle(renderer, eye_right, pupil_r, Color_Black);
+    }
+    else
+    {
+        RenderCircle(renderer, eye_left, eye_r, Color_Brown);
+        RenderCircle(renderer, eye_right, eye_r, Color_Brown);
+    }
 
     // Debug rendering
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
