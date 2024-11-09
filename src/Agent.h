@@ -36,6 +36,27 @@ struct Brain
     VecR32 gene;
 };
 
+struct Leg
+{
+    // Idx of the end of the leg.
+    int idx;    
+    Vec3 offset;
+};
+
+struct Head
+{
+    // should always be 0. But just in case.
+    int idx;
+
+    Vec3 target_position;
+};
+
+struct MainBody
+{
+    Array<int> body;
+    Array<Vec3> target_positions;
+};
+
 struct Agent
 {
     Vec2 pos; 
@@ -46,7 +67,10 @@ struct Agent
     I32 charge;
     I32 charge_refractory;
 
-    Skeleton* details;
+    Head head;
+    MainBody body;
+    Array<Leg> legs;
+    Skeleton* skeleton;
 
     Array<AgentEye> eyes;
     Brain* brain;
@@ -70,8 +94,6 @@ struct Agent
     R32 nearest_carnivore_distance;
     R32 nearest_carnivore_angle;
     Agent* nearest_carnivore;
-
-    Array<GeneNode> gene_nodes;
 
     bool is_alive;
 };

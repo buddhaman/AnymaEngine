@@ -916,6 +916,8 @@ CreateWorld(MemoryArena* arena)
     // Stupid way to calculate number of blocks. This whole part is stupid, I
     // just need a simple memory pool. Not this bitted thing I dont know why I
     // made it.
+    // Also, why do i have memorypools if i have the two lifespan arenas? cant i
+    // just use the lifespan arenas and allocate whatever i want.
     U32 n_blocks = max_agents/32+1;
     world->agent_pool = CreateBittedMemoryPool<Agent>(arena, n_blocks);
     world->brain_pool = CreateBittedMemoryPool<Brain>(arena, n_blocks);

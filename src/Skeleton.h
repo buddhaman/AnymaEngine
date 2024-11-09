@@ -19,29 +19,6 @@ struct Limb
     U32 color;
 };
 
-struct Leg
-{
-    // Idx of the end of the leg.
-    int idx;    
-    Vec3 offset;
-};
-
-struct Head
-{
-    // should always be 0. But just in case.
-    int idx;
-
-    Vec3 target_position;
-};
-
-struct MainBody
-{
-    Array<int> body;
-    Array<Vec3> target_positions;
-};
-
-// TODO: Add tail, mouth etc
-
 // This is the detailed struct that you see in high LOD.
 struct Skeleton
 {
@@ -50,10 +27,6 @@ struct Skeleton
 
     Array<Joint> joints;
     Array<Limb> limbs;
-
-    Head head;
-    MainBody body;
-    Array<Leg> legs;
 };
 
 Verlet3* 
