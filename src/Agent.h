@@ -47,7 +47,7 @@ struct Leg
 
 struct Head
 {
-    // should always be 0. But just in case.
+    // Should always be 0. But just in case.
     int idx;
 
     Vec3 target_position;

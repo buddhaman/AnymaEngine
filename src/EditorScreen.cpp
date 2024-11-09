@@ -11,6 +11,17 @@
 void
 UpdateAgentSkeleton(Agent* agent)
 {
+    // TEST:
+    R32 speed = 0.12f;
+    Vec2 direction = V2Polar(agent->orientation, 1.0f);
+    agent->pos += direction * speed;
+
+    agent->orientation += 0.002f;
+
+    Vec3 center;
+    center.xy = agent->pos;
+    center.z = 0.0f;
+
     MainBody* body = &agent->body;
     Skeleton* skeleton = agent->skeleton;
     R32 body_force = 0.4f;
@@ -25,10 +36,12 @@ UpdateAgentSkeleton(Agent* agent)
     {
         Joint* j = &skeleton->joints[leg.idx];
         j->v->pos.z = 0;
+        j->v->pos = XForm(center, direction, leg.offset);
     }
 
-    // Move head up
+    // Move head up and set X,Y to proper agent x, y position
     Joint* head = &skeleton->joints[agent->head.idx];
+    head->v->pos.xy = agent->pos;
     AddImpulse(head->v, V3(0,0,body_force));
 }
 
@@ -80,6 +93,15 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     UpdateAgentSkeleton(agent);
     RenderSkeleton(renderer, skeleton);
 
+    // Debug rendering
+    Vec2 direction = V2Polar(agent->orientation, 1.0f);
+    Vec3 agent_pos = V3(agent->pos.x, agent->pos.y, 0);
+    RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
+    for(Leg& leg : agent->legs)
+    {
+        RenderCircle(renderer, XForm(agent_pos, direction, leg.offset), 0.1f, Color_Green);
+    }
+
     // Render entire thing 
     Render(renderer->renderer, cam, window->width, window->height);
 
@@ -87,7 +109,7 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
 }
 
 Leg* 
-AddLeg(Agent* agent, int idx_in_body, R32 r, U32 color)
+AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 {
     Skeleton* skele = agent->skeleton;
     Leg* leg = agent->legs.PushBack();
@@ -99,6 +121,9 @@ AddLeg(Agent* agent, int idx_in_body, R32 r, U32 color)
 
     // set idx to foot.
     leg->idx = (int)skele->joints.size-1;
+    leg->offset.xy = agent->body.target_positions[idx_in_body].xy;
+    leg->offset.y += dir*5;
+    leg->offset.z = 0.0f;
 
     Connect(skele, body_particle_idx, r*2, leg->idx-1, r*2, color);
     Connect(skele, leg->idx-1, r*2, leg->idx, r*2, color);
@@ -106,7 +131,8 @@ AddLeg(Agent* agent, int idx_in_body, R32 r, U32 color)
     return leg;
 }
 
-void InitAgentSkeleton(MemoryArena* arena, Agent* agent)
+void 
+InitAgentSkeleton(MemoryArena* arena, Agent* agent)
 {
     int n_legs = 3;
     U32 color = Color_Brown;
@@ -140,15 +166,12 @@ void InitAgentSkeleton(MemoryArena* arena, Agent* agent)
         Connect(skele, prev_idx, scale*2, idx, scale*2, color);
     }
 
-    AddLeg(agent, 0, 1.0f, color);
-    Verlet3* v = &skele->particles[agent->head.idx];
-    AddImpulse(v, V3(10,1,1));
-
-    AddLeg(agent, 0, 1.0f, color);
-    AddLeg(agent, 1, 1.0f, color);
-    AddLeg(agent, 1, 1.0f, color);
-    AddLeg(agent, 2, 1.0f, color);
-    AddLeg(agent, 2, 1.0f, color);
+    AddLeg(agent, 0, -1, 1.0f, color);
+    AddLeg(agent, 0, +1, 1.0f, color);
+    AddLeg(agent, 1, -1, 1.0f, color);
+    AddLeg(agent, 1, +1, 1.0f, color);
+    AddLeg(agent, 2, -1, 1.0f, color);
+    AddLeg(agent, 2, +1, 1.0f, color);
 }
 
 void
