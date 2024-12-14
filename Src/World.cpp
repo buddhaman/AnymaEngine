@@ -646,7 +646,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 
     // Stupid way to calculate max of 3 numbers. Should make library function
     // for this.
-    R32 max_color = Max(color_calc[0], Max(color_calc[1], color_calc[2]));
+    R32 max_color = Max(color_calc[0], color_calc[1], color_calc[2]);
     for(int i = 0; i < 3; i++)
     {
         color_calc[i] /= max_color;

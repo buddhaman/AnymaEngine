@@ -68,13 +68,25 @@ static constexpr R64 R64_MAX = DBL_MAX;
 static constexpr R32 PI_R32 = 3.1415927f;
 static constexpr R64 PI_R64 = 3.141592653589793;
 
-
 // Functions
-template <typename T>
-T Max(T a, T b) { return a < b ? b : a; }
 
 template <typename T>
 T Min(T a, T b) { return a < b ? a : b; }
+
+template <typename T, typename... Args>
+T Min(T first, Args... rest) 
+{
+    return Min(first, Min(rest...));
+}
+
+template <typename T>
+T Max(T a, T b) { return a < b ? b : a; }
+
+template <typename T, typename... Args>
+T Max(T first, Args... rest)
+{
+    return Max(first, Max(rest...));
+}
 
 template <typename T>
 T Abs(T v) { return v < 0 ? -v : v; }
@@ -87,7 +99,7 @@ T Clamp(T min, T val, T max)
     return val;
 }
 
-static inline float 
+static inline R32 
 RandomR32Debug(float min, float max)
 {
     float randFloat = (float)(rand()) / (float)(RAND_MAX);
