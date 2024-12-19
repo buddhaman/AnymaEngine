@@ -53,7 +53,6 @@ struct Leg
 
 struct Head
 {
-    // Should always be 0. But just in case.
     int idx;
 
     Vec3 target_position;
@@ -113,7 +112,7 @@ GetAgentColor(AgentType type)
     {
     case AgentType_Carnivore: return RGBAColor(255, 0, 0, 255);
     case AgentType_Herbivore: return RGBAColor(0, 255, 0, 255);
-    default: return 0xffffffff;
+    default: return Color_White;
     }
 }
 
@@ -135,16 +134,8 @@ I32
 GetInitialEnergy(World* world, AgentType type);
 
 static inline bool
-IsCharging(Agent* agent)
-{
-    return agent->charge;
-}
+IsCharging(Agent* agent) { return agent->charge; }
 
 static inline bool
-IsRefractory(Agent* agent)
-{
-    return agent->charge_refractory != 0;
-}
-
-
+IsRefractory(Agent* agent) { return agent->charge_refractory != 0; }
 

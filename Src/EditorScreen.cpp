@@ -32,7 +32,6 @@ UpdateAgentSkeleton(Agent* agent)
         AddImpulse(j->v, V3(0,0,body_force));
     }
 
-    // TODO: Feet come in pairs. When one foot moves it switches radii. Staggered walking.
     for(Leg& leg : agent->legs)
     {
         Joint* j = &skeleton->joints[leg.idx];
@@ -176,7 +175,7 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 void 
 InitAgentSkeleton(MemoryArena* arena, Agent* agent)
 {
-    int n_legs = 3;
+    int n_legs = 1;
     U32 color = Color_Brown;
     R32 scale = 1.0f;
     Skeleton* skele = agent->skeleton;
@@ -184,12 +183,7 @@ InitAgentSkeleton(MemoryArena* arena, Agent* agent)
     agent->legs = CreateArray<Leg>(arena, n_legs*2);
 
     // Start with head
-    Vec3 pos = V3(0,0,scale*4);
-
-    // Head
-    AddJoint(skele, pos, scale*2, color);
-    agent->head.idx = 0;
-    agent->head.target_position = pos;
+    Vec3 pos = V3(0,0,scale*8);
 
     // Body
     R32 diff = 4.0f*scale;
@@ -204,16 +198,31 @@ InitAgentSkeleton(MemoryArena* arena, Agent* agent)
         agent->body.body.PushBack(idx);
         agent->body.target_positions.PushBack(pos);
 
-        int prev_idx = i==0? agent->head.idx : idx-1;
+        if(idx==0) continue;
+
+        int prev_idx = idx-1;
         Connect(skele, prev_idx, scale*2, idx, scale*2, color);
     }
 
-    AddLeg(agent, 0, -1, 1.0f, color);
-    AddLeg(agent, 0, +1, 1.0f, color);
-    AddLeg(agent, 1, -1, 1.0f, color);
-    AddLeg(agent, 1, +1, 1.0f, color);
-    AddLeg(agent, 2, -1, 1.0f, color);
-    AddLeg(agent, 2, +1, 1.0f, color);
+    AddLeg(agent, 0, -1, scale/2.0f, color);
+    AddLeg(agent, 0, +1, scale/2.0f, color);
+    // AddLeg(agent, 1, -1, 1.0f, color);
+    // AddLeg(agent, 1, +1, 1.0f, color);
+    // AddLeg(agent, 2, -1, 1.0f, color);
+    // AddLeg(agent, 2, +1, 1.0f, color);
+    // AddLeg(agent, 3, -1, 1.0f, color);
+    // AddLeg(agent, 3, +1, 1.0f, color);
+
+    // Head
+
+    pos += V3(0,0,diff);
+    agent->head.target_position = pos;
+    AddJoint(skele, agent->head.target_position, scale*2, color);
+    agent->head.idx = (int)skele->joints.size-1;
+
+    // Connect head to last bodypart in body
+    int last_idx = agent->body.body.Last();
+    Connect(skele, last_idx, scale, agent->head.idx, scale, color);
 }
 
 void

@@ -25,6 +25,7 @@ struct Array
     inline void Clear() { size = 0;}
     inline void Swap(I64 idx0, I64 idx1) { T tmp = data[idx0]; data[idx0] = data[idx1]; data[idx1] = tmp; }
     inline bool IsFull() { return size==capacity; }
+    inline T& Last() { return data[size-1]; };
     inline Array<T> View(I64 offset, I64 new_array_size)
     {
         Assert(offset >= 0);
