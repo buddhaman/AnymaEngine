@@ -39,13 +39,17 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Throw away memory pools and use lifetime arenas for everything.
+- Spawn multiple of these creatures.
+- Refactor simulationscreen to use renderer.
+- Design a genome that encodes the morphology of a creature. Keep it simple.
+- Turn agent into entity? At least something such that collision detection and
+  vision is possible between both plants and agents.
+- Create food. Make bushes with berries and herbivore agents have to stand still and collect.
+
 - Design mouth.
-- Design a genome that encodes the morphology of a creature.
 - Make graph in real seconds as units.
 - FUN: Make a creature editor.
 - Modular sensor and actuator system + editor.
-- Refactor simulationscreen to use renderer.
 - FUN: Make a mass-add feature.
 - FUN: Make a mass-death feature.
 - FUN: Make a mutation gun. Radiation.
@@ -88,6 +92,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make list of common colors.
 
 ### Done
+- Throw away memory pools and use lifetime arenas for everything.
 - Design eyes.
 - Render a detailed agent in the editor.
 - Walk cycle.

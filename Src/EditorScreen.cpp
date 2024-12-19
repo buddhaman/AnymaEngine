@@ -11,13 +11,13 @@
 void
 UpdateAgentSkeleton(Agent* agent)
 {
-    // TEST:
-    R32 speed = 0.12f;
+    R32 speed = 0.34f;
     Vec2 direction = V2Polar(agent->orientation, 1.0f);
     agent->pos += direction * speed;
 
     R32 turn_speed = 0.1f;
-    agent->orientation += RandomR32Debug(-turn_speed, turn_speed);
+    // agent->orientation += RandomR32Debug(-turn_speed, turn_speed);
+    agent->orientation += 0.01f;
 
     Vec3 center;
     center.xy = agent->pos;
@@ -52,7 +52,10 @@ UpdateAgentSkeleton(Agent* agent)
 
     // Move head up and set X,Y to proper agent x, y position
     Joint* head = &skeleton->joints[agent->head.idx];
-    head->v->pos.xy = agent->pos;
+
+    // Only takes into account agents head X position. But that should work.
+    head->v->pos.xy = agent->pos + V2Polar(agent->orientation, agent->head.target_position.x);
+
     AddImpulse(head->v, V3(0,0,body_force));
 }
 
@@ -175,43 +178,47 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 void 
 InitAgentSkeleton(MemoryArena* arena, Agent* agent)
 {
-    int n_legs = 1;
+    int n_legs = 3;
     U32 color = Color_Brown;
     R32 scale = 1.0f;
     Skeleton* skele = agent->skeleton;
 
     agent->legs = CreateArray<Leg>(arena, n_legs*2);
 
-    // Start with head
+    // Start with neck
     Vec3 pos = V3(0,0,scale*8);
 
     // Body
-    R32 diff = 4.0f*scale;
+    R32 diff = 6.0f*scale;
+
+    // Offset beginning position by diff*n_legs/2 such that the agent is centered.
+    pos -= V3((n_legs-1)*diff/2.0f, 0, 0);
+
     agent->body.body = CreateArray<int>(arena, n_legs);
     agent->body.target_positions = CreateArray<Vec3>(arena, n_legs);
+    R32 s = scale;
+    R32 inc = 0.3f;
     for(int i = 0; i < n_legs; i++)
     {
-        pos += V3(diff, 0, 0);
-
-        AddJoint(skele, pos, scale, color);
+        AddJoint(skele, pos, s, color);
         int idx = (int)skele->particles.size-1;
         agent->body.body.PushBack(idx);
         agent->body.target_positions.PushBack(pos);
 
+        s+=inc;
+        pos += i < n_legs-1 ? V3(diff, 0, 0) : V3(0,0,0);
+
         if(idx==0) continue;
 
         int prev_idx = idx-1;
-        Connect(skele, prev_idx, scale*2, idx, scale*2, color);
+        Connect(skele, prev_idx, (s-inc*2)*2, idx, (s-inc)*2, color);
     }
 
-    AddLeg(agent, 0, -1, scale/2.0f, color);
-    AddLeg(agent, 0, +1, scale/2.0f, color);
-    // AddLeg(agent, 1, -1, 1.0f, color);
-    // AddLeg(agent, 1, +1, 1.0f, color);
-    // AddLeg(agent, 2, -1, 1.0f, color);
-    // AddLeg(agent, 2, +1, 1.0f, color);
-    // AddLeg(agent, 3, -1, 1.0f, color);
-    // AddLeg(agent, 3, +1, 1.0f, color);
+    for(int i = 0; i < n_legs; i++)
+    {
+        AddLeg(agent, i, -1, scale/2.0f, color);
+        AddLeg(agent, i, +1, scale/2.0f, color);
+    }
 
     // Head
 
@@ -234,7 +241,7 @@ InitEditorScreen(EditorScreen* editor)
     editor->cam.scale = 1;
     editor->renderer = CreateTiltedRenderer(arena);
     editor->renderer->cam.angle = -PI_R32/4.0f;
-    int max_joints = 24;
+    int max_joints = 32;
     editor->agent = PushNewStruct(arena, Agent);
     editor->agent->skeleton = CreateSkeleton(arena, max_joints, max_joints*2);
     InitAgentSkeleton(arena, editor->agent);
