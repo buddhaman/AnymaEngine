@@ -45,6 +45,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Turn agent into entity? At least something such that collision detection and
   vision is possible between both plants and agents.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
+- Create tilemap and interpolate colors on the edges for biomes.
 
 - Design mouth.
 - Make graph in real seconds as units.
