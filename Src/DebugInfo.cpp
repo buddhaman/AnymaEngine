@@ -86,11 +86,11 @@ ImGuiChunkDistribution(World* world)
 void 
 ImGuiBrainVisualizer(Brain* brain)
 {
-    if(ImPlot::BeginPlot("Gene"))
-    {
-        ImPlot::PlotHeatmap("Gene Map", brain->weights.m, brain->weights.w, brain->weights.h, -2.0f, 2.0f);
-        ImPlot::EndPlot();
-    }
+    // if(ImPlot::BeginPlot("Gene"))
+    // {
+    //     ImPlot::PlotHeatmap("Gene Map", brain->weights.m, brain->weights.w, brain->weights.h, -2.0f, 2.0f);
+    //     ImPlot::EndPlot();
+    // }
 }
 
 void

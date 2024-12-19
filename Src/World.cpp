@@ -616,26 +616,10 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     }
 
     // Brain
-    Brain* brain = PushNewStruct(world->lifespan_arena, Brain);
     int inputs = n_eyes*3+1;
     int outputs = 4;
     R32 mutation_rate = global_settings.mutation_rate;
-    brain->gene = VecR32Create(arena, inputs*outputs);
-    if(parent)
-    {
-        brain->gene.CopyFrom(parent->brain->gene);
-    }
-    else
-    {
-        brain->gene.Set(0);
-        brain->gene.AddNormal(0, 0.5f);
-    }
-    brain->gene.AddNormal(0, mutation_rate);
-    brain->input = VecR32Create(arena, inputs);
-    brain->output = VecR32Create(arena, outputs);
-    I64 offset = 0;
-    brain->weights = brain->gene.ShapeAs(inputs, outputs, offset);
-    agent->brain = brain;
+    Brain* brain = agent->brain = CreateBrain(arena, inputs, inputs*2+1, outputs, parent ? parent->brain : nullptr, mutation_rate);
 
     // Here the gene is known, calculate a nice color to visualize the gene.
     R32 color_calc[3] = {0,0,0};
@@ -799,8 +783,9 @@ CreateWorld(MemoryArena* arena)
     world->y_chunks = settings->y_chunks;
     world->size = world->chunk_size*V2((R32)world->x_chunks, (R32)world->y_chunks);
 
-    world->lifespan_arena = CreateSubArena(arena, MegaBytes(128));
-    world->lifespan_arena_old = CreateSubArena(arena, MegaBytes(128));
+    U64 lifespan_arena_size = MegaBytes(384);
+    world->lifespan_arena = CreateSubArena(arena, lifespan_arena_size);
+    world->lifespan_arena_old = CreateSubArena(arena, lifespan_arena_size);
 
     int max_agents = settings->max_agents;
     int n_initial_agents = settings->n_initial_agents;

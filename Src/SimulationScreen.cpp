@@ -464,7 +464,7 @@ RestartWorld(SimulationScreen* screen)
 void
 InitSimulationScreen(SimulationScreen* screen)
 {
-    screen->world_arena = CreateMemoryArena(MegaBytes(512));
+    screen->world_arena = CreateMemoryArena(GigaBytes(1));
     screen->screen_arena = CreateMemoryArena(MegaBytes(32));
     RestartWorld(screen);
 

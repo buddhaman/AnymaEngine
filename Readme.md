@@ -236,4 +236,7 @@ STYLE:
 ##### Plugin system
  - Lua or sth.
 
+ ### BUGS
+  - Asserts still show in release.
+
  

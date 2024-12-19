@@ -18,20 +18,20 @@ struct Brain
     VecR32 gene;
 };
 
-static inline I64 
+static inline int
 CalculateBrainSizeFeedForward(int inputSize, int hiddenSize, int outputSize)
 {
     return (inputSize * hiddenSize + hiddenSize) + (hiddenSize * outputSize + outputSize);
 }
 
 Brain* 
-CreateBrain(MemoryArena* arena, int inputSize, int hiddenSize, int outputSize, Brain* parent, R32 mutationRate)
+CreateBrain(MemoryArena* arena, int input_size, int hidden_size, int output_size, Brain* parent, R32 mutation_rate)
 {
     Brain* brain = PushNewStruct(arena, Brain);
 
-    I64 geneSize = CalculateBrainSizeFeedForward(inputSize, hiddenSize, outputSize);
+    int gene_size = CalculateBrainSizeFeedForward(input_size, hidden_size, output_size);
 
-    brain->gene = VecR32Create(arena, geneSize);
+    brain->gene = VecR32Create(arena, gene_size);
 
     if (parent)
     {
@@ -44,21 +44,25 @@ CreateBrain(MemoryArena* arena, int inputSize, int hiddenSize, int outputSize, B
     }
 
     // Apply mutations to the gene
-    brain->gene.AddNormal(0, mutationRate);
+    brain->gene.AddNormal(0, mutation_rate);
 
     // Create input, hidden, and output vectors
-    brain->input = VecR32Create(arena, inputSize);
-    brain->hidden = VecR32Create(arena, hiddenSize);
-    brain->output = VecR32Create(arena, outputSize);
+    brain->input = VecR32Create(arena, input_size);
+    brain->hidden = VecR32Create(arena, hidden_size);
+    brain->output = VecR32Create(arena, output_size);
 
     // Shape gene into matrices and biases for input-hidden and hidden-output layers
     I64 offset = 0;
-    brain->input_weights = brain->gene.ShapeAs(hiddenSize, inputSize, offset);
-    brain->input_biases = VecR32Create(hiddenSize, brain->gene.v + offset);
-    offset += hiddenSize;
+    brain->input_weights = brain->gene.ShapeAs(input_size, hidden_size, offset);
+    brain->input_biases = VecR32Create(hidden_size, brain->gene.v + offset);
+    offset += hidden_size;
 
-    brain->hidden_weights = brain->gene.ShapeAs(outputSize, hiddenSize, offset);
-    brain->hidden_biases = VecR32Create(outputSize, brain->gene.v + offset);
+    brain->hidden_weights = brain->gene.ShapeAs(hidden_size, output_size, offset);
+    brain->hidden_biases = VecR32Create(output_size, brain->gene.v + offset);
+
+    offset+=output_size;
+
+    Assert(offset == brain->gene.n && "Gene size mismatch during creation.");
 
     return brain;
 }
