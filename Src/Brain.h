@@ -4,46 +4,38 @@
 
 struct Brain
 {
+    // Weights and biases.
     MatR32 input_weights;
+    VecR32 input_biases;
     MatR32 hidden_weights;
+    VecR32 hidden_biases;
+
+    // Mutable
     VecR32 input;
     VecR32 hidden;
     VecR32 output;
+
     VecR32 gene;
 };
 
 static inline I64 
-CalculateBrainGeneSizeFeedForward(int inputSize, int hiddenSize, int outputSize)
+CalculateBrainSizeFeedForward(int inputSize, int hiddenSize, int outputSize)
 {
-    // Gene size is the sum of weights between input and hidden, and hidden and output
-    return inputSize * hiddenSize + hiddenSize * outputSize;
+    return (inputSize * hiddenSize + hiddenSize) + (hiddenSize * outputSize + outputSize);
 }
 
-static inline void
-UpdateBrain(Brain* brain)
-{
-    MatR32VecMul(brain->output, brain->weights, brain->input);
-    brain->output.Apply([](R32 x) -> R32 {return tanh(x);});
-}
-
-// Parent = nullptr if no parent.
 Brain* 
-CreateBrainFeedForward(MemoryArena* arena, int inputSize, int hiddenSize, int outputSize, VecR32* parent, R32 mutationRate)
+CreateBrain(MemoryArena* arena, int inputSize, int hiddenSize, int outputSize, Brain* parent, R32 mutationRate)
 {
-    // Allocate memory for the Brain struct
     Brain* brain = PushNewStruct(arena, Brain);
 
-    // Precalculate gene size
-    I64 gene_size = CalculateBrainGeneSizeFeedForward(inputSize, hiddenSize, outputSize);
+    I64 geneSize = CalculateBrainSizeFeedForward(inputSize, hiddenSize, outputSize);
 
-    // Create the gene vector
-    brain->gene = VecR32Create(arena, gene_size);
+    brain->gene = VecR32Create(arena, geneSize);
 
-    // If a parent exists, copy its gene, otherwise initialize with random values
     if (parent)
     {
-        Assert(parent->n==gene_size);
-        brain->gene.CopyFrom(parent);
+        brain->gene.CopyFrom(parent->gene);
     }
     else
     {
@@ -56,13 +48,38 @@ CreateBrainFeedForward(MemoryArena* arena, int inputSize, int hiddenSize, int ou
 
     // Create input, hidden, and output vectors
     brain->input = VecR32Create(arena, inputSize);
-    brain->hidden = VecR32Create(arena, hiddenSize); // Hidden layer added
+    brain->hidden = VecR32Create(arena, hiddenSize);
     brain->output = VecR32Create(arena, outputSize);
 
-    // Shape gene into matrices for input-hidden and hidden-output weights
+    // Shape gene into matrices and biases for input-hidden and hidden-output layers
     I64 offset = 0;
     brain->input_weights = brain->gene.ShapeAs(hiddenSize, inputSize, offset);
+    brain->input_biases = VecR32Create(hiddenSize, brain->gene.v + offset);
+    offset += hiddenSize;
+
     brain->hidden_weights = brain->gene.ShapeAs(outputSize, hiddenSize, offset);
+    brain->hidden_biases = VecR32Create(outputSize, brain->gene.v + offset);
 
     return brain;
+}
+
+static inline void UpdateBrain(Brain* brain)
+{
+    MatR32VecMul(brain->hidden, brain->input_weights, brain->input);
+
+    for (int i = 0; i < brain->hidden.n; i++)
+    {
+        brain->hidden.v[i] += brain->input_biases.v[i];
+    }
+
+    brain->hidden.Apply([](R32 x) -> R32 { return tanh(x); });
+
+    MatR32VecMul(brain->output, brain->hidden_weights, brain->hidden);
+
+    for (int i = 0; i < brain->output.n; i++)
+    {
+        brain->output.v[i] += brain->hidden_biases.v[i];
+    }
+
+    brain->output.Apply([](R32 x) -> R32 { return tanh(x); });
 }
