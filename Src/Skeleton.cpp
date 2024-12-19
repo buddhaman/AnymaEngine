@@ -58,7 +58,7 @@ void
 RenderSkeleton(TiltedRenderer* renderer, Skeleton* skeleton)
 {
     // Draw outline.
-    R32 outline = 0.1f;
+    R32 outline = 0.2f;
     U32 outline_color = Color_Black;
 
     for(Joint& joint : skeleton->joints)

@@ -178,7 +178,7 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 void 
 InitAgentSkeleton(MemoryArena* arena, Agent* agent)
 {
-    int n_legs = 3;
+    int n_legs = 1;
     U32 color = Color_Brown;
     R32 scale = 1.0f;
     Skeleton* skele = agent->skeleton;

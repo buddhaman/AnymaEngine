@@ -107,8 +107,11 @@ WindowBegin(Window* window)
     window->frame_start_time = SDL_GetPerformanceCounter();
 
     HandleInput(window);
+    U32 color = HexToColor(0xD2B48CFF);
+    Vec4 bg_color = ColorToVec4(color);
+
     // Clear the screen
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(bg_color.r, bg_color.g, bg_color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, window->width, window->height);
