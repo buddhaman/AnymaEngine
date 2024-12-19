@@ -239,7 +239,7 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
         //brain->input[4] = sinf((R32)(world->ticks / 60.0f));
 #endif
 
-        UpdateBrain(agent);
+        UpdateBrain(agent->brain);
     }
 }
 

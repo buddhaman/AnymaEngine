@@ -167,7 +167,7 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
     leg->target_offset.xy = agent->body.target_positions[idx_in_body].xy;
     leg->target_offset.y += dir*3;
     leg->target_offset.z = 0.0f;
-    leg->r = 2.0f;
+    leg->r = 1.0f;
 
     Connect(skele, body_particle_idx, r*2, leg->idx-1, r*2, color);
     Connect(skele, leg->idx-1, r*2, leg->idx, r*2, color);
@@ -178,7 +178,7 @@ AddLeg(Agent* agent, int idx_in_body, int dir, R32 r, U32 color)
 void 
 InitAgentSkeleton(MemoryArena* arena, Agent* agent)
 {
-    int n_legs = 1;
+    int n_legs = 6;
     U32 color = Color_Brown;
     R32 scale = 1.0f;
     Skeleton* skele = agent->skeleton;
@@ -189,15 +189,15 @@ InitAgentSkeleton(MemoryArena* arena, Agent* agent)
     Vec3 pos = V3(0,0,scale*8);
 
     // Body
-    R32 diff = 6.0f*scale;
+    R32 diff = 9.0f*scale;
 
-    // Offset beginning position by diff*n_legs/2 such that the agent is centered.
+    // Offset beginning position by diff*(n_legs-1)/2 such that the agent is centered.
     pos -= V3((n_legs-1)*diff/2.0f, 0, 0);
 
     agent->body.body = CreateArray<int>(arena, n_legs);
     agent->body.target_positions = CreateArray<Vec3>(arena, n_legs);
     R32 s = scale;
-    R32 inc = 0.3f;
+    R32 inc = 0.1f;
     for(int i = 0; i < n_legs; i++)
     {
         AddJoint(skele, pos, s, color);

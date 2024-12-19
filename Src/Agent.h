@@ -6,6 +6,7 @@
 #include "Linalg.h"
 #include "Skeleton.h"
 #include "Genome.h"
+#include "Brain.h"
 
 // Forward declarations
 struct World;
@@ -26,14 +27,6 @@ struct AgentEye
     R32 distance;
     AgentType hit_type;
     R32 orientation;
-};
-
-struct Brain
-{
-    VecR32 input;
-    MatR32 weights;
-    VecR32 output;
-    VecR32 gene;
 };
 
 struct Leg
@@ -116,13 +109,6 @@ GetAgentColor(AgentType type)
     }
 }
 
-static inline void
-UpdateBrain(Agent* agent)
-{
-    Brain* brain = agent->brain;
-    MatR32VecMul(brain->output, brain->weights, brain->input);
-    brain->output.Apply([](R32 x) -> R32 {return tanh(x);});
-}
 
 void
 UpdateMovement(World* world, Agent* agent);
