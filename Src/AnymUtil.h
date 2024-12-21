@@ -99,6 +99,15 @@ T Clamp(T min, T val, T max)
     return val;
 }
 
+static inline I32
+RandomIntDebug(int min_value, int max_value)
+{
+    Assert(min_value <= max_value);
+    int range = max_value-min_value;
+    int r = rand() % range;
+    return r + min_value;
+}
+
 static inline R32 
 RandomR32Debug(float min, float max)
 {

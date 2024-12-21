@@ -10,7 +10,66 @@
 
 constexpr R32 speed = 0.34f;
 constexpr R32 turn_speed = 0.01f;
+constexpr int max_joints = 64;
 static R32 walk_radius = speed/sinf(turn_speed);
+
+void
+InitDefaultPhenotype(PhenoType* pheno)
+{
+    R32 r = 1.0f;
+    pheno->n_backbones = 5;
+    pheno->backbone_radius.Set(r);
+    pheno->backbone_radius[0] = r*3;
+    pheno->backbone_radius[1] = r*6;
+    pheno->backbone_radius[2] = r*2;
+    pheno->backbone_radius[3] = r*6;
+    pheno->backbone_radius[4] = r*3;
+    pheno->knee_size.Set(r+0.2f);
+    pheno->foot_size.Set(r);
+    pheno->step_radius.Set(1.0f);
+    pheno->has_leg[0] = 1;
+    pheno->has_leg[1] = 0;
+    pheno->has_leg[2] = 1;
+    pheno->has_leg[3] = 0;
+    pheno->has_leg[4] = 1;
+    pheno->elbow_size = r;
+    pheno->hand_size = r;
+}
+
+void
+InitRandomPhenotype(PhenoType* pheno)
+{
+    pheno->n_backbones = RandomIntDebug(1, 10);
+
+    // Bettter make differnt distribution, technically this can go below 0.
+    pheno->backbone_radius.Set(0);
+    pheno->backbone_radius.AddNormal(3.0f, 1.0f);
+
+    pheno->knee_size.Set(0.0f);
+    pheno->knee_size.AddNormal(1.0f, 0.5f);
+
+    pheno->foot_size.Set(0.0f);
+    pheno->foot_size.AddNormal(1.0f, 0.5f);
+
+    pheno->step_radius.Set(0.0f);
+    pheno->step_radius.AddNormal(1.0f, 0.25f);
+
+    for(int i = 0; i < pheno->n_backbones; i++)
+    {
+        pheno->has_leg[i] = RandomR32Debug(0, 1) < 0.5f;
+    }
+
+    pheno->elbow_size = 1.0f;
+    pheno->hand_size = 1.0f;
+
+    pheno->color = Vec4ToColor(V4(
+        RandomR32Debug(0.0f, 1.0f),
+        RandomR32Debug(0.0f, 1.0f),
+        RandomR32Debug(0.0f, 1.0f),
+        1.0f
+    ));
+}
+
 
 void
 UpdateAgentSkeleton(Agent* agent)
@@ -27,12 +86,19 @@ UpdateAgentSkeleton(Agent* agent)
 
     MainBody* body = &agent->body;
     Skeleton* skeleton = agent->skeleton;
-    R32 body_force = 0.4f;
+
+    R32 body_force = (agent->legs.size==0) ? -0.4f : 0.4f;
     for(int bodypart_idx : body->body)
     {
         Joint* j = &skeleton->joints[bodypart_idx];
         AddImpulse(j->v, V3(0,0,body_force));
     }
+
+    for(Verlet3& p : skeleton->particles)
+    {
+        if(p.pos.z < 0.0f) p.pos.z = 0.0f;
+    }
+
 
     for(Leg& leg : agent->legs)
     {
@@ -248,13 +314,25 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     ImGui::EndMainMenuBar();
 
     ImGui::Begin("Edit Creature");
+    bool reset_creature = false;
+    if(ImGui::Button("Randomize"))
+    {
+        reset_creature = true;
+        InitRandomPhenotype(agent->phenotype);
+    }
     if(EditCreatureWindow(agent->phenotype))
     {
-        // TODO: FIX THIS MEMORY LEAK
-        agent->skeleton = CreateSkeleton(editor->editor_arena, 32, 64);
-        InitAgentSkeleton(editor->editor_arena, agent);
+        reset_creature = true;
+
     }
     ImGui::End();
+
+    if(reset_creature)
+    {
+        // TODO: FIX THIS MEMORY LEAK
+        agent->skeleton = CreateSkeleton(editor->editor_arena, max_joints, max_joints*2);
+        InitAgentSkeleton(editor->editor_arena, agent);
+    }
 
     R32 tilt_speed = -0.01f;
     if(IsKeyDown(input, InputAction_W))
@@ -361,29 +439,11 @@ InitEditorScreen(EditorScreen* editor)
     editor->cam.scale = 1;
     editor->renderer = CreateTiltedRenderer(arena);
     editor->renderer->cam.angle = -PI_R32/4.0f;
-    int max_joints = 32;
     editor->agent = PushNewStruct(arena, Agent);
     editor->agent->skeleton = CreateSkeleton(arena, max_joints, max_joints*2);
     editor->agent->pos = V2(0, -walk_radius);
 
     PhenoType* pheno = editor->agent->phenotype = CreatePhenotype(arena, 12);
-    R32 r = 1.0f;
-    pheno->n_backbones = 5;
-    pheno->backbone_radius.Set(r);
-    pheno->backbone_radius[0] = r*3;
-    pheno->backbone_radius[1] = r*6;
-    pheno->backbone_radius[2] = r*2;
-    pheno->backbone_radius[3] = r*6;
-    pheno->backbone_radius[4] = r*3;
-    pheno->knee_size.Set(r+0.2f);
-    pheno->foot_size.Set(r);
-    pheno->step_radius.Set(1.0f);
-    pheno->has_leg[0] = 1;
-    pheno->has_leg[1] = 0;
-    pheno->has_leg[2] = 1;
-    pheno->has_leg[3] = 0;
-    pheno->has_leg[4] = 1;
-    pheno->elbow_size = r;
-    pheno->hand_size = r;
+    InitRandomPhenotype(pheno);
     InitAgentSkeleton(arena, editor->agent);
 }
