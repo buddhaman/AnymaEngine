@@ -397,6 +397,10 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
 
     // Debug rendering
+    // Draw camera bounds for debugging
+    RenderZCircle(renderer, V3(renderer->cam.bounds.pos.x, renderer->cam.bounds.pos.y, 0.0f), 4.0f, Color_Cyan);
+    RenderZCircle(renderer, V3(renderer->cam.bounds.pos.x+cam->bounds.dims.x, renderer->cam.bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
+    RenderZCircle(renderer, renderer->cam.pos, 4.0f, Color_Cyan);
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
     for(Leg& leg : agent->legs)
     {
@@ -423,6 +427,7 @@ InitEditorScreen(EditorScreen* editor)
     editor->cam.scale = 1;
     editor->renderer = CreateTiltedRenderer(arena);
     editor->renderer->cam.angle = -PI_R32/4.0f;
+    editor->renderer->cam.scale = 6.0;
     editor->agent = PushNewStruct(arena, Agent);
     editor->agent->skeleton = CreateSkeleton(arena, max_joints, max_joints*2);
     editor->agent->pos = V2(0, -walk_radius);

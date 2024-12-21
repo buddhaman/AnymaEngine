@@ -54,7 +54,7 @@ static inline R32
 GetY(TiltedCamera* camera, Vec3 pos)
 {
     R32 projected_y = pos.y * camera->c - pos.z * camera->s;
-    R32 ty = (projected_y - camera->pos.y) * camera->scale;
+    R32 ty = (projected_y - camera->pos.y*camera->c) * camera->scale;
     return ty;
 }
 

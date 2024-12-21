@@ -14,10 +14,8 @@ UpdateTiltedCamera(TiltedCamera* camera, int screen_width, int screen_height)
     camera->bounds.dims.y = camera->size.y * inv_scale / camera->c;
 
     // Position of the bounds
-    camera->bounds.pos.x = camera->pos.x - camera->bounds.dims.x / 2.0f;
-    camera->bounds.pos.y = (camera->pos.y / camera->c) - camera->bounds.dims.y / 2.0f;
+    camera->bounds.pos = camera->pos.xy - camera->bounds.dims/2.0f;
 }
-
 
 void
 UpdateTiltedCameraScrollInput(TiltedCamera* camera, InputHandler* input)
@@ -38,7 +36,7 @@ UpdateTiltedCameraDragInput(TiltedCamera* camera, InputHandler* input)
 
         // Adjust camera position for drag
         camera->pos.x -= diff.x;                 
-        camera->pos.y += (diff.y / c*c);          
+        camera->pos.y += (diff.y / c);          
     }
 }
 
@@ -65,7 +63,7 @@ TiltedMouseToWorld(TiltedCamera* camera, InputHandler* input, int screen_width, 
     // Map the screen-space coordinates to world space
     Vec3 world_pos;
     world_pos.x = camera->pos.x + screen_offset.x;          
-    world_pos.y = camera->pos.y/c + screen_offset.y / c;   
+    world_pos.y = camera->pos.y + screen_offset.y / c;   
     world_pos.z = 0;
     return world_pos;
 }
