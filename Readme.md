@@ -39,7 +39,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Add arms.
+- Mutate genes.
 - Rebuild only phenotype when changing in editor.
 - Refactor simulationscreen to use renderer. Do this gradually. 
 - Smooth transition from top down to detailed rendering.
@@ -95,6 +95,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make random number generator.
 
 ### Done
+- Add arms.
+- Generate random genes.
 - Visualize mutations.
 - Turn editable parameters into a genome and generate the phenotype.
 - Edit creatures in an interface. Number of legs, hands, sizes.

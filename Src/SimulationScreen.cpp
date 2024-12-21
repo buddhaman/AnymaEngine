@@ -9,6 +9,7 @@
 #include "DebugInfo.h"
 #include "Lucide.h"
 
+#include "Renderer.h"
 
 static void
 DoScreenWorldUpdate(SimulationScreen* screen)
@@ -90,6 +91,47 @@ DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_ma
         R32 y = y_chunk * grid_size;
         PushRect(mesh, V2(draw_min.x, y - thickness / 2.0f), V2(draw_max.x - draw_min.x, thickness), u, V2(0,0), color);
     }
+}
+
+static void
+DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
+{
+    World* world = screen->world;
+    TiltedRenderer* renderer = screen->renderer;
+    TiltedCamera* cam = &renderer->cam;
+    InputHandler* input = &window->input;
+    
+    R32 tilt_speed = -0.01f;
+    if(IsKeyDown(input, InputAction_W))
+    {
+        renderer->cam.angle += tilt_speed;
+    }
+    if(IsKeyDown(input, InputAction_S))
+    {
+        renderer->cam.angle -= tilt_speed;
+    }
+
+    renderer->cam.angle = Clamp(-PI_R32/2.0f+0.001f, cam->angle, 0.0f);
+
+    UpdateTiltedCamera(cam, window->width, window->height);
+
+    ImGuiIO& imgui_io = ImGui::GetIO();
+    if(!imgui_io.WantCaptureMouse)
+    {
+        UpdateTiltedCameraScrollInput(cam, input);
+        UpdateTiltedCameraDragInput(cam, input);
+    }
+    
+    for(Agent* agent : world->agents)
+    {
+        U32 color = GetAgentColor(agent->type);
+        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, color);
+    }
+
+    // Render entire thing 
+    // TODO: Is this camera necessary? can also just calculate matrix inside
+    // render function.
+    Render(renderer->renderer, &screen->cam, window->width, window->height);
 }
 
 static void
@@ -423,6 +465,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         ImGui::End();
     }
 
+#if 0
     Vec2 world_mouse_pos = MouseToWorld(&screen->cam, input, window->width, window->height);
     ImGuiIO& io = ImGui::GetIO();
     screen->hovered_agent = nullptr;
@@ -438,6 +481,7 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
             screen->selected_agent = screen->hovered_agent;
         }
     }
+#endif
 
     if(!screen->isPaused)
     {
@@ -450,7 +494,11 @@ UpdateSimulationScreen(SimulationScreen* screen, Window* window)
         }
     }
 
+#if 0
     DoScreenWorldRender(screen, window);
+#else
+    DoTiltedScreenWorldRender(screen, window);
+#endif
     return 0;
 }
 
@@ -468,14 +516,19 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->screen_arena = CreateMemoryArena(MegaBytes(32));
     RestartWorld(screen);
 
-    screen->cam.pos = screen->world->size/2.0f;
+    screen->cam.pos = V2(0,0);
+    screen->cam.scale = 1;
+
     screen->update_times.FillAndSetValue(0);
     screen->num_carnivores.FillAndSetValue(0);
     screen->num_herbivores.FillAndSetValue(0);
 
+    // TODO: This is the deprecated renderer, remove this.
     screen->shader = CreateShader();
     screen->atlas = MakeDefaultTexture(screen->screen_arena, 511);
     screen->square = &screen->atlas->regions[1];
+
+    screen->renderer = CreateTiltedRenderer(screen->screen_arena);
 
     I32 num_cores = std::thread::hardware_concurrency();
     std::cout << "Num cores = " << num_cores << std::endl;

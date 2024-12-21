@@ -23,6 +23,8 @@ struct SimulationScreen
     Camera2D cam;
     Shader shader;
 
+    TiltedRenderer* renderer;
+
     DynamicArray<R32> update_times;
 
     int track_population_per = 6;
