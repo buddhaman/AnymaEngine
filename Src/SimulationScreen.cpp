@@ -185,7 +185,13 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     for(Agent* agent : world->agents)
     {
         U32 color = GetAgentColor(agent->type);
-        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, color);
+        Vec4 dark_color_v = ColorToVec4(color);
+        dark_color_v.xyz*=0.6f;
+        R32 height = 1.0f;
+        U32 dark_color = Vec4ToColor(dark_color_v);
+        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, dark_color);
+        RenderYRect(renderer, V3(agent->pos.x, agent->pos.y, height/2.0f), V2(agent->radius*2, height), renderer->renderer->square, dark_color);
+        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, height), agent->radius, color);
     }
 
 
