@@ -58,6 +58,9 @@ void
 RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color);
 
 void
+RenderYRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color);
+
+void
 RenderZCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color);
 
 void

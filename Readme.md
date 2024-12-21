@@ -39,10 +39,10 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Spawn multiple of these creatures in the editor.
-- Edit creatures in an interface. Number of legs, hands, sizes.
+- Rebuild only phenotype when changing in editor.
 - Turn editable parameters into a genome and generate the phenotype.
 - Visualize mutations.
+- Spawn multiple of these creatures in the editor.
 - Refactor simulationscreen to use renderer. Do this gradually. 
 - Smooth transition from top down to detailed rendering.
 - Turn agent into entity? At least something such that collision detection and
@@ -53,6 +53,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make decorations on the terain, rocks.
 - Collision detection with solid tiles.
 - Show work done per thread. Internal profiling tools.
+- Build creature in local coordinates.
 
 - Design mouth.
 - Make graph in real seconds as units.
@@ -96,6 +97,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make random number generator.
 
 ### Done
+- Edit creatures in an interface. Number of legs, hands, sizes.
 - Make texture region.
 - Global empty texture for convenience.
 - Make list of common colors.

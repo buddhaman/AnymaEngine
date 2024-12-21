@@ -9,8 +9,8 @@
 #include "Agent.h"
 
 constexpr R32 speed = 0.34f;
-constexpr R32 turn_speed = 0.1f;
-static R32 walk_radius = speed/sinf(turn_speed/2.0f);
+constexpr R32 turn_speed = 0.01f;
+static R32 walk_radius = speed/sinf(turn_speed);
 
 void
 UpdateAgentSkeleton(Agent* agent)
@@ -19,7 +19,7 @@ UpdateAgentSkeleton(Agent* agent)
     agent->pos += direction * speed;
 
     // agent->orientation += RandomR32Debug(-turn_speed, turn_speed);
-    agent->orientation += 0.01f;
+    agent->orientation += turn_speed;
 
     Vec3 center;
     center.xy = agent->pos;
@@ -277,9 +277,22 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         UpdateTiltedCameraDragInput(&editor->renderer->cam, input);
     }
 
-    U32 platform_color = Color_Gray;
-    // Render platform
-    RenderZCircle(renderer, V3(0,0,0), walk_radius, platform_color);
+
+    R32 grayscale = 0.6f;
+    U32 platform_color = Vec4ToColor(grayscale, grayscale, grayscale, 1.0f);
+    R32 shade = 0.6f;
+    U32 platform_shade = Vec4ToColor(grayscale*shade, grayscale*shade, grayscale*shade, 1.0f);
+    R32 platform_r = walk_radius+25.0f;
+    R32 platform_height = 35.0f;
+    R32 pedestal_r = platform_r*0.77f;
+    R32 pedestal_height = 200.0f;
+    AtlasRegion* square = renderer->renderer->square;
+
+    RenderZCircle(renderer, V3(0,0,-pedestal_height), pedestal_r, platform_shade);
+    RenderYRect(renderer, V3(0,0,-pedestal_height/2.0f), V2(pedestal_r*2, pedestal_height), square, platform_shade);
+    RenderZCircle(renderer, V3(0,0,-platform_height), platform_r, platform_shade);
+    RenderYRect(renderer, V3(0,0,-platform_height/2.0f), V2(platform_r*2, platform_height), square, platform_shade);
+    RenderZCircle(renderer, V3(0,0,0), platform_r, platform_color);
 
     // Draw mouse position
     Vec3 mouse = TiltedMouseToWorld(&renderer->cam, input, window->width, window->height);

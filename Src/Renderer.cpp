@@ -26,7 +26,7 @@ void
 RenderRect(Renderer* renderer, Vec2 center, Vec2 dims, AtlasRegion* region, U32 color)
 {
     PushRect(&renderer->mesh, 
-             V2(center.x - dims.x, center.y - dims.y), 
+             V2(center.x - dims.x*0.5f, center.y - dims.y*0.5f), 
              dims,
              region->pos, region->size,
              color);
@@ -109,9 +109,18 @@ RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* regio
 }
 
 void
+RenderYRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color)
+{
+    RenderRect(renderer->renderer, 
+                GetVec2(&renderer->cam, center),
+                V2(GetScaled(&renderer->cam, dims.x), GetScaled(&renderer->cam, renderer->cam.s*dims.y)),
+                region, color);
+}
+
+void
 RenderZCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color)
 {
-    RenderZRect(renderer, center, V2(radius, radius), renderer->renderer->circle, color);
+    RenderZRect(renderer, center, V2(radius*2, radius*2), renderer->renderer->circle, color);
 }
 
 void
