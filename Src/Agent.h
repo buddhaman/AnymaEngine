@@ -89,6 +89,8 @@ struct Agent
     Head head;
     MainBody body;
     Array<Leg> legs;
+    Leg l_arm;
+    Leg r_arm;
     Skeleton* skeleton;
 
     Array<AgentEye> eyes;
@@ -128,7 +130,6 @@ GetAgentColor(AgentType type)
     default: return Color_White;
     }
 }
-
 
 void
 UpdateMovement(World* world, Agent* agent);

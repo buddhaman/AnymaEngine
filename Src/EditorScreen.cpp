@@ -14,29 +14,6 @@ constexpr int max_joints = 64;
 static R32 walk_radius = speed/sinf(turn_speed);
 
 void
-InitDefaultPhenotype(PhenoType* pheno)
-{
-    R32 r = 1.0f;
-    pheno->n_backbones = 5;
-    pheno->backbone_radius.Set(r);
-    pheno->backbone_radius[0] = r*3;
-    pheno->backbone_radius[1] = r*6;
-    pheno->backbone_radius[2] = r*2;
-    pheno->backbone_radius[3] = r*6;
-    pheno->backbone_radius[4] = r*3;
-    pheno->knee_size.Set(r+0.2f);
-    pheno->foot_size.Set(r);
-    pheno->step_radius.Set(1.0f);
-    pheno->has_leg[0] = 1;
-    pheno->has_leg[1] = 0;
-    pheno->has_leg[2] = 1;
-    pheno->has_leg[3] = 0;
-    pheno->has_leg[4] = 1;
-    pheno->elbow_size = r;
-    pheno->hand_size = r;
-}
-
-void
 InitRandomPhenotype(PhenoType* pheno)
 {
     pheno->n_backbones = RandomIntDebug(1, 10);
@@ -70,12 +47,13 @@ InitRandomPhenotype(PhenoType* pheno)
     ));
 }
 
-
 void
 UpdateAgentSkeleton(Agent* agent)
 {
-    Vec2 direction = V2Polar(agent->orientation, 1.0f);
-    agent->pos += direction * speed;
+    Vec3 direction = V3(0,0,0);
+    direction.xy = V2Polar(agent->orientation, 1.0f);
+    agent->pos += direction.xy * speed;
+    Vec3 perp = V3(-direction.y, direction.x, 0);
 
     // agent->orientation += RandomR32Debug(-turn_speed, turn_speed);
     agent->orientation += turn_speed;
@@ -99,24 +77,29 @@ UpdateAgentSkeleton(Agent* agent)
         if(p.pos.z < 0.0f) p.pos.z = 0.0f;
     }
 
-
     for(Leg& leg : agent->legs)
     {
         Joint* j = &skeleton->joints[leg.idx];
         
-        Vec3 world_target = XForm(center, direction, leg.target_offset);
+        Vec3 world_target = XForm(center, direction.xy, leg.target_offset);
 
         // distance of foot to target. If more than r then move foot.
         R32 feet_diff = V3Len(world_target - leg.foot_pos);
         if(feet_diff > leg.r)
         {
             leg.foot_pos = world_target;
-            leg.foot_pos.xy += direction * RandomR32Debug(0.0f, leg.r);
+            leg.foot_pos.xy += direction.xy * RandomR32Debug(0.0f, leg.r);
         }
 
         j->v->pos.z = 0;
         j->v->pos = leg.foot_pos;
     }
+
+    // Update arms
+    Joint* l_arm = &skeleton->joints[agent->l_arm.idx];
+    AddImpulse(l_arm->v, perp*0.5f);
+    Joint* r_arm = &skeleton->joints[agent->r_arm.idx];
+    AddImpulse(r_arm->v, -perp*0.5f);
 
     // Move head up and set X,Y to proper agent x, y position
     Joint* head = &skeleton->joints[agent->head.idx];
@@ -128,18 +111,15 @@ UpdateAgentSkeleton(Agent* agent)
 }
 
 Leg* 
-AddLeg(Agent* agent, int idx_in_body, int dir, U32 color)
+InitLeg(Agent* agent, Leg* leg, int idx_in_body, int dir, R32 mid_radius, R32 end_radius, U32 color)
 {
     Skeleton* skele = agent->skeleton;
-    Leg* leg = agent->legs.PushBack();
     int body_particle_idx = agent->body.body[idx_in_body];
     Joint* attach_to = &skele->joints[body_particle_idx];
     Vec3 ground_diff = V3(0,0,attach_to->v->pos.z);
     R32 back_size = agent->phenotype->backbone_radius[idx_in_body];
-    R32 knee_size = agent->phenotype->knee_size[idx_in_body];
-    R32 foot_size = agent->phenotype->foot_size[idx_in_body];
-    AddJoint(skele, attach_to->v->pos-0.5f*ground_diff, knee_size, color);
-    AddJoint(skele, attach_to->v->pos-1.0f*ground_diff, foot_size, color);
+    AddJoint(skele, attach_to->v->pos-0.5f*ground_diff, mid_radius, color);
+    AddJoint(skele, attach_to->v->pos-1.0f*ground_diff, end_radius, color);
 
     // set idx to foot.
     leg->idx = (int)skele->joints.size-1;
@@ -148,8 +128,8 @@ AddLeg(Agent* agent, int idx_in_body, int dir, U32 color)
     leg->target_offset.z = 0.0f;
     leg->r = agent->phenotype->step_radius[idx_in_body];
 
-    Connect(skele, body_particle_idx, back_size*2, leg->idx-1, knee_size*2, color);
-    Connect(skele, leg->idx-1, knee_size*2, leg->idx, foot_size*2, color);
+    Connect(skele, body_particle_idx, back_size*2, leg->idx-1, mid_radius*2, color);
+    Connect(skele, leg->idx-1, mid_radius*2, leg->idx, end_radius*2, color);
 
     return leg;
 }
@@ -197,9 +177,14 @@ InitAgentSkeleton(MemoryArena* arena, Agent* agent)
     for(int i = 0; i < n_backbones; i++)
     {
         if(!phenotype->has_leg[i]) continue;
-        AddLeg(agent, i, -1, color);
-        AddLeg(agent, i, +1, color);
+        R32 knee_size = agent->phenotype->knee_size[i];
+        R32 foot_size = agent->phenotype->foot_size[i];
+        InitLeg(agent, agent->legs.PushBack(), i, -1, knee_size, foot_size, color);
+        InitLeg(agent, agent->legs.PushBack(), i, +1, knee_size, foot_size, color);
     }
+
+    InitLeg(agent, &agent->l_arm, n_backbones-1, -1, phenotype->elbow_size, phenotype->hand_size, color);
+    InitLeg(agent, &agent->r_arm, n_backbones-1, -1, phenotype->elbow_size, phenotype->hand_size, color);
 
     // Head
     pos += V3(0,0,diff);
