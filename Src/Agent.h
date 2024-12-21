@@ -29,6 +29,25 @@ struct AgentEye
     R32 orientation;
 };
 
+struct PhenoType
+{
+    int n_backbones = 0;
+    VecR32 backbone_radius;
+
+    Array<U32> has_leg;
+    VecR32 knee_size;
+    VecR32 foot_size;
+    VecR32 step_radius;
+
+    // Later we want to customize number of limbs.
+    R32 elbow_size = 0;
+    R32 hand_size = 0;
+    U32 color;
+};
+
+PhenoType*
+CreatePhenotype(MemoryArena* arena, int max_backbones);
+
 struct Leg
 {
     // Idx of the end of the leg.
@@ -74,6 +93,7 @@ struct Agent
 
     Array<AgentEye> eyes;
     Brain* brain;
+    PhenoType* phenotype;
 
     AgentType type;
     EntityID id;
@@ -103,8 +123,8 @@ GetAgentColor(AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return RGBAColor(255, 0, 0, 255);
-    case AgentType_Herbivore: return RGBAColor(0, 255, 0, 255);
+    case AgentType_Carnivore: return Color_Red;
+    case AgentType_Herbivore: return Color_Green;
     default: return Color_White;
     }
 }

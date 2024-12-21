@@ -5,9 +5,9 @@
 
 struct MatR32
 {
-    I32 w;
-    I32 h;
-    R32 *m;
+    I32 w = 0;
+    I32 h = 0;
+    R32 *m = nullptr;
 
     R32& Elem(int x, int y)
     {
@@ -18,8 +18,8 @@ struct MatR32
 
 struct VecR32
 {
-    I32 n;
-    R32 *v;
+    I32 n = 0;
+    R32 *v = nullptr;
 
     inline R32& operator[](int idx) { Assert(0 <= idx && idx < n); return v[idx]; }
     inline void Set(R32 value) { for(int i = 0; i < n; i++) { v[i] = value; } } 

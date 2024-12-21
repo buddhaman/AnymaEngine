@@ -2,6 +2,25 @@
 #include "Agent.h"
 #include "World.h"
 
+PhenoType* 
+CreatePhenotype(MemoryArena* arena, int max_backbones)
+{
+    PhenoType* body = PushStruct(arena, PhenoType);
+    *body = {0};
+
+    body->backbone_radius = VecR32Create(arena, max_backbones);
+    body->knee_size = VecR32Create(arena, max_backbones);
+    body->foot_size = VecR32Create(arena, max_backbones);
+    body->step_radius = VecR32Create(arena, max_backbones);
+
+    body->has_leg = CreateArray<U32>(arena, max_backbones);
+    body->has_leg.FillAndSetValue(0);
+
+    body->color = Color_Brown;
+
+    return body;
+}
+
 I32
 GetTicksUntilReproduction(World* world, AgentType type)
 {

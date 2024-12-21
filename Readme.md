@@ -39,10 +39,12 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Spawn multiple of these creatures.
+- Spawn multiple of these creatures in the editor.
+- Edit creatures in an interface. Number of legs, hands, sizes.
+- Turn editable parameters into a genome and generate the phenotype.
+- Visualize mutations.
 - Refactor simulationscreen to use renderer. Do this gradually. 
 - Smooth transition from top down to detailed rendering.
-- Design a genome that encodes the morphology of a creature. Keep it simple.
 - Turn agent into entity? At least something such that collision detection and
   vision is possible between both plants and agents.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
@@ -50,7 +52,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Use perlin noise for terain and biome generation.
 - Make decorations on the terain, rocks.
 - Collision detection with solid tiles.
-- Show work done per thread.
+- Show work done per thread. Internal profiling tools.
 
 - Design mouth.
 - Make graph in real seconds as units.
@@ -204,13 +206,9 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Set business rules for evolution.
 - Make interesting presets, make it easier for the user.
 
-### Bugs
-- No agents leads to deadlock? SOLVED
-
 ### Engine and more games.
 - Move game-engine related stuff to different folder and turn into reusable game-engine.
 - Create a game like super world box. Make complex behavior and create a behavior tree editor for fast iteration.
-  - Create a custom interpreted langauge for creating behavior trees.
 - Online game where you manage your little land and need to trade or fight with neighbouring countries. On a server WASM.
 
 #### Design
@@ -242,6 +240,7 @@ STYLE:
  - Lua or sth.
 
  ### BUGS
+  - No agents leads to deadlock? SOLVED
   - Asserts still show in release.
 
  

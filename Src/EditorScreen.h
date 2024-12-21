@@ -17,6 +17,9 @@ struct EditorScreen
     TiltedRenderer* renderer;
 
     Agent* agent;
+    PhenoType* phenotype;
+
+    R32 time = 0.0f;
 };
 
 int

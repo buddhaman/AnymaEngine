@@ -27,6 +27,9 @@ void
 RenderCircle(Renderer* renderer, Vec2 center, R32 radius, U32 color);
 
 void
+RenderRect(Renderer* renderer, Vec2 center, Vec2 dims, AtlasRegion* region, U32 color);
+
+void
 Render(Renderer* renderer, Camera2D* cam, int width, int height);
 
 Renderer* 
@@ -50,6 +53,12 @@ RenderTrapezoid(TiltedRenderer* renderer, Vec3 from, R32 from_width, Vec3 to, R3
 
 void
 RenderCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color);
+
+void
+RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color);
+
+void
+RenderZCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, U32 color);
 
 void
 RenderZLineCircle(TiltedRenderer* renderer, Vec3 center, R32 radius, R32 line_width, U32 color);

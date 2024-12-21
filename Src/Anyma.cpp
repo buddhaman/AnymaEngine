@@ -1,27 +1,5 @@
-#define SDL_MAIN_HANDLED
-#define SDL_STATIC
-
-#define IMGUI_IMPL_OPENGL_LOADER_CUSTOM
-#include "TimVectorMath.h"
-#define IMGUI_USER_CONFIG "ImGuiConfig.h"
-
-#include <SDL.h>
-#include <gl3w.h>
-#include <imgui.h>
-#include <implot.h>
-
-#include "imgui.cpp"
-#include "imgui_draw.cpp"
-#include "imgui_tables.cpp"
-#include "imgui_widgets.cpp"
-
-#include "implot.cpp"
-#include "implot_items.cpp"
-
-#include "imgui_impl_sdl2.cpp"
-#include "imgui_impl_opengl3.cpp"
-
-#include "gl3w.cpp"
+#include "External.h"
+#include "External.cpp"
 
 #include "AnymUtil.h"
 #include "Array.h"
@@ -54,7 +32,6 @@
 #include "Camera2D.cpp"
 #include "TiltCamera.cpp"
 #include "DebugInfo.cpp"
-#include "External.cpp"
 #include "InputHandler.cpp"
 #include "Linalg.cpp"
 #include "Genome.cpp"
