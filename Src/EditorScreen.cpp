@@ -240,8 +240,9 @@ bool EditCreatureWindow(PhenoType* pheno)
     bool changed = false;
     // Edit the number of backbones with clamping
     ImGui::Text("Backbones");
-    if (ImGui::InputInt("Number of Backbones", &pheno->n_backbones)) {
-        pheno->n_backbones = Clamp(0, pheno->n_backbones, 12);
+    if (ImGui::InputInt("Number of Backbones", &pheno->n_backbones)) 
+    {
+        pheno->n_backbones = Clamp(1, pheno->n_backbones, 12);
         changed = true;
     }
 
@@ -397,10 +398,6 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
 
     // Debug rendering
-    // Draw camera bounds for debugging
-    RenderZCircle(renderer, V3(renderer->cam.bounds.pos.x, renderer->cam.bounds.pos.y, 0.0f), 4.0f, Color_Cyan);
-    RenderZCircle(renderer, V3(renderer->cam.bounds.pos.x+cam->bounds.dims.x, renderer->cam.bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
-    RenderZCircle(renderer, renderer->cam.pos, 4.0f, Color_Cyan);
     RenderCircle(renderer, agent_pos, 0.1f, Color_Red);
     for(Leg& leg : agent->legs)
     {

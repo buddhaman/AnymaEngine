@@ -151,26 +151,22 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         UpdateTiltedCameraScrollInput(cam, input);
         UpdateTiltedCameraDragInput(cam, input);
     }
-    
-    for(Agent* agent : world->agents)
-    {
-        U32 color = GetAgentColor(agent->type);
-        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, color);
-    }
 
     // Draw camera bounds for debugging
-    RenderZCircle(renderer, V3(cam->bounds.pos.x, cam->bounds.pos.y, 0.0f), 4.0f, Color_Cyan);
-    RenderZCircle(renderer, V3(cam->bounds.pos.x+cam->bounds.dims.x, cam->bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
-    RenderZCircle(renderer, cam->pos, 4.0f, Color_Cyan);
+    // RenderZCircle(renderer, V3(cam->bounds.pos.x, cam->bounds.pos.y, 0.0f), 4.0f, Color_Cyan);
+    // RenderZCircle(renderer, V3(cam->bounds.pos.x+cam->bounds.dims.x, cam->bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
+    // RenderZCircle(renderer, cam->pos, 4.0f, Color_Cyan);
 
     R32 thickness = 0.2f;
     R32 min_scale = 4.0f;
     I32 subdivs = 5;
+    Vec4 grid_color = ColorToVec4(HexToColor(0x8CAAD2FF));
     if(cam->scale > min_scale)
     {
         R32 factor = log2f(cam->scale) - log2f(min_scale);
         R32 alpha = Clamp(0.0f, factor, 1.0f);
-        U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
+        //U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
+        U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
         DrawGrid(renderer, 
                 cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
                 V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
@@ -179,11 +175,19 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     if(cam->scale > 1.0f)
     {
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
-        U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
+        //U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
+        U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
         DrawGrid(renderer, 
                 cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
                 V2(0,0), world->size, world->chunk_size, thickness, color);
     }
+    
+    for(Agent* agent : world->agents)
+    {
+        U32 color = GetAgentColor(agent->type);
+        RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, color);
+    }
+
 
     // Render entire thing 
     // TODO: Is this camera necessary? can also just calculate matrix inside
