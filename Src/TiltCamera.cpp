@@ -4,9 +4,20 @@ void
 UpdateTiltedCamera(TiltedCamera* camera, int screen_width, int screen_height)
 {
     camera->size = V2((R32)screen_width, (R32)screen_height);
-    camera->c = cosf(camera->angle);
-    camera->s = sinf(camera->angle);
+    camera->c = cosf(camera->angle); // cos(theta)
+    camera->s = sinf(camera->angle); // sin(theta)
+
+    R32 inv_scale = 1.0f / camera->scale;
+
+    // Dimensions of the bounds
+    camera->bounds.dims.x = camera->size.x * inv_scale;
+    camera->bounds.dims.y = camera->size.y * inv_scale / camera->c;
+
+    // Position of the bounds
+    camera->bounds.pos.x = camera->pos.x - camera->bounds.dims.x / 2.0f;
+    camera->bounds.pos.y = (camera->pos.y / camera->c) - camera->bounds.dims.y / 2.0f;
 }
+
 
 void
 UpdateTiltedCameraScrollInput(TiltedCamera* camera, InputHandler* input)
@@ -48,8 +59,8 @@ TiltedMouseToWorld(TiltedCamera* camera, InputHandler* input, int screen_width, 
     // Scale by the camera's size and scale
     Vec2 screen_offset = normalized_mouse * (camera->size / camera->scale * 0.5f);
 
-    R32 c = camera->c; // cos(angle)
-    R32 s = camera->s; // sin(angle)
+    R32 c = camera->c;
+    R32 s = camera->s; 
 
     // Map the screen-space coordinates to world space
     Vec3 world_pos;

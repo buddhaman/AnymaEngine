@@ -94,6 +94,36 @@ DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_ma
 }
 
 static void
+DrawGrid(TiltedRenderer* renderer, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_max, R32 grid_size, R32 thickness, U32 color)
+{
+    Vec2 draw_min = V2(Max(cam_min.x, world_min.x), Max(cam_min.y, world_min.y));
+    Vec2 draw_max = V2(Min(cam_max.x, world_max.x), Min(cam_max.y, world_max.y));
+
+    I32 x_chunk_start = (I32)floor(draw_min.x / grid_size);
+    I32 x_chunk_end = (I32)ceil(draw_max.x / grid_size);
+    I32 y_chunk_start = (I32)floor(draw_min.y / grid_size);
+    I32 y_chunk_end = (I32)ceil(draw_max.y / grid_size);
+
+    // Draw vertical lines
+    for (I32 x_chunk = x_chunk_start; x_chunk <= x_chunk_end; x_chunk++)
+    {
+        R32 x = x_chunk * grid_size;
+        RenderZRect(renderer, 
+                    V3(x - thickness / 2.0f, (draw_min.y+draw_max.y)/2.0f, 0), 
+                    V2(thickness, draw_max.y - draw_min.y), 
+                    renderer->renderer->square, 
+                    color);
+    }
+
+    // Draw horizontal lines
+    for (I32 y_chunk = y_chunk_start; y_chunk <= y_chunk_end; y_chunk++)
+    {
+        R32 y = y_chunk * grid_size;
+        RenderZRect(renderer, V3((draw_min.x+draw_max.x)/2.0f, y - thickness / 2.0f, 0), V2(draw_max.x-draw_min.x, thickness), renderer->renderer->square, color);
+    }
+}
+
+static void
 DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
 {
     World* world = screen->world;
@@ -128,6 +158,12 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, 0), agent->radius, color);
     }
 
+    RenderZCircle(renderer, V3(cam->bounds.pos.x, cam->bounds.pos.y, 0.0f), 4.0f, Color_Cyan);
+    RenderZCircle(renderer, V3(cam->bounds.pos.x+cam->bounds.dims.x, cam->bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
+
+    DrawGrid(renderer, 
+            cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
+            V2(0,0), world->size, world->chunk_size, 0.1f, Color_Black);
     // Render entire thing 
     // TODO: Is this camera necessary? can also just calculate matrix inside
     // render function.
@@ -295,7 +331,9 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
 
     ImGui::Text("FPS: %.0f", window->fps);
     ImGui::Text("Update: %.2f millis", window->update_millis);
-    ImGui::Text("Camera scale: %.2f", screen->cam.scale);
+    ImGui::Text("Camera scale: %.2f", screen->renderer->cam.scale);
+    ImGui::Text("Camera bounds pos: %.2f %.2f", screen->renderer->cam.bounds.pos.x, screen->renderer->cam.bounds.pos.y);
+    ImGui::Text("Camera bounds dim: %.2f %.2f", screen->renderer->cam.bounds.dims.x, screen->renderer->cam.bounds.dims.y);
     ImGui::Text("Number of cores: %lld", screen->thread_pool->workers.size);
     ImGui::Text("Number of particles: %lld", world->particles.size);
     ImGuiMemoryArena(world->arena, "Static memory");
