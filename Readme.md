@@ -40,12 +40,17 @@ Brain update rate will be 1 / 6 of the physics update rate.
 
 #### TODO
 - Spawn multiple of these creatures.
-- Refactor simulationscreen to use renderer.
+- Refactor simulationscreen to use renderer. Do this gradually. 
+- Smooth transition from top down to detailed rendering.
 - Design a genome that encodes the morphology of a creature. Keep it simple.
 - Turn agent into entity? At least something such that collision detection and
   vision is possible between both plants and agents.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
 - Create tilemap and interpolate colors on the edges for biomes.
+- Use perlin noise for terain and biome generation.
+- Make decorations on the terain, rocks.
+- Collision detection with solid tiles.
+- Show work done per thread.
 
 - Design mouth.
 - Make graph in real seconds as units.
@@ -64,7 +69,6 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Change rendering to 2.5D.
 - Calculate frame update time and render time, use this to reccomend speedup or create adaptive speedup.
 - Add terain.
-- Show charge when zoomed in.
 - Show charge of agent in ui.
 - OPTION: Change sensor info, give angle and distance of nearest same species and nearest opponent. 
 - OPTION: Pheromones for herbivores.
@@ -88,11 +92,12 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Show agents in chunk in debug window. 
 - Consistently call everything either draw or render. 
 - Make random number generator.
+
+### Done
 - Make texture region.
 - Global empty texture for convenience.
 - Make list of common colors.
-
-### Done
+- Show charge when zoomed in.
 - Throw away memory pools and use lifetime arenas for everything.
 - Design eyes.
 - Render a detailed agent in the editor.

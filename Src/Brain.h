@@ -25,7 +25,12 @@ CalculateBrainSizeFeedForward(int inputSize, int hiddenSize, int outputSize)
 }
 
 Brain* 
-CreateBrain(MemoryArena* arena, int input_size, int hidden_size, int output_size, Brain* parent, R32 mutation_rate)
+CreateBrain(MemoryArena* arena, 
+            int input_size, 
+            int hidden_size, 
+            int output_size, 
+            Brain* parent, 
+            R32 mutation_rate)
 {
     Brain* brain = PushNewStruct(arena, Brain);
 
@@ -67,7 +72,8 @@ CreateBrain(MemoryArena* arena, int input_size, int hidden_size, int output_size
     return brain;
 }
 
-static inline void UpdateBrain(Brain* brain)
+static inline void 
+UpdateBrain(Brain* brain)
 {
     MatR32VecMul(brain->hidden, brain->input_weights, brain->input);
 

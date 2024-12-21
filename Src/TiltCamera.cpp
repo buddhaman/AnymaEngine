@@ -17,15 +17,17 @@ UpdateTiltedCameraScrollInput(TiltedCamera* camera, InputHandler* input)
 void
 UpdateTiltedCameraDragInput(TiltedCamera* camera, InputHandler* input)
 {
-    if(input->mousedown[0])
+    if (input->mousedown[0]) // If left mouse button is pressed
     {
-        Vec2 diff = input->mouse_delta / (camera->scale);
+        // Mouse delta scaled to world space
+        Vec2 diff = input->mouse_delta / camera->scale;
 
-        R32 c = camera->c; 
-        R32 s = camera->s;
+        R32 c = camera->c; // cos(theta)
+        R32 s = camera->s; // sin(theta)
 
-        camera->pos.x -= diff.x;
-        camera->pos.y += diff.y / camera->c;
+        // Adjust camera position for drag
+        camera->pos.x -= diff.x;                 
+        camera->pos.y += (diff.y / c*c);          
     }
 }
 
@@ -35,8 +37,24 @@ TiltedCameraStopDragging(TiltedCamera* camera)
     camera->is_dragging = 0;
 }
 
-Vec2
+Vec3
 TiltedMouseToWorld(TiltedCamera* camera, InputHandler* input, int screen_width, int screen_height)
 {
-    return V2(0,0);
+    Vec2 normalized_mouse = V2(
+        (2.0f * input->mouse_pos.x / screen_width) - 1.0f,
+        1.0f - (2.0f * input->mouse_pos.y / screen_height)
+    );
+
+    // Scale by the camera's size and scale
+    Vec2 screen_offset = normalized_mouse * (camera->size / camera->scale * 0.5f);
+
+    R32 c = camera->c; // cos(angle)
+    R32 s = camera->s; // sin(angle)
+
+    // Map the screen-space coordinates to world space
+    Vec3 world_pos;
+    world_pos.x = camera->pos.x + screen_offset.x;          
+    world_pos.y = camera->pos.y/c + screen_offset.y / c;   
+    world_pos.z = 0;
+    return world_pos;
 }

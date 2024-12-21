@@ -329,7 +329,7 @@ DoStatisticsWindow(SimulationScreen* screen)
 
     DynamicArray<R32> x_axis(screen->num_herbivores.size);
     x_axis.Fill();
-    x_axis.Apply([](int i, R32& val) {val = (R32)i;});
+    x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
 
     DynamicArray<R32> bottom(screen->num_herbivores.size);
     bottom.FillAndSetValue(0);
@@ -342,7 +342,7 @@ DoStatisticsWindow(SimulationScreen* screen)
         ImPlot::PlotShaded("Carnivores", x_axis.data, bottom.data, screen->num_carnivores.data, (int)screen->num_carnivores.size);
         ImPlot::PopStyleColor();
 
-        bottom.Apply([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
+        bottom.ApplyIndexed([&screen](int i, R32& x){ x = screen->num_carnivores[i] + screen->num_herbivores[i]; });
 
         ImPlot::PushStyleColor(ImPlotCol_Fill, V4(0.3f, 1.0f, 0.3f, 0.6f));
         ImPlot::PlotShaded("Herbivores", x_axis.data, screen->num_carnivores.data, bottom.data, (int)screen->num_herbivores.size);

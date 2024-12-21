@@ -77,10 +77,9 @@ struct VecR32
         }
         if(n%2==1)
         {
-            v[n-1] += (RandomNormalPairDebug().x*dev);
+            v[n-1] += (avg+RandomNormalPairDebug().x*dev);
         }
     }
-
 };
 
 static inline VecR32 

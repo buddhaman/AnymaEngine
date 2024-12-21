@@ -7,7 +7,7 @@ set OPENGL_PATH=external\opengl
 rem Check for release or debug argument
 if "%1"=="release" (
     set BUILD_TYPE=Release
-    set COMPILER_OPTS=/O2 /MT /W3 /std:c++20 /DNDEBUG
+    set COMPILER_OPTS=/O2 /MT /EHsc /W3 /std:c++20 /DNDEBUG
     set OUTPUT_DIR=Build\Release
 ) else (
     set BUILD_TYPE=Debug
@@ -26,7 +26,7 @@ if not exist Build mkdir Build
 if not exist %OUTPUT_DIR% mkdir %OUTPUT_DIR%
 
 rem Clean object files for release builds
-if "%BUILD_TYPE%"=="Release" (
+if "%BUILD_TYPE%"=="release" (
     del /Q %OUTPUT_DIR%\*.obj
 )
 

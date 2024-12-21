@@ -35,7 +35,7 @@ UpdateTiltedCameraDragInput(TiltedCamera* camera, InputHandler* input);
 void
 TiltedCameraStopDragging(TiltedCamera* camera);
 
-Vec2
+Vec3
 TiltedMouseToWorld(TiltedCamera* camera, InputHandler* input, int screen_width, int screen_height);
 
 static inline R32

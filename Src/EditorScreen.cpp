@@ -101,6 +101,10 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         UpdateTiltedCameraDragInput(&editor->renderer->cam, input);
     }
 
+    // Draw mouse position
+    Vec3 mouse = TiltedMouseToWorld(&renderer->cam, input, window->width, window->height);
+    RenderCircle(renderer, mouse, 1.0f, Color_Black);
+
     Skeleton* skeleton = agent->skeleton;
 
     UpdateSkeleton(skeleton);

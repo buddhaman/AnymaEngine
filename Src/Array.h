@@ -33,14 +33,16 @@ struct Array
         return Array<T>{0, new_array_size, data+offset};
     }
 
-    // TODO: Remove all STL classes.
-    inline void Apply(std::function<void(R32& x)> f) { for(int i = 0; i < size; i++) { f(data[i]); } }
-    inline void Apply(std::function<void(int i, R32& x)> f) 
+    template <typename Func> inline void 
+    Apply(Func f) 
     {
-        for(int i = 0; i < size; i++) 
-        { 
-            f(i, data[i]); 
-        }
+        for(int i = 0; i < size; i++) { f(data[i]); }
+    }
+
+    template <typename Func> inline void 
+    ApplyIndexed(Func f) 
+    {
+        for(int i = 0; i < size; i++) { f(i, data[i]); }
     }
 
     inline void Shift(int shift, int fill=0) 
@@ -156,7 +158,7 @@ struct Array
         bool operator!=(const Iterator& other) const { return ptr != other.ptr; }
         const T& operator*() const { return *ptr; }
         T& operator*() { return *ptr; }
-        Iterator& operator++() { ++ptr; return *this; }  // Prefix increment
+        Iterator& operator++() { ++ptr; return *this; }  
     };
     Iterator begin() { return Iterator(data); }
     Iterator end() { return Iterator(data + size); }
