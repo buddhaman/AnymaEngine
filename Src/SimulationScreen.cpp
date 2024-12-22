@@ -141,6 +141,15 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         renderer->cam.angle -= tilt_speed;
     }
 
+    R32 zoom_speed = 1.04f;
+    if(IsKeyDown(input, InputAction_Z))
+    {
+        renderer->cam.scale *= zoom_speed;
+    }
+    if(IsKeyDown(input, InputAction_X))
+    {
+        renderer->cam.scale /= zoom_speed;
+    }
     renderer->cam.angle = Clamp(-PI_R32/2.0f+0.001f, cam->angle, 0.0f);
 
     UpdateTiltedCamera(cam, window->width, window->height);

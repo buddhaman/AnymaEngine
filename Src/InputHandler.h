@@ -9,6 +9,8 @@ enum InputAction
     InputAction_A,
     InputAction_S,
     InputAction_D,
+    InputAction_Z,
+    InputAction_X,
     InputAction_NumValues
 };
 

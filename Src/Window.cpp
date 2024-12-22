@@ -56,6 +56,8 @@ HandleInput(Window* window)
                 case SDL_SCANCODE_A: input->keydown[InputAction_A]=down; break;
                 case SDL_SCANCODE_S: input->keydown[InputAction_S]=down; break;
                 case SDL_SCANCODE_D: input->keydown[InputAction_D]=down; break;
+                case SDL_SCANCODE_Z: input->keydown[InputAction_Z]=down; break;
+                case SDL_SCANCODE_X: input->keydown[InputAction_X]=down; break;
             }
         } break;
 
