@@ -1,6 +1,7 @@
 #include "World.h"
 
 #include "Noise.h"
+#include "Skeleton.h"
 
 static void
 SwapLifespanArenas(World* world)
@@ -644,6 +645,13 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type) + (int)RandomR32Debug(-80, 40);
     agent->energy = GetInitialEnergy(world, agent->type);
 
+    // Skeleton
+    // TODO: Streamline skeleton creation. Tie it to the phenotype.
+    agent->skeleton = CreateSkeleton(arena, 64, 64*2);
+    agent->phenotype = CreatePhenotype(arena, 12);
+    InitRandomPhenotype(agent->phenotype);
+    InitAgentSkeleton(arena, agent);
+
     return agent;
 }
 
@@ -852,7 +860,6 @@ CreateWorld(MemoryArena* arena)
             world->cell_corner_colors[y * (world->x_cells + 1) + x] = Vec3ToColor(avg.r, avg.g, avg.b);
         }
     }
-
 
     world->agents = CreateArray<Agent*>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);

@@ -211,7 +211,8 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
                     V2(0,0), world->size, world->cell_size, thickness, color);
         }
     }
-    
+
+#if 0
     for(Agent* agent : world->agents)
     {
         U32 color = GetAgentColor(agent->type);
@@ -223,6 +224,13 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         RenderYRect(renderer, V3(agent->pos.x, agent->pos.y, height/2.0f), V2(agent->radius*2, height), renderer->renderer->square, dark_color);
         RenderZCircle(renderer, V3(agent->pos.x, agent->pos.y, height), agent->radius, color);
     }
+#else
+    for(Agent* agent : world->agents)
+    {
+        UpdateAgentSkeleton(agent);
+        RenderAgent(renderer, agent);
+    }
+#endif
 
 
     // Render entire thing 

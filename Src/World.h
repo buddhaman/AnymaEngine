@@ -139,6 +139,9 @@ void
 RenderEyeRays(Mesh2D* mesh, Agent* agent, Vec2 uv);
 
 void
+RenderAgent(TiltedRenderer* renderer, Agent* agent);
+
+void
 RenderDetails(Mesh2D* mesh, Agent* agent, Vec2 uv);
 
 void 

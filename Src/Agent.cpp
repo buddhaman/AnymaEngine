@@ -211,6 +211,42 @@ UpdateAgentSkeleton(Agent* agent)
     UpdateSkeleton(agent->skeleton);
 }
 
+void
+RenderAgent(TiltedRenderer* renderer, Agent* agent)
+{
+    Skeleton* skeleton = agent->skeleton;
+
+    RenderSkeleton(renderer, skeleton);
+
+    Vec3 direction = V3(0,0,0);
+    direction.xy = V2Polar(agent->orientation, 1.0f);
+
+    // Draw cute face
+    Vec3 head_pos = skeleton->joints[agent->head.idx].v->pos;
+    R32 eye_r = 1.0f;
+    R32 pupil_r = eye_r/3.0f;
+    R32 head_r = 2.0f;
+
+    Vec3 eye_left = XForm(head_pos, direction.xy, V3(1,-1,0));
+    Vec3 eye_right = XForm(head_pos, direction.xy, V3(1,1,0));
+
+    if(RandomR32Debug(0, 1) < 0.015) skeleton->blink = 8;
+    if(skeleton->blink) skeleton->blink--;
+    if(!skeleton->blink)
+    {
+        RenderCircle(renderer, eye_left, eye_r, Color_White);
+        RenderCircle(renderer, eye_right, eye_r, Color_White);
+        RenderCircle(renderer, eye_left, pupil_r, Color_Black);
+        RenderCircle(renderer, eye_right, pupil_r, Color_Black);
+    }
+    else
+    {
+        RenderCircle(renderer, eye_left, eye_r, agent->phenotype->color);
+        RenderCircle(renderer, eye_right, eye_r, agent->phenotype->color);
+    }
+}
+
+
 I32
 GetTicksUntilReproduction(World* world, AgentType type)
 {

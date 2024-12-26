@@ -136,6 +136,9 @@ GetAgentColor(AgentType type)
 void
 UpdateMovement(World* world, Agent* agent);
 
+void
+RenderAgent(TiltedRenderer* renderer, Agent* agent);
+
 I32
 GetTicksUntilReproduction(World* world, AgentType type);
 
