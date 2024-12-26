@@ -176,7 +176,6 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
             Chunk* chunk = GetChunk(world, x, y);
             Vec3 center = V3(chunk->pos.x + chunk_size / 2.0f, chunk->pos.y + chunk_size / 2.0f, 0.0f);
 
-            // Corrected indexing for corner colors
             U32 color0 = world->chunk_corner_colors[x + y * (world->x_chunks + 1)];
             U32 color1 = world->chunk_corner_colors[x + 1 + y * (world->x_chunks + 1)];
             U32 color2 = world->chunk_corner_colors[x + 1 + (y + 1) * (world->x_chunks + 1)];
@@ -206,7 +205,6 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         if(cam->scale > 1.0f)
         {
             R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
-            //U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
             U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
             DrawGrid(renderer, 
                     cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 

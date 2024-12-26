@@ -4,6 +4,7 @@
 #include "Array.h"
 
 #include "Agent.h"
+
 #include "Mesh2D.h"
 #include "Camera2D.h"
 #include "TMath.h"
@@ -57,7 +58,11 @@ struct World
 
     Vec2 size;
 
+    Array<Entity*> entities;
     Array<Agent*> agents;
+    Array<Plant*> plants;
+
+    // Tracking for dynamic entities.
     Array<U32> removed_agent_indices;
     Array<U32> visible_agent_indices;
     int max_eyes_per_agent;

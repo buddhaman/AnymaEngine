@@ -7,6 +7,7 @@
 #include "Skeleton.h"
 #include "Genome.h"
 #include "Brain.h"
+#include "Entity.h"
 
 // Forward declarations
 struct World;
@@ -76,13 +77,11 @@ struct MainBody
     Array<Vec3> target_positions;
 };
 
-struct Agent
+struct Agent : public Entity
 {
-    Vec2 pos; 
     Vec2 vel;
 
     R32 orientation;
-    R32 radius;
     I32 charge;
     I32 charge_refractory;
 
