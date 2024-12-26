@@ -18,6 +18,28 @@ PushIndex(Mesh2D* mesh, U32 index)
 
 void
 PushQuad(Mesh2D* mesh, 
+         Vec2 p0, Vec2 uv0, U32 color0,
+         Vec2 p1, Vec2 uv1, U32 color1,
+         Vec2 p2, Vec2 uv2, U32 color2,
+         Vec2 p3, Vec2 uv3, U32 color3)
+{
+    U32 lastIndex = (U32)mesh->vertex_buffer.size;
+
+    PushVertex(mesh, p0, uv0, color0);
+    PushVertex(mesh, p1, uv1, color1);
+    PushVertex(mesh, p2, uv2, color2);
+    PushVertex(mesh, p3, uv3, color3);
+
+    PushIndex(mesh, lastIndex);
+    PushIndex(mesh, lastIndex+1);
+    PushIndex(mesh, lastIndex+2);
+    PushIndex(mesh, lastIndex+2);
+    PushIndex(mesh, lastIndex+3);
+    PushIndex(mesh, lastIndex);
+}
+
+void
+PushQuad(Mesh2D* mesh, 
          Vec2 p0, Vec2 uv0, 
          Vec2 p1, Vec2 uv1, 
          Vec2 p2, Vec2 uv2, 

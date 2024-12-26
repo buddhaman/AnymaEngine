@@ -167,39 +167,51 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     // RenderZCircle(renderer, cam->pos, 4.0f, Color_Cyan);
 
     // Draw tiles
+    // TODO: Render as one continuous mesh.
     R32 chunk_size = world->chunk_size;
-    for(int y = 0; y < world->y_chunks; y++)
-    for(int x = 0; x < world->x_chunks; x++)
+    for (int y = 0; y < world->y_chunks; y++)
     {
-        Chunk* chunk = GetChunk(world, x, y);
-        Vec3 center = V3(chunk->pos.x+chunk_size/2.0f, chunk->pos.y+chunk_size/2.0f, 0.0f);
-        RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, chunk->color);
+        for (int x = 0; x < world->x_chunks; x++)
+        {
+            Chunk* chunk = GetChunk(world, x, y);
+            Vec3 center = V3(chunk->pos.x + chunk_size / 2.0f, chunk->pos.y + chunk_size / 2.0f, 0.0f);
+
+            // Corrected indexing for corner colors
+            U32 color0 = world->chunk_corner_colors[x + y * (world->x_chunks + 1)];
+            U32 color1 = world->chunk_corner_colors[x + 1 + y * (world->x_chunks + 1)];
+            U32 color2 = world->chunk_corner_colors[x + 1 + (y + 1) * (world->x_chunks + 1)];
+            U32 color3 = world->chunk_corner_colors[x + (y + 1) * (world->x_chunks + 1)];
+
+            RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, color0, color1, color2, color3);
+        }
     }
 
-
-    R32 thickness = 0.2f;
-    R32 min_scale = 4.0f;
-    I32 subdivs = 5;
-    Vec4 grid_color = ColorToVec4(HexToColor(0x8CAAD2FF));
-    if(cam->scale > min_scale)
+    if(screen->show_grid)
     {
-        R32 factor = log2f(cam->scale) - log2f(min_scale);
-        R32 alpha = Clamp(0.0f, factor, 1.0f);
-        //U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
-        U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
-        DrawGrid(renderer, 
-                cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
-                V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
-    }
+        R32 thickness = 0.2f;
+        R32 min_scale = 4.0f;
+        I32 subdivs = 5;
+        Vec4 grid_color = ColorToVec4(HexToColor(0x8CAAD2FF));
+        if(cam->scale > min_scale)
+        {
+            R32 factor = log2f(cam->scale) - log2f(min_scale);
+            R32 alpha = Clamp(0.0f, factor, 1.0f);
+            //U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
+            U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
+            DrawGrid(renderer, 
+                    cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
+                    V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
+        }
 
-    if(cam->scale > 1.0f)
-    {
-        R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
-        //U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
-        U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
-        DrawGrid(renderer, 
-                cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
-                V2(0,0), world->size, world->chunk_size, thickness, color);
+        if(cam->scale > 1.0f)
+        {
+            R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
+            //U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
+            U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
+            DrawGrid(renderer, 
+                    cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
+                    V2(0,0), world->size, world->chunk_size, thickness, color);
+        }
     }
     
     for(Agent* agent : world->agents)
@@ -372,7 +384,7 @@ EditSettings(SimulationScreen* screen)
     {
         screen->overlay = static_cast<ColorOverlay>(currentItem);
     }
-    ImGui::Checkbox("Show chunk occupancy", &screen->show_chunk_occupancy);
+    ImGui::Checkbox("Show grid", &screen->show_grid);
 }
 
 static void

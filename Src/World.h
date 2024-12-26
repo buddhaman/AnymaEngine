@@ -43,9 +43,6 @@ struct Chunk
     int y_idx;
     ChunkType type;
 
-    // TODO: remove when corners have colors.
-    U32 color;
-
     // Index into the world agent array 
     Array<U32> agent_indices;
 };

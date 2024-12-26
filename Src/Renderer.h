@@ -58,6 +58,10 @@ void
 RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color);
 
 void
+RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, 
+            U32 color0, U32 color1, U32 color2, U32 color3);
+
+void
 RenderYRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color);
 
 void

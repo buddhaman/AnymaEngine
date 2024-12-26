@@ -818,32 +818,39 @@ CreateWorld(MemoryArena* arena)
         chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
 
-    for (int y = 0; y < world->y_chunks; y++)
-    for (int x = 0; x < world->x_chunks; x++)
+    // Iterate over corners
+    world->chunk_corner_colors = CreateArray<U32>(world->arena, (world->x_chunks + 1) * (world->y_chunks + 1));
+    world->chunk_corner_colors.Fill();
+    for (int y = 0; y <= world->y_chunks; y++) 
     {
-        int kernel_radius = 2;
-
-        int min_x = Max(0, x - kernel_radius);
-        int min_y = Max(0, y - kernel_radius);
-        int max_x = Min(world->x_chunks - 1, x + kernel_radius);
-        int max_y = Min(world->y_chunks - 1, y + kernel_radius);
-
-        int n_chunks = Max(1, (max_x - min_x + 1) * (max_y - min_y + 1));
-
-        Vec3 avg = V3(0, 0, 0);
-        for (int yy = min_y; yy <= max_y; yy++)
-        for (int xx = min_x; xx <= max_x; xx++)
+        for (int x = 0; x <= world->x_chunks; x++)
         {
-            Chunk* chunk = GetChunk(world, xx, yy);
-            U32 type_color = GetChunkTypeColor(chunk->type);
-            Vec3 type_color_v3 = ColorToVec4(type_color).xyz;
-            avg += type_color_v3;
+            int kernel_radius = 2;
+
+            int min_x = Max(0, x - kernel_radius);
+            int min_y = Max(0, y - kernel_radius);
+            int max_x = Min(world->x_chunks - 1, x + kernel_radius - 1);
+            int max_y = Min(world->y_chunks - 1, y + kernel_radius - 1);
+
+            int n_chunks = Max(1, (max_x - min_x + 1) * (max_y - min_y + 1));
+
+            Vec3 avg = V3(0, 0, 0);
+            for (int yy = min_y; yy <= max_y; yy++)
+            {
+                for (int xx = min_x; xx <= max_x; xx++)
+                {
+                    Chunk* chunk = GetChunk(world, xx, yy);
+                    U32 type_color = GetChunkTypeColor(chunk->type);
+                    Vec3 type_color_v3 = ColorToVec4(type_color).xyz;
+                    avg += type_color_v3;
+                }
+            }
+
+            avg /= n_chunks;
+
+            // Set the interpolated color for the current corner
+            world->chunk_corner_colors[y * (world->x_chunks + 1) + x] = Vec3ToColor(avg.r, avg.g, avg.b);
         }
-
-        avg /= n_chunks;
-
-        Chunk* chunk = GetChunk(world, x, y);
-        chunk->color = Vec3ToColor(avg.r, avg.g, avg.b);
     }
 
 

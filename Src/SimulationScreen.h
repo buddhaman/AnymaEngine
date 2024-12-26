@@ -42,6 +42,7 @@ struct SimulationScreen
     bool show_control_window = true;
 
     bool show_health = true;
+    bool show_grid = true;
 
     ColorOverlay overlay = ColorOverlay_AgentType;
 

@@ -109,6 +109,31 @@ RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* regio
 }
 
 void
+RenderZRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, 
+            U32 color0, U32 color1, U32 color2, U32 color3)
+{
+    Vec2 scaledDims = V2(GetScaled(&renderer->cam, dims.x), 
+                         GetScaled(&renderer->cam, renderer->cam.c * dims.y));
+    Vec2 baseCenter = GetVec2(&renderer->cam, center);
+
+    Vec2 p0 = V2(baseCenter.x - scaledDims.x * 0.5f, baseCenter.y - scaledDims.y * 0.5f);
+    Vec2 p1 = V2(baseCenter.x + scaledDims.x * 0.5f, baseCenter.y - scaledDims.y * 0.5f);
+    Vec2 p2 = V2(baseCenter.x + scaledDims.x * 0.5f, baseCenter.y + scaledDims.y * 0.5f);
+    Vec2 p3 = V2(baseCenter.x - scaledDims.x * 0.5f, baseCenter.y + scaledDims.y * 0.5f);
+
+    Vec2 uv0 = region->pos;
+    Vec2 uv1 = V2(region->pos.x + region->size.x, region->pos.y);
+    Vec2 uv2 = V2(region->pos.x + region->size.x, region->pos.y + region->size.y);
+    Vec2 uv3 = V2(region->pos.x, region->pos.y + region->size.y);
+
+    PushQuad(&renderer->renderer->mesh, 
+             p0, uv0, color0,
+             p1, uv1, color1,
+             p2, uv2, color2,
+             p3, uv3, color3);
+}
+
+void
 RenderYRect(TiltedRenderer* renderer, Vec3 center, Vec2 dims, AtlasRegion* region, U32 color)
 {
     RenderRect(renderer->renderer, 

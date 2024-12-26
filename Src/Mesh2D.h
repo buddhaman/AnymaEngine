@@ -33,6 +33,13 @@ PushIndex(Mesh2D* mesh, U32 index);
 
 void
 PushQuad(Mesh2D* mesh, 
+         Vec2 p0, Vec2 uv0, U32 color0,
+         Vec2 p1, Vec2 uv1, U32 color1,
+         Vec2 p2, Vec2 uv2, U32 color2,
+         Vec2 p3, Vec2 uv3, U32 color3);
+
+void
+PushQuad(Mesh2D* mesh, 
          Vec2 p0, Vec2 uv0, 
          Vec2 p1, Vec2 uv1, 
          Vec2 p2, Vec2 uv2, 
