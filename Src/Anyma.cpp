@@ -9,6 +9,7 @@
 #include "External.h"
 #include "InputHandler.h"
 #include "Linalg.h"
+#include "Noise.h"
 #include "Genome.h"
 #include "TMath.h"
 #include "TString.h"

@@ -1,5 +1,7 @@
 #include "World.h"
 
+#include "Noise.h"
+
 static void
 SwapLifespanArenas(World* world)
 {
@@ -806,7 +808,11 @@ CreateWorld(MemoryArena* arena)
         chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
         chunk->x_idx = x;
         chunk->y_idx = y;
-        chunk->type = RandomR32Debug(0, 1) < 0.5f ? ChunkType_Sand : ChunkType_Grass;
+        R32 scale = 20;
+        R32 x_noise = chunk->pos.x / world->size.x;
+        R32 y_noise = chunk->pos.y / world->size.y;
+        R32 noise_value = perlin2d(scale*x_noise, scale*y_noise, 0.2, 4);
+        chunk->type = noise_value < 0.5f ? ChunkType_Sand : ChunkType_Grass;
         chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
 

@@ -88,6 +88,7 @@ T Max(T first, Args... rest)
     return Max(first, Max(rest...));
 }
 
+
 template <typename T>
 T Abs(T v) { return v < 0 ? -v : v; }
 
@@ -97,6 +98,11 @@ T Clamp(T min, T val, T max)
     if(val < min) return min;
     if(val > max) return max;
     return val;
+}
+
+static R32 Lerp(R32 t, R32 a, R32 b) 
+{
+    return a + t * (b - a);
 }
 
 static inline I32
@@ -111,7 +117,7 @@ RandomIntDebug(int min_value, int max_value)
 static inline R32 
 RandomR32Debug(float min, float max)
 {
-    float randFloat = (float)(rand()) / (float)(RAND_MAX);
+    R32 randFloat = (R32)(rand()) / (R32)(RAND_MAX);
     return randFloat * (max - min) + min;
 }
 
