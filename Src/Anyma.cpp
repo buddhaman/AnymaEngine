@@ -19,6 +19,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Renderer.h"
+#include "Entity.h"
 #include "Skeleton.h"
 #include "Brain.h"
 #include "Agent.h"

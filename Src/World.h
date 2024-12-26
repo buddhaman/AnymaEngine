@@ -4,6 +4,7 @@
 #include "Array.h"
 
 #include "Agent.h"
+#include "Plant.h"
 
 #include "Mesh2D.h"
 #include "Camera2D.h"
