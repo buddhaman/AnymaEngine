@@ -11,7 +11,7 @@ struct TiltedCamera
     Vec3 pos = V3(0,0,0);
     Vec2 size = V2(0,0);
 
-    // This one is read-only. Useful to have. Bounds in the 2D world. So intersection of view beam and ground plane.
+    // This one is read-only. Useful to have. Bounds in the 2D world. The intersection of view beam and ground plane.
     Rect bounds;
 
     R32 scale = 1.0f;

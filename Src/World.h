@@ -16,12 +16,19 @@ enum ColorOverlay
     ColorOverlay_AgentGenes
 };
 
+enum ChunkType
+{
+    ChunkType_Grass,
+    ChunkType_Sand,
+};
+
 struct Chunk
 {
     // For convenience
     Vec2 pos;
     int x_idx;
     int y_idx;
+    ChunkType type;
 
     // Index into the world agent array 
     Array<U32> agent_indices;
@@ -53,11 +60,6 @@ struct World
 
     bool spawn_particles;
     Array<Particle> particles;
-
-    // Its easier to store the selected entity in World, even though it belongs to screen. 
-    // Here we can set it to null when it dies etc. Wait where is it? lol i lost it.
-    // Anyway now that i reaed this: its even better to store a generation
-    // number and compare this in screen. 
 };
 
 static inline Chunk* 

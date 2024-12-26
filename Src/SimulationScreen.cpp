@@ -166,6 +166,23 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     // RenderZCircle(renderer, V3(cam->bounds.pos.x+cam->bounds.dims.x, cam->bounds.pos.y+cam->bounds.dims.y, 0.0f), 4.0f, Color_Cyan);
     // RenderZCircle(renderer, cam->pos, 4.0f, Color_Cyan);
 
+    // Draw tiles
+    R32 chunk_size = world->chunk_size;
+    for(int y = 0; y < world->y_chunks; y++)
+    for(int x = 0; x < world->x_chunks; x++)
+    {
+        Chunk* chunk = GetChunk(world, x, y);
+        U32 chunk_color; 
+        switch(chunk->type)
+        {
+        case ChunkType_Grass: chunk_color = HexToColor(0x4caf50ff); break;
+        case ChunkType_Sand: chunk_color = HexToColor(0xf4d03fff); break; 
+        }
+        Vec3 center = V3(chunk->pos.x+chunk_size/2.0f, chunk->pos.y+chunk_size/2.0f, 0.0f);
+        RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, chunk_color);
+    }
+
+
     R32 thickness = 0.2f;
     R32 min_scale = 4.0f;
     I32 subdivs = 5;
