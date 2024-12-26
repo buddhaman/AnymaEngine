@@ -49,6 +49,9 @@ struct PhenoType
 PhenoType*
 CreatePhenotype(MemoryArena* arena, int max_backbones);
 
+void
+InitRandomPhenotype(PhenoType* pheno);
+
 struct Leg
 {
     // Idx of the end of the leg.
@@ -138,6 +141,12 @@ GetTicksUntilReproduction(World* world, AgentType type);
 
 I32
 GetInitialEnergy(World* world, AgentType type);
+
+void 
+InitAgentSkeleton(MemoryArena* arena, Agent* agent);
+
+void
+UpdateAgentSkeleton(Agent* agent);
 
 static inline bool
 IsCharging(Agent* agent) { return agent->charge; }

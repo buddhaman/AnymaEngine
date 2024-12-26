@@ -50,7 +50,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make decorations on the terain, rocks.
 - Collision detection with solid tiles.
 - Show work done per thread. Internal profiling tools.
-- Build creature in local coordinates.
+- I just realized that the lifespan arena is just a more complicated circular
+  buffer. Implement circular buffers.
 
 - Design mouth.
 - Make graph in real seconds as units.
@@ -96,6 +97,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Build creature in local coordinates.
 - Make terrain look good. 
 - Rebuild only phenotype when changing in editor.
 - Add arms.
