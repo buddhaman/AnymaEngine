@@ -39,7 +39,6 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Make terrain look good. 
 - Refactor simulationscreen to use renderer. Do this gradually. 
 - Smooth transition from top down to detailed rendering.
 - Mutate genes.
@@ -97,6 +96,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Make terrain look good. 
 - Rebuild only phenotype when changing in editor.
 - Add arms.
 - Generate random genes.

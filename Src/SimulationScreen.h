@@ -7,6 +7,7 @@
 #include "SimulationSettings.h"
 #include "ThreadPool.h"
 #include "Texture.h"
+#include "Agent.h"
 
 struct SimulationScreen
 {
@@ -35,7 +36,7 @@ struct SimulationScreen
     int updates_per_frame = 1;
     R32 time = 0.0f;
 
-    bool show_chunk_occupancy = false;
+    bool show_cell_occupancy = false;
     bool show_debug_window = true;
     bool show_edit_window = true;
     bool show_statistic_window = true;

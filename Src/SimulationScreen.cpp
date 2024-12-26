@@ -19,12 +19,12 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     UpdateWorldChanges(world);
 
     #if 0
-    SortAgentsIntoMultipleChunks(screen->world);
+    SortAgentsIntoMultipleCells(screen->world);
     //screen->thread_pool->AddJob(new std::function<void()>([screen, world](){
-        for(int y = 0; y < world->y_chunks; y++)
-        for(int x = 0; x < world->x_chunks; x++)
+        for(int y = 0; y < world->y_cells; y++)
+        for(int x = 0; x < world->x_cells; x++)
         {
-            ChunkCollisions(world, x, y);
+            CellCollisions(world, x, y);
         }
     //}));
     //screen->thread_pool->AddJob(new std::function<void()>([world](){
@@ -32,11 +32,11 @@ DoScreenWorldUpdate(SimulationScreen* screen)
     //}));
     //screen->thread_pool->WaitForFinish();
     #else
-    SortAgentsIntoMultipleChunks(screen->world);
-    for(int y = 0; y < world->y_chunks; y++)
-    for(int x = 0; x < world->x_chunks; x++)
+    SortAgentsIntoMultipleCells(screen->world);
+    for(int y = 0; y < world->y_cells; y++)
+    for(int x = 0; x < world->x_cells; x++)
     {
-        ChunkCollisions(world, x, y);
+        CellCollisions(world, x, y);
     }
 
     ThreadPool* thread_pool = screen->thread_pool;
@@ -73,22 +73,22 @@ DrawGrid(Mesh2D* mesh, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, Vec2 world_ma
     Vec2 draw_min = V2(Max(cam_min.x, world_min.x), Max(cam_min.y, world_min.y));
     Vec2 draw_max = V2(Min(cam_max.x, world_max.x), Min(cam_max.y, world_max.y));
 
-    I32 x_chunk_start = (I32)floor(draw_min.x / grid_size);
-    I32 x_chunk_end = (I32)ceil(draw_max.x / grid_size);
-    I32 y_chunk_start = (I32)floor(draw_min.y / grid_size);
-    I32 y_chunk_end = (I32)ceil(draw_max.y / grid_size);
+    I32 x_cell_start = (I32)floor(draw_min.x / grid_size);
+    I32 x_cell_end = (I32)ceil(draw_max.x / grid_size);
+    I32 y_cell_start = (I32)floor(draw_min.y / grid_size);
+    I32 y_cell_end = (I32)ceil(draw_max.y / grid_size);
 
     // Draw vertical lines
-    for (I32 x_chunk = x_chunk_start; x_chunk <= x_chunk_end; x_chunk++)
+    for (I32 x_cell = x_cell_start; x_cell <= x_cell_end; x_cell++)
     {
-        R32 x = x_chunk * grid_size;
+        R32 x = x_cell * grid_size;
         PushRect(mesh, V2(x - thickness / 2.0f, draw_min.y), V2(thickness, draw_max.y - draw_min.y), u, V2(0,0), color);
     }
 
     // Draw horizontal lines
-    for (I32 y_chunk = y_chunk_start; y_chunk <= y_chunk_end; y_chunk++)
+    for (I32 y_cell = y_cell_start; y_cell <= y_cell_end; y_cell++)
     {
-        R32 y = y_chunk * grid_size;
+        R32 y = y_cell * grid_size;
         PushRect(mesh, V2(draw_min.x, y - thickness / 2.0f), V2(draw_max.x - draw_min.x, thickness), u, V2(0,0), color);
     }
 }
@@ -99,15 +99,15 @@ DrawGrid(TiltedRenderer* renderer, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, V
     Vec2 draw_min = V2(Max(cam_min.x, world_min.x), Max(cam_min.y, world_min.y));
     Vec2 draw_max = V2(Min(cam_max.x, world_max.x), Min(cam_max.y, world_max.y));
 
-    I32 x_chunk_start = (I32)floor(draw_min.x / grid_size);
-    I32 x_chunk_end = (I32)ceil(draw_max.x / grid_size);
-    I32 y_chunk_start = (I32)floor(draw_min.y / grid_size);
-    I32 y_chunk_end = (I32)ceil(draw_max.y / grid_size);
+    I32 x_cell_start = (I32)floor(draw_min.x / grid_size);
+    I32 x_cell_end = (I32)ceil(draw_max.x / grid_size);
+    I32 y_cell_start = (I32)floor(draw_min.y / grid_size);
+    I32 y_cell_end = (I32)ceil(draw_max.y / grid_size);
 
     // Draw vertical lines
-    for (I32 x_chunk = x_chunk_start; x_chunk <= x_chunk_end; x_chunk++)
+    for (I32 x_cell = x_cell_start; x_cell <= x_cell_end; x_cell++)
     {
-        R32 x = x_chunk * grid_size;
+        R32 x = x_cell * grid_size;
         RenderZRect(renderer, 
                     V3(x - thickness / 2.0f, (draw_min.y+draw_max.y)/2.0f, 0), 
                     V2(thickness, draw_max.y - draw_min.y), 
@@ -116,9 +116,9 @@ DrawGrid(TiltedRenderer* renderer, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, V
     }
 
     // Draw horizontal lines
-    for (I32 y_chunk = y_chunk_start; y_chunk <= y_chunk_end; y_chunk++)
+    for (I32 y_cell = y_cell_start; y_cell <= y_cell_end; y_cell++)
     {
-        R32 y = y_chunk * grid_size;
+        R32 y = y_cell * grid_size;
         RenderZRect(renderer, V3((draw_min.x+draw_max.x)/2.0f, y - thickness / 2.0f, 0), V2(draw_max.x-draw_min.x, thickness), renderer->renderer->square, color);
     }
 }
@@ -168,20 +168,20 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
 
     // Draw tiles
     // TODO: Render as one continuous mesh.
-    R32 chunk_size = world->chunk_size;
-    for (int y = 0; y < world->y_chunks; y++)
+    R32 cell_size = world->cell_size;
+    for (int y = 0; y < world->y_cells; y++)
     {
-        for (int x = 0; x < world->x_chunks; x++)
+        for (int x = 0; x < world->x_cells; x++)
         {
-            Chunk* chunk = GetChunk(world, x, y);
-            Vec3 center = V3(chunk->pos.x + chunk_size / 2.0f, chunk->pos.y + chunk_size / 2.0f, 0.0f);
+            Cell* cell = GetCell(world, x, y);
+            Vec3 center = V3(cell->pos.x + cell_size / 2.0f, cell->pos.y + cell_size / 2.0f, 0.0f);
 
-            U32 color0 = world->chunk_corner_colors[x + y * (world->x_chunks + 1)];
-            U32 color1 = world->chunk_corner_colors[x + 1 + y * (world->x_chunks + 1)];
-            U32 color2 = world->chunk_corner_colors[x + 1 + (y + 1) * (world->x_chunks + 1)];
-            U32 color3 = world->chunk_corner_colors[x + (y + 1) * (world->x_chunks + 1)];
+            U32 color0 = world->cell_corner_colors[x + y * (world->x_cells + 1)];
+            U32 color1 = world->cell_corner_colors[x + 1 + y * (world->x_cells + 1)];
+            U32 color2 = world->cell_corner_colors[x + 1 + (y + 1) * (world->x_cells + 1)];
+            U32 color3 = world->cell_corner_colors[x + (y + 1) * (world->x_cells + 1)];
 
-            RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, color0, color1, color2, color3);
+            RenderZRect(renderer, center, V2(cell_size, cell_size), renderer->renderer->square, color0, color1, color2, color3);
         }
     }
 
@@ -199,7 +199,7 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
             U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
             DrawGrid(renderer, 
                     cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
-                    V2(0,0), world->size, world->chunk_size/subdivs, thickness/3.0f, color);
+                    V2(0,0), world->size, world->cell_size/subdivs, thickness/3.0f, color);
         }
 
         if(cam->scale > 1.0f)
@@ -208,7 +208,7 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
             U32 color = Vec4ToColor(grid_color.x, grid_color.y, grid_color.z, alpha);
             DrawGrid(renderer, 
                     cam->bounds.pos, cam->bounds.pos+cam->bounds.dims, 
-                    V2(0,0), world->size, world->chunk_size, thickness, color);
+                    V2(0,0), world->size, world->cell_size, thickness, color);
         }
     }
     
@@ -253,19 +253,19 @@ DoScreenWorldRender(SimulationScreen* screen, Window* window)
         R32 factor = log2f(cam->scale) - log2f(min_scale);
         R32 alpha = Clamp(0.0f, factor, 1.0f);
         U32 color = Vec4ToColor(0.3f, 0.3f, 0.3f, alpha);
-        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size/subdivs, u, thickness/3.0f, color);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->cell_size/subdivs, u, thickness/3.0f, color);
     }
 
     if(cam->scale > 1.0f)
     {
         R32 alpha = Clamp(0.0f, cam->scale-1.0f, 1.0f);
         U32 color = Vec4ToColor(0.4f, 0.4f, 0.4f, alpha);
-        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->chunk_size, u, thickness, color);
+        DrawGrid(mesh, cam->pos - cam->size/2.0f, cam->pos + cam->size/2.0f, V2(0,0), world->size, world->cell_size, u, thickness, color);
     }
 
-    if(screen->show_chunk_occupancy)
+    if(screen->show_cell_occupancy)
     {
-        DrawChunks(world, mesh, &screen->cam, u);
+        DrawCells(world, mesh, &screen->cam, u);
     }
 
     // Only difference between these if statements is the color but thats done on purpose.
@@ -335,9 +335,9 @@ EditSettings(SimulationScreen* screen)
     bool changed = false;
     changed |= ImGuiInputInt("Max agents", &settings->max_agents, 1, 256000);
     changed |= ImGuiInputInt("Initial agents", &settings->n_initial_agents, 1, settings->max_agents);
-    changed |= ImGuiInputFloat("Chunk size", &settings->chunk_size, 4.0f, 400.0f);
-    changed |= ImGuiInputInt("X chunks", &settings->x_chunks, 1, 256);
-    changed |= ImGuiInputInt("Y chunks", &settings->y_chunks, 1, 256);
+    changed |= ImGuiInputFloat("Cell size", &settings->cell_size, 4.0f, 400.0f);
+    changed |= ImGuiInputInt("X cells", &settings->x_cells, 1, 256);
+    changed |= ImGuiInputInt("Y cells", &settings->y_cells, 1, 256);
 
     ImGui::SeparatorText("Agent");
 
@@ -408,8 +408,8 @@ void
 DoAgentInfo(SimulationScreen* screen, Agent* agent)
 {
     World* world = screen->world;
-    ChunkCoordinates coords = GetChunkCoordinatesFromWorldPos(screen->world, agent->pos);
-    ImGui::Text("Chunk: %u %u", coords.x, coords.y);
+    CellCoordinates coords = GetCellCoordinatesFromWorldPos(screen->world, agent->pos);
+    ImGui::Text("Cell: %u %u", coords.x, coords.y);
 
     ImGui::Text("%d ticks until reproduction.", agent->ticks_until_reproduce);
     R32 reproduction_factor = (R32)agent->ticks_until_reproduce/(R32)world->max_lifespan;
@@ -492,7 +492,7 @@ DoStatisticsWindow(SimulationScreen* screen)
         ImPlot::EndPlot();
     }
 
-    ImGuiChunkDistribution(screen->world);
+    ImGuiCellDistribution(screen->world);
     if(screen->selected_agent)
     {
         ImGuiBrainVisualizer(screen->selected_agent->brain);

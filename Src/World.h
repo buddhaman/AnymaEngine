@@ -18,32 +18,32 @@ enum ColorOverlay
     ColorOverlay_AgentGenes
 };
 
-enum ChunkType
+enum CellType
 {
-    ChunkType_Grass,
-    ChunkType_Sand,
+    CellType_Grass,
+    CellType_Sand,
 };
 
 U32
-GetChunkTypeColor(ChunkType type)
+GetCellTypeColor(CellType type)
 {
     switch(type)
     {
-    case ChunkType_Grass: return HexToColor(0x4caf50ff); 
-    case ChunkType_Sand: return HexToColor(0xf4d03fff);
+    case CellType_Grass: return HexToColor(0x4caf50ff); 
+    case CellType_Sand: return HexToColor(0xf4d03fff);
     }
 
     // Invalid type
     return Color_Pink;
 }
 
-struct Chunk
+struct Cell
 {
     // For convenience
     Vec2 pos;
     int x_idx;
     int y_idx;
-    ChunkType type;
+    CellType type;
 
     // Index into the world agent array 
     Array<U32> agent_indices;
@@ -51,11 +51,11 @@ struct Chunk
 
 struct World
 {
-    R32 chunk_size;
-    int x_chunks;
-    int y_chunks;
-    Array<Chunk> chunks;
-    Array<U32> chunk_corner_colors;
+    R32 cell_size;
+    int x_cells;
+    int y_cells;
+    Array<Cell> cells;
+    Array<U32> cell_corner_colors;
 
     Vec2 size;
 
@@ -82,48 +82,48 @@ struct World
     Array<Particle> particles;
 };
 
-static inline Chunk* 
-GetChunk(World* world, int x_idx, int y_idx)
+static inline Cell* 
+GetCell(World* world, int x_idx, int y_idx)
 {
-    return &world->chunks[x_idx+y_idx*world->x_chunks];
+    return &world->cells[x_idx+y_idx*world->x_cells];
 }
 
-struct ChunkCoordinates
+struct CellCoordinates
 {
     U32 x;
     U32 y;
 };
 
-static inline ChunkCoordinates
-GetChunkCoordinatesFromWorldPos(World* world, Vec2 at)
+static inline CellCoordinates
+GetCellCoordinatesFromWorldPos(World* world, Vec2 at)
 { 
-    int x_chunk = (int)(at.x/world->chunk_size);
-    int y_chunk = (int)(at.y/world->chunk_size);
-    x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
-    y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
-    return {(U32)x_chunk, (U32)y_chunk};
+    int x_cell = (int)(at.x/world->cell_size);
+    int y_cell = (int)(at.y/world->cell_size);
+    x_cell = Clamp(0, x_cell, world->x_cells-1);
+    y_cell = Clamp(0, y_cell, world->y_cells-1);
+    return {(U32)x_cell, (U32)y_cell};
 }
 
 static inline I32
-GetXChunk(World* world, R32 x)
+GetXCell(World* world, R32 x)
 { 
-    return (int)(x/world->chunk_size); 
+    return (int)(x/world->cell_size); 
 }
 
 static inline I32
-GetYChunk(World* world, R32 y)
+GetYCell(World* world, R32 y)
 { 
-    return (int)(y/world->chunk_size); 
+    return (int)(y/world->cell_size); 
 }
 
-static inline Chunk* 
-GetChunkAt(World* world, Vec2 at)
+static inline Cell* 
+GetCellAt(World* world, Vec2 at)
 {
-    int x_chunk = (int)(at.x/world->chunk_size);
-    int y_chunk = (int)(at.y/world->chunk_size);
-    x_chunk = Clamp(0, x_chunk, world->x_chunks-1);
-    y_chunk = Clamp(0, y_chunk, world->y_chunks-1);
-    return GetChunk(world, x_chunk, y_chunk);
+    int x_cell = (int)(at.x/world->cell_size);
+    int y_cell = (int)(at.y/world->cell_size);
+    x_cell = Clamp(0, x_cell, world->x_cells-1);
+    y_cell = Clamp(0, y_cell, world->y_cells-1);
+    return GetCell(world, x_cell, y_cell);
 }
 
 Agent* 
@@ -148,10 +148,10 @@ void
 RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay color_overlay = ColorOverlay_AgentType);
 
 void 
-DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv);
+DrawCells(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv);
 
 void
-SortAgentsIntoMultipleChunks(World* world);
+SortAgentsIntoMultipleCells(World* world);
 
 void
 UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx);
@@ -172,7 +172,7 @@ Agent*
 SelectFromWorld(World* world, Vec2 pos, R32 extra_radius = 0.0f);
 
 void
-ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y);
+CellCollisions(World* world, int center_cell_x, int center_cell_y);
 
 Particle* 
 TrySpawnParticle(World* world, Vec2 pos, Vec2 vel, R32 lifetime, U32 color);

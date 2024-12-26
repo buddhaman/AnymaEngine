@@ -22,9 +22,9 @@ struct SimulationSettings
 {
     int max_agents = DEFAULT_MAX_AGENTS;
     int n_initial_agents = DEFAULT_NUM_AGENTS;
-    R32 chunk_size = 12.0f;
-    int x_chunks = DEFAULT_AXIS_CHUNKS;
-    int y_chunks = DEFAULT_AXIS_CHUNKS;
+    R32 cell_size = 12.0f;
+    int x_cells = DEFAULT_AXIS_CHUNKS;
+    int y_cells = DEFAULT_AXIS_CHUNKS;
 
     R32 mutation_rate = 0.012f;
     I32 energy_transfer_on_hit = 350;

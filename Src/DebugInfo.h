@@ -3,13 +3,13 @@
 #include "World.h"
 
 void 
-ImGuiChunkGrid(World* world);
+ImGuiCellGrid(World* world);
 
 void 
-ImGuiChunkBarGraph(World* world);
+ImGuiCellBarGraph(World* world);
 
 void 
-ImGuiChunkDistribution(World* world);
+ImGuiCellDistribution(World* world);
 
 void
 ImGuiMemoryArena(MemoryArena* arena, const char* name);

@@ -13,18 +13,18 @@ SwapLifespanArenas(World* world)
     world->lifespan_arena_old = tmp;
 }
 
-// Now this algorithm can double check agents belonging to multiple chunks. Fix this.
+// Now this algorithm can double check agents belonging to multiple cells. Fix this.
 // Idea: first collect all agents, sort with pairs where the first index is the length 
 Agent* 
 CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* exclude_agent)
 {
     Vec2 at = ray.pos;
-    int x_chunk = GetXChunk(world, at.x);
-    int y_chunk = GetYChunk(world, at.y);
-    if( x_chunk < 0 || 
-        y_chunk < 0 || 
-        x_chunk >= world->x_chunks || 
-        y_chunk >= world->y_chunks) 
+    int x_cell = GetXCell(world, at.x);
+    int y_cell = GetYCell(world, at.y);
+    if( x_cell < 0 || 
+        y_cell < 0 || 
+        x_cell >= world->x_cells || 
+        y_cell >= world->y_cells) 
     {
         return nullptr;
     }
@@ -32,15 +32,15 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
     R32 traversed = 0.0f;
     int x_dir = ray.dir.x < 0.0f ? -1 : 1;
     int y_dir = ray.dir.y < 0.0f ? -1 : 1;
-    R32 half_chunk = world->chunk_size/2.0f;
+    R32 half_cell = world->cell_size/2.0f;
 
     while(traversed < ray_length)
     {
-        Chunk* chunk = GetChunk(world, x_chunk, y_chunk);
+        Cell* cell = GetCell(world, x_cell, y_cell);
         
         R32 min_intersect_dist = R32_MAX;
         Agent* hit = nullptr;
-        for(U32 agent_idx : chunk->agent_indices)
+        for(U32 agent_idx : cell->agent_indices)
         {
             Agent* agent = world->agents[agent_idx];
             if(agent==exclude_agent) continue;
@@ -58,24 +58,24 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
             return hit;
         }
 
-        // Move to next chunk.
-        R32 x_edge = (chunk->x_idx + 0.5f)*world->chunk_size + half_chunk*x_dir;
-        R32 y_edge = (chunk->y_idx + 0.5f)*world->chunk_size + half_chunk*y_dir;
+        // Move to next cell.
+        R32 x_edge = (cell->x_idx + 0.5f)*world->cell_size + half_cell*x_dir;
+        R32 y_edge = (cell->y_idx + 0.5f)*world->cell_size + half_cell*y_dir;
         R32 x_trav = (x_edge - at.x)/ray.dir.x;
         R32 y_trav = (y_edge - at.y)/ray.dir.y;
         if(x_trav < y_trav)
         {
             traversed += x_trav;
             at = ray.pos + traversed*ray.dir;
-            x_chunk += x_dir;
-            if(x_chunk < 0 || x_chunk >= world->x_chunks) break;
+            x_cell += x_dir;
+            if(x_cell < 0 || x_cell >= world->x_cells) break;
         }
         else
         {
             traversed += y_trav;
             at = ray.pos + traversed*ray.dir;
-            y_chunk += y_dir;
-            if(y_chunk < 0 || y_chunk >= world->y_chunks) break;
+            y_cell += y_dir;
+            if(y_cell < 0 || y_cell >= world->y_cells) break;
         }
     }
 
@@ -85,9 +85,9 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
 bool 
 CanAddAgent(World* world, Vec2 pos)
 {
-    Chunk* chunk = GetChunkAt(world, pos);
+    Cell* cell = GetCellAt(world, pos);
     if(world->agents.IsFull()) return false;
-    if(chunk->agent_indices.IsFull()) return false;
+    if(cell->agent_indices.IsFull()) return false;
     return true;
 }
 
@@ -155,24 +155,24 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
 #else      
 
         // Instead of casting a ray find nearest agents and give the relative angle (in fov) and 
-        // TODO: Get only agents in the chunks that intersect the fov circle
+        // TODO: Get only agents in the cells that intersect the fov circle
         // section. Find nearest herbivore and nearest carnivore.
         agent->nearest_carnivore = nullptr;
         agent->nearest_herbivore = nullptr;
         R32 sight_radius = agent->sight_radius;
-        int min_chunk_x = Max(0, GetXChunk(world, agent->pos.x - sight_radius));
-        int min_chunk_y = Max(0, GetYChunk(world, agent->pos.y - sight_radius));
-        int max_chunk_x = Min(world->x_chunks-1, GetXChunk(world, agent->pos.x + sight_radius));
-        int max_chunk_y = Min(world->y_chunks-1, GetYChunk(world, agent->pos.y + sight_radius));
+        int min_cell_x = Max(0, GetXCell(world, agent->pos.x - sight_radius));
+        int min_cell_y = Max(0, GetYCell(world, agent->pos.y - sight_radius));
+        int max_cell_x = Min(world->x_cells-1, GetXCell(world, agent->pos.x + sight_radius));
+        int max_cell_y = Min(world->y_cells-1, GetYCell(world, agent->pos.y + sight_radius));
         // We dont take square cause later we want to take agent radius into account.
         agent->nearest_carnivore_distance = sight_radius;
         agent->nearest_herbivore_distance = sight_radius;
-        for(int y_chunk = min_chunk_y; y_chunk <= max_chunk_y; y_chunk++)
-        for(int x_chunk = min_chunk_x; x_chunk <= max_chunk_x; x_chunk++)
+        for(int y_cell = min_cell_y; y_cell <= max_cell_y; y_cell++)
+        for(int x_cell = min_cell_x; x_cell <= max_cell_x; x_cell++)
         {
             // Iterate over all agents and check if they fall within the fov and radius.
-            Chunk* chunk = GetChunk(world, x_chunk, y_chunk);
-            for(U32 agent_idx : chunk->agent_indices)
+            Cell* cell = GetCell(world, x_cell, y_cell);
+            for(U32 agent_idx : cell->agent_indices)
             {
                 Agent* other = world->agents[agent_idx];
                 if(other==agent) continue;
@@ -440,7 +440,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay col
     R32 world_rect_width = 2.0f/cam->scale;
     PushLineRect(mesh, V2(0,0), world->size, world_rect_width, uv, V2(0,0), RGBAColor(150, 150, 150, 150));
 
-    // Which agents are visible. Omg this is stupid should be done using chunks.
+    // Which agents are visible. Omg this is stupid should be done using cells.
     world->visible_agent_indices.Clear();
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
@@ -547,43 +547,43 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay col
 }
 
 void 
-DrawChunks(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv)
+DrawCells(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv)
 {
-    Vec2 chunk_dims = V2(world->chunk_size, world->chunk_size);
-    for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
+    Vec2 cell_dims = V2(world->cell_size, world->cell_size);
+    for(int cell_idx = 0; cell_idx < world->cells.size; cell_idx++)
     {
-        Chunk* chunk = &world->chunks[chunk_idx];
-        U32 color = chunk->agent_indices.size > 0 ? RGBAColor(0, 255, 0, 255) : RGBAColor(80, 80, 80, 80);
-        PushLineRect(mesh, chunk->pos, chunk_dims, 1.0f/cam->scale, uv, V2(0,0), color);
+        Cell* cell = &world->cells[cell_idx];
+        U32 color = cell->agent_indices.size > 0 ? RGBAColor(0, 255, 0, 255) : RGBAColor(80, 80, 80, 80);
+        PushLineRect(mesh, cell->pos, cell_dims, 1.0f/cam->scale, uv, V2(0,0), color);
     }
 }
 
 static inline void
-ClearChunks(World* world)
+ClearCells(World* world)
 {
-    for(int chunk_idx = 0; chunk_idx < world->chunks.size; chunk_idx++)
+    for(int cell_idx = 0; cell_idx < world->cells.size; cell_idx++)
     {
-        world->chunks[chunk_idx].agent_indices.Clear();
+        world->cells[cell_idx].agent_indices.Clear();
     } 
 }
 
 void
-SortAgentsIntoMultipleChunks(World* world)
+SortAgentsIntoMultipleCells(World* world)
 {
-    ClearChunks(world);
+    ClearCells(world);
 
     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
     {
         Agent* agent = world->agents[agent_idx];
-        int min_x = Max(0, (int)((agent->pos.x-agent->radius)/world->chunk_size));
-        int max_x = Min(world->x_chunks-1, (int)((agent->pos.x+agent->radius)/world->chunk_size));
-        int min_y = Max(0, (int)((agent->pos.y-agent->radius)/world->chunk_size));
-        int max_y = Min(world->y_chunks-1, (int)((agent->pos.y+agent->radius)/world->chunk_size));
+        int min_x = Max(0, (int)((agent->pos.x-agent->radius)/world->cell_size));
+        int max_x = Min(world->x_cells-1, (int)((agent->pos.x+agent->radius)/world->cell_size));
+        int min_y = Max(0, (int)((agent->pos.y-agent->radius)/world->cell_size));
+        int max_y = Min(world->y_cells-1, (int)((agent->pos.y+agent->radius)/world->cell_size));
         for(int y = min_y; y <= max_y; y++)
         for(int x = min_x; x <= max_x; x++)
         {
-            Chunk* chunk = GetChunk(world, x, y);
-            chunk->agent_indices.PushBack(agent_idx);
+            Cell* cell = GetCell(world, x, y);
+            cell->agent_indices.PushBack(agent_idx);
         }
     }
 }
@@ -660,8 +660,8 @@ RemoveAgent(World* world, U32 agent_idx)
 Agent* 
 SelectFromWorld(World* world, Vec2 pos, R32 extra_radius)
 {
-    Chunk* chunk = GetChunkAt(world, pos);
-    for(U32 agent_idx : chunk->agent_indices)
+    Cell* cell = GetCellAt(world, pos);
+    for(U32 agent_idx : cell->agent_indices)
     {
         Agent* agent = world->agents[agent_idx];
         R32 r2 = V2Dist2(agent->pos, pos);
@@ -675,16 +675,16 @@ SelectFromWorld(World* world, Vec2 pos, R32 extra_radius)
 }
 
 static inline void 
-ChunkCollisions(World* world, Chunk* chunk0, Chunk* chunk1)
+CellCollisions(World* world, Cell* cell0, Cell* cell1)
 {
-    for(int i = 0; i < chunk0->agent_indices.size; i++)
+    for(int i = 0; i < cell0->agent_indices.size; i++)
     {
-        U32 a0_idx = chunk0->agent_indices[i];
+        U32 a0_idx = cell0->agent_indices[i];
         Agent* a0 = world->agents[a0_idx];
 
-        for(int j = 0; j < chunk1->agent_indices.size; j++)
+        for(int j = 0; j < cell1->agent_indices.size; j++)
         {
-            U32 a1_idx = chunk1->agent_indices[j];
+            U32 a1_idx = cell1->agent_indices[j];
             Agent* a1 = world->agents[a1_idx];
             CheckAgentCollisions(a0, a1);
         }
@@ -692,35 +692,35 @@ ChunkCollisions(World* world, Chunk* chunk0, Chunk* chunk1)
 }
 
 void
-ChunkCollisions(World* world, int center_chunk_x, int center_chunk_y)
+CellCollisions(World* world, int center_cell_x, int center_cell_y)
 {
     // First try, naive algorithm.
-    Chunk* center_chunk = GetChunk(world, center_chunk_x, center_chunk_y);
+    Cell* center_cell = GetCell(world, center_cell_x, center_cell_y);
 
-    bool has_right = center_chunk_x < world->x_chunks-1;
-    bool has_down = center_chunk_y < world->y_chunks-1;
+    bool has_right = center_cell_x < world->x_cells-1;
+    bool has_down = center_cell_y < world->y_cells-1;
     if(has_right) 
     {
-        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x+1, center_chunk_y));
+        CellCollisions(world, center_cell, GetCell(world, center_cell_x+1, center_cell_y));
     }
     if(has_down) 
     {
-        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x, center_chunk_y+1));
+        CellCollisions(world, center_cell, GetCell(world, center_cell_x, center_cell_y+1));
     }
     if(has_down && has_right)
     {
-        ChunkCollisions(world, center_chunk, GetChunk(world, center_chunk_x+1, center_chunk_y+1));
+        CellCollisions(world, center_cell, GetCell(world, center_cell_x+1, center_cell_y+1));
     }
 
-    // Inside center chunk.
-    for(int i = 0; i < center_chunk->agent_indices.size-1; i++)
+    // Inside center cell.
+    for(int i = 0; i < center_cell->agent_indices.size-1; i++)
     {
-        U32 a0_idx = center_chunk->agent_indices[i];
+        U32 a0_idx = center_cell->agent_indices[i];
         Agent* a0 = world->agents[a0_idx];
 
-        for(int j = i+1; j < center_chunk->agent_indices.size; j++)
+        for(int j = i+1; j < center_cell->agent_indices.size; j++)
         {
-            U32 a1_idx = center_chunk->agent_indices[j];
+            U32 a1_idx = center_cell->agent_indices[j];
             Agent* a1 = world->agents[a1_idx];
             CheckAgentCollisions(a0, a1);
         }
@@ -780,10 +780,10 @@ CreateWorld(MemoryArena* arena)
     World* world = PushStruct(arena, World);
     *world = World{};
     world->arena = arena;
-    world->chunk_size = settings->chunk_size;
-    world->x_chunks = settings->x_chunks;
-    world->y_chunks = settings->y_chunks;
-    world->size = world->chunk_size*V2((R32)world->x_chunks, (R32)world->y_chunks);
+    world->cell_size = settings->cell_size;
+    world->x_cells = settings->x_cells;
+    world->y_cells = settings->y_cells;
+    world->size = world->cell_size*V2((R32)world->x_cells, (R32)world->y_cells);
 
     U64 lifespan_arena_size = MegaBytes(384);
     world->lifespan_arena = CreateSubArena(arena, lifespan_arena_size);
@@ -793,7 +793,7 @@ CreateWorld(MemoryArena* arena)
     int n_initial_agents = settings->n_initial_agents;
 
     // TODO: This is a heuristic. Do something better.
-    int max_agents_in_chunk = (int)(world->chunk_size*world->chunk_size*2);
+    int max_agents_in_cell = (int)(world->cell_size*world->cell_size*2);
 
     world->max_lifespan = 60*60;
     world->lifespan_arena_swap_ticks = world->max_lifespan;
@@ -802,54 +802,54 @@ CreateWorld(MemoryArena* arena)
 
     PerlinNoise noise;
     noise.seed = RandomIntDebug(0, 10000);
-    world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
-    for(int y = 0; y < world->y_chunks; y++)
-    for(int x = 0; x < world->x_chunks; x++)
+    world->cells = CreateArray<Cell>(world->arena, world->x_cells*world->y_cells);
+    for(int y = 0; y < world->y_cells; y++)
+    for(int x = 0; x < world->x_cells; x++)
     {
-        Chunk* chunk = world->chunks.PushBack();
-        chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
-        chunk->x_idx = x;
-        chunk->y_idx = y;
+        Cell* cell = world->cells.PushBack();
+        cell->pos = V2(x*world->cell_size, y*world->cell_size);
+        cell->x_idx = x;
+        cell->y_idx = y;
         R32 scale = 20.0f;
-        R32 x_noise = chunk->pos.x / world->size.x;
-        R32 y_noise = chunk->pos.y / world->size.y;
+        R32 x_noise = cell->pos.x / world->size.x;
+        R32 y_noise = cell->pos.y / world->size.y;
         R32 noise_value = Perlin2D(&noise, scale*x_noise, scale*y_noise, 0.2f, 4);
-        chunk->type = noise_value < 0.5f ? ChunkType_Sand : ChunkType_Grass;
-        chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
+        cell->type = noise_value < 0.5f ? CellType_Sand : CellType_Grass;
+        cell->agent_indices = CreateArray<U32>(world->arena, max_agents_in_cell);
     }
 
     // Iterate over corners
-    world->chunk_corner_colors = CreateArray<U32>(world->arena, (world->x_chunks + 1) * (world->y_chunks + 1));
-    world->chunk_corner_colors.Fill();
-    for (int y = 0; y <= world->y_chunks; y++) 
+    world->cell_corner_colors = CreateArray<U32>(world->arena, (world->x_cells + 1) * (world->y_cells + 1));
+    world->cell_corner_colors.Fill();
+    for (int y = 0; y <= world->y_cells; y++) 
     {
-        for (int x = 0; x <= world->x_chunks; x++)
+        for (int x = 0; x <= world->x_cells; x++)
         {
             int kernel_radius = 2;
 
             int min_x = Max(0, x - kernel_radius);
             int min_y = Max(0, y - kernel_radius);
-            int max_x = Min(world->x_chunks - 1, x + kernel_radius - 1);
-            int max_y = Min(world->y_chunks - 1, y + kernel_radius - 1);
+            int max_x = Min(world->x_cells - 1, x + kernel_radius - 1);
+            int max_y = Min(world->y_cells - 1, y + kernel_radius - 1);
 
-            int n_chunks = Max(1, (max_x - min_x + 1) * (max_y - min_y + 1));
+            int n_cells = Max(1, (max_x - min_x + 1) * (max_y - min_y + 1));
 
             Vec3 avg = V3(0, 0, 0);
             for (int yy = min_y; yy <= max_y; yy++)
             {
                 for (int xx = min_x; xx <= max_x; xx++)
                 {
-                    Chunk* chunk = GetChunk(world, xx, yy);
-                    U32 type_color = GetChunkTypeColor(chunk->type);
+                    Cell* cell = GetCell(world, xx, yy);
+                    U32 type_color = GetCellTypeColor(cell->type);
                     Vec3 type_color_v3 = ColorToVec4(type_color).xyz;
                     avg += type_color_v3;
                 }
             }
 
-            avg /= ((R32)n_chunks);
+            avg /= ((R32)n_cells);
 
             // Set the interpolated color for the current corner
-            world->chunk_corner_colors[y * (world->x_chunks + 1) + x] = Vec3ToColor(avg.r, avg.g, avg.b);
+            world->cell_corner_colors[y * (world->x_cells + 1) + x] = Vec3ToColor(avg.r, avg.g, avg.b);
         }
     }
 
