@@ -630,6 +630,9 @@ InitSimulationScreen(SimulationScreen* screen)
     screen->square = &screen->atlas->regions[1];
 
     screen->renderer = CreateTiltedRenderer(screen->screen_arena);
+    screen->renderer->cam.pos.xy = screen->world->size/2.0f;
+    screen->renderer->cam.scale = 1.0f;
+    screen->renderer->cam.angle = -PI_R32/4.0f;
 
     I32 num_cores = std::thread::hardware_concurrency();
     std::cout << "Num cores = " << num_cores << std::endl;

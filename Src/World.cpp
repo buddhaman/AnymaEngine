@@ -810,10 +810,10 @@ CreateWorld(MemoryArena* arena)
         chunk->pos = V2(x*world->chunk_size, y*world->chunk_size);
         chunk->x_idx = x;
         chunk->y_idx = y;
-        R32 scale = 20;
+        R32 scale = 20.0f;
         R32 x_noise = chunk->pos.x / world->size.x;
         R32 y_noise = chunk->pos.y / world->size.y;
-        R32 noise_value = Perlin2D(&noise, scale*x_noise, scale*y_noise, 0.2, 4);
+        R32 noise_value = Perlin2D(&noise, scale*x_noise, scale*y_noise, 0.2f, 4);
         chunk->type = noise_value < 0.5f ? ChunkType_Sand : ChunkType_Grass;
         chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
@@ -846,7 +846,7 @@ CreateWorld(MemoryArena* arena)
                 }
             }
 
-            avg /= n_chunks;
+            avg /= ((R32)n_chunks);
 
             // Set the interpolated color for the current corner
             world->chunk_corner_colors[y * (world->x_chunks + 1) + x] = Vec3ToColor(avg.r, avg.g, avg.b);
