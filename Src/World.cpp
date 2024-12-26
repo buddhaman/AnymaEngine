@@ -647,8 +647,8 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
 
     // Skeleton
     // TODO: Streamline skeleton creation. Tie it to the phenotype.
-    agent->skeleton = CreateSkeleton(arena, 64, 64*2);
-    agent->phenotype = CreatePhenotype(arena, 12);
+    agent->skeleton = CreateSkeleton(arena, 48, 96);
+    agent->phenotype = CreatePhenotype(arena, 5);
     InitRandomPhenotype(agent->phenotype);
     InitAgentSkeleton(arena, agent);
 

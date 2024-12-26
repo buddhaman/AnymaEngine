@@ -24,7 +24,7 @@ CreatePhenotype(MemoryArena* arena, int max_backbones)
 void
 InitRandomPhenotype(PhenoType* pheno)
 {
-    pheno->n_backbones = RandomIntDebug(1, 10);
+    pheno->n_backbones = RandomIntDebug(1, 4);
 
     // Bettter make differnt distribution, technically this can go below 0.
     pheno->backbone_radius.Set(0);
