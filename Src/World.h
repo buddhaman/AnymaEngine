@@ -22,6 +22,19 @@ enum ChunkType
     ChunkType_Sand,
 };
 
+U32
+GetChunkTypeColor(ChunkType type)
+{
+    switch(type)
+    {
+    case ChunkType_Grass: return HexToColor(0x4caf50ff); 
+    case ChunkType_Sand: return HexToColor(0xf4d03fff);
+    }
+
+    // Invalid type
+    return Color_Pink;
+}
+
 struct Chunk
 {
     // For convenience
@@ -29,6 +42,9 @@ struct Chunk
     int x_idx;
     int y_idx;
     ChunkType type;
+
+    // TODO: remove when corners have colors.
+    U32 color;
 
     // Index into the world agent array 
     Array<U32> agent_indices;
@@ -40,6 +56,7 @@ struct World
     int x_chunks;
     int y_chunks;
     Array<Chunk> chunks;
+    Array<U32> chunk_corner_colors;
 
     Vec2 size;
 

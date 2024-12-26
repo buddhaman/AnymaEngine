@@ -800,6 +800,8 @@ CreateWorld(MemoryArena* arena)
 
     world->max_eyes_per_agent = 6;
 
+    PerlinNoise noise;
+    noise.seed = RandomIntDebug(0, 10000);
     world->chunks = CreateArray<Chunk>(world->arena, world->x_chunks*world->y_chunks);
     for(int y = 0; y < world->y_chunks; y++)
     for(int x = 0; x < world->x_chunks; x++)
@@ -811,10 +813,39 @@ CreateWorld(MemoryArena* arena)
         R32 scale = 20;
         R32 x_noise = chunk->pos.x / world->size.x;
         R32 y_noise = chunk->pos.y / world->size.y;
-        R32 noise_value = perlin2d(scale*x_noise, scale*y_noise, 0.2, 4);
+        R32 noise_value = Perlin2D(&noise, scale*x_noise, scale*y_noise, 0.2, 4);
         chunk->type = noise_value < 0.5f ? ChunkType_Sand : ChunkType_Grass;
         chunk->agent_indices = CreateArray<U32>(world->arena, max_agents_in_chunk);
     }
+
+    for (int y = 0; y < world->y_chunks; y++)
+    for (int x = 0; x < world->x_chunks; x++)
+    {
+        int kernel_radius = 2;
+
+        int min_x = Max(0, x - kernel_radius);
+        int min_y = Max(0, y - kernel_radius);
+        int max_x = Min(world->x_chunks - 1, x + kernel_radius);
+        int max_y = Min(world->y_chunks - 1, y + kernel_radius);
+
+        int n_chunks = Max(1, (max_x - min_x + 1) * (max_y - min_y + 1));
+
+        Vec3 avg = V3(0, 0, 0);
+        for (int yy = min_y; yy <= max_y; yy++)
+        for (int xx = min_x; xx <= max_x; xx++)
+        {
+            Chunk* chunk = GetChunk(world, xx, yy);
+            U32 type_color = GetChunkTypeColor(chunk->type);
+            Vec3 type_color_v3 = ColorToVec4(type_color).xyz;
+            avg += type_color_v3;
+        }
+
+        avg /= n_chunks;
+
+        Chunk* chunk = GetChunk(world, x, y);
+        chunk->color = Vec3ToColor(avg.r, avg.g, avg.b);
+    }
+
 
     world->agents = CreateArray<Agent*>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);

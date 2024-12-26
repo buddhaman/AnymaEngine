@@ -88,7 +88,6 @@ T Max(T first, Args... rest)
     return Max(first, Max(rest...));
 }
 
-
 template <typename T>
 T Abs(T v) { return v < 0 ? -v : v; }
 
@@ -100,7 +99,8 @@ T Clamp(T min, T val, T max)
     return val;
 }
 
-static R32 Lerp(R32 t, R32 a, R32 b) 
+static R32 
+Lerp(R32 t, R32 a, R32 b) 
 {
     return a + t * (b - a);
 }
@@ -178,6 +178,19 @@ Vec4ToColor(R32 r, R32 g, R32 b, R32 a)
     U8 gb = (U8)((int)(g * 255.0f));
     U8 bb = (U8)((int)(b * 255.0f));
     U8 ab = (U8)((int)(a * 255.0f));
+
+    return RGBAColor(rb, gb, bb, ab);
+}
+
+constexpr U32
+Vec3ToColor(R32 r, R32 g, R32 b)
+{
+    U32 hex = 0;
+
+    U8 rb = (U8)((int)(r * 255.0f));
+    U8 gb = (U8)((int)(g * 255.0f));
+    U8 bb = (U8)((int)(b * 255.0f));
+    U8 ab = 255;
 
     return RGBAColor(rb, gb, bb, ab);
 }

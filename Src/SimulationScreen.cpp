@@ -172,14 +172,8 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     for(int x = 0; x < world->x_chunks; x++)
     {
         Chunk* chunk = GetChunk(world, x, y);
-        U32 chunk_color; 
-        switch(chunk->type)
-        {
-        case ChunkType_Grass: chunk_color = HexToColor(0x4caf50ff); break;
-        case ChunkType_Sand: chunk_color = HexToColor(0xf4d03fff); break; 
-        }
         Vec3 center = V3(chunk->pos.x+chunk_size/2.0f, chunk->pos.y+chunk_size/2.0f, 0.0f);
-        RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, chunk_color);
+        RenderZRect(renderer, center, V2(chunk_size, chunk_size), renderer->renderer->square, chunk->color);
     }
 
 
