@@ -113,6 +113,11 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         reset_creature = true;
         InitRandomPhenotype(agent->phenotype);
     }
+    if(ImGui::Button("Mutate"))
+    {
+        reset_creature = true;
+        MutatePhenotyhpe(agent->phenotype);
+    }
     if(EditCreatureWindow(agent->phenotype))
     {
         reset_creature = true;

@@ -62,37 +62,46 @@ typedef uint64_t U64;
 typedef float R32;
 typedef double R64;
 
-static constexpr R32 R32_MAX = FLT_MAX;
-static constexpr R64 R64_MAX = DBL_MAX;
-
 static constexpr R32 PI_R32 = 3.1415927f;
 static constexpr R64 PI_R64 = 3.141592653589793;
 
+template <typename T> struct NumLimits { static_assert(sizeof(T) == 0, "NumLimits is not specialized for this type."); };
+template <> struct NumLimits<I8> { static constexpr I8 Max() { return 127; }  };
+template <> struct NumLimits<I16> { static constexpr I16 Max() { return 32767; }  };
+template <> struct NumLimits<I32> { static constexpr I32 Max() { return 2147483647; }  };
+template <> struct NumLimits<I64> { static constexpr I64 Max() { return 9223372036854775807LL; }  };
+template <> struct NumLimits<U8> { static constexpr U8 Max() { return 255; }  };
+template <> struct NumLimits<U16> { static constexpr U16 Max() { return 65535; }  };
+template <> struct NumLimits<U32> { static constexpr U32 Max() { return 4294967295U; }  };
+template <> struct NumLimits<U64> { static constexpr U64 Max() { return 18446744073709551615ULL; }  };
+template <> struct NumLimits<R32> { static constexpr R32 Max() { return 3.402823e+38F; }  };
+template <> struct NumLimits<R64> { static constexpr R64 Max() { return 1.7976931348623157e+308; }  };
+
 // Functions
 
-template <typename T>
-T Min(T a, T b) { return a < b ? a : b; }
+template <typename T> T 
+Min(T a, T b) { return a < b ? a : b; }
 
-template <typename T, typename... Args>
-T Min(T first, Args... rest) 
+template <typename T, typename... Args> T 
+Min(T first, Args... rest) 
 {
     return Min(first, Min(rest...));
 }
 
-template <typename T>
-T Max(T a, T b) { return a < b ? b : a; }
+template <typename T> T 
+Max(T a, T b) { return a < b ? b : a; }
 
-template <typename T, typename... Args>
-T Max(T first, Args... rest)
+template <typename T, typename... Args> T 
+Max(T first, Args... rest)
 {
     return Max(first, Max(rest...));
 }
 
-template <typename T>
-T Abs(T v) { return v < 0 ? -v : v; }
+template <typename T> T 
+Abs(T v) { return v < 0 ? -v : v; }
 
-template <typename T>
-T Clamp(T min, T val, T max)
+template <typename T> T 
+Clamp(T min, T val, T max)
 {
     if(val < min) return min;
     if(val > max) return max;
@@ -119,6 +128,12 @@ RandomR32Debug(float min, float max)
 {
     R32 randFloat = (R32)(rand()) / (R32)(RAND_MAX);
     return randFloat * (max - min) + min;
+}
+
+static inline bool 
+RandomBoolDebug(R32 prob)
+{
+    return RandomR32Debug(0, 1) < prob;
 }
 
 static inline Vec2 
@@ -255,28 +270,23 @@ HSVAToRGBA(R32 h, R32 s, R32 v, R32 a)
     return Vec4ToColor(r, g, b, a);
 }
 
-#ifndef COLORS_H
-#define COLORS_H
-
 // Common colors defined globally
-constexpr U32 Color_Red        = RGBAColor(255, 0, 0, 255);
-constexpr U32 Color_Green      = RGBAColor(0, 255, 0, 255);
-constexpr U32 Color_Blue       = RGBAColor(0, 0, 255, 255);
-constexpr U32 Color_Yellow     = RGBAColor(255, 255, 0, 255);
-constexpr U32 Color_Cyan       = RGBAColor(0, 255, 255, 255);
-constexpr U32 Color_Magenta    = RGBAColor(255, 0, 255, 255);
-constexpr U32 Color_White      = RGBAColor(255, 255, 255, 255);
-constexpr U32 Color_Black      = RGBAColor(0, 0, 0, 255);
-constexpr U32 Color_Gray       = RGBAColor(128, 128, 128, 255);
-constexpr U32 Color_Orange     = RGBAColor(255, 165, 0, 255);
-constexpr U32 Color_Purple     = RGBAColor(128, 0, 128, 255);
-constexpr U32 Color_Brown      = RGBAColor(165, 42, 42, 255);
-constexpr U32 Color_Pink       = RGBAColor(255, 192, 203, 255);
-constexpr U32 Color_Lime       = RGBAColor(0, 255, 0, 255);
-constexpr U32 Color_Aqua       = RGBAColor(0, 255, 255, 255);
-constexpr U32 Color_Silver     = RGBAColor(192, 192, 192, 255);
-constexpr U32 Color_Gold       = RGBAColor(255, 215, 0, 255);
-constexpr U32 Color_Indigo     = RGBAColor(75, 0, 130, 255);
-constexpr U32 Color_Violet     = RGBAColor(238, 130, 238, 255);
-
-#endif
+static constexpr U32 Color_Red        = RGBAColor(255, 0, 0, 255);
+static constexpr U32 Color_Green      = RGBAColor(0, 255, 0, 255);
+static constexpr U32 Color_Blue       = RGBAColor(0, 0, 255, 255);
+static constexpr U32 Color_Yellow     = RGBAColor(255, 255, 0, 255);
+static constexpr U32 Color_Cyan       = RGBAColor(0, 255, 255, 255);
+static constexpr U32 Color_Magenta    = RGBAColor(255, 0, 255, 255);
+static constexpr U32 Color_White      = RGBAColor(255, 255, 255, 255);
+static constexpr U32 Color_Black      = RGBAColor(0, 0, 0, 255);
+static constexpr U32 Color_Gray       = RGBAColor(128, 128, 128, 255);
+static constexpr U32 Color_Orange     = RGBAColor(255, 165, 0, 255);
+static constexpr U32 Color_Purple     = RGBAColor(128, 0, 128, 255);
+static constexpr U32 Color_Brown      = RGBAColor(165, 42, 42, 255);
+static constexpr U32 Color_Pink       = RGBAColor(255, 192, 203, 255);
+static constexpr U32 Color_Lime       = RGBAColor(0, 255, 0, 255);
+static constexpr U32 Color_Aqua       = RGBAColor(0, 255, 255, 255);
+static constexpr U32 Color_Silver     = RGBAColor(192, 192, 192, 255);
+static constexpr U32 Color_Gold       = RGBAColor(255, 215, 0, 255);
+static constexpr U32 Color_Indigo     = RGBAColor(75, 0, 130, 255);
+static constexpr U32 Color_Violet     = RGBAColor(238, 130, 238, 255);

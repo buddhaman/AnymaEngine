@@ -12,8 +12,6 @@
 // Forward declarations
 struct World;
 
-using EntityID = U32;
-
 enum AgentType
 {
     AgentType_None = 0,
@@ -51,6 +49,9 @@ CreatePhenotype(MemoryArena* arena, int max_backbones);
 
 void
 InitRandomPhenotype(PhenoType* pheno);
+
+void
+MutatePhenotyhpe(PhenoType* pheno);
 
 struct Leg
 {
@@ -100,7 +101,6 @@ struct Agent : public Entity
     PhenoType* phenotype;
 
     AgentType type;
-    EntityID id;
 
     I32 ticks_until_reproduce;
     I32 energy;

@@ -39,11 +39,8 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Refactor simulationscreen to use renderer. Do this gradually. 
 - Smooth transition from top down to detailed rendering.
-- Mutate genes.
-- Turn agent into entity? At least something such that collision detection and
-  vision is possible between both plants and agents.
+- Mutate genes gradually. 
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
 - Create tilemap and interpolate colors on the edges for biomes.
 - Use perlin noise for terain and biome generation.
@@ -97,6 +94,9 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Turn agent into entity? At least something such that collision detection and
+  vision is possible between both plants and agents.
+- Refactor simulationscreen to use renderer. Do this gradually. 
 - Build creature in local coordinates.
 - Make terrain look good. 
 - Rebuild only phenotype when changing in editor.

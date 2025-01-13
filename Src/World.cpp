@@ -39,7 +39,7 @@ CastRay(World* world, Ray ray, R32 ray_length, RayCollision* collision, Agent* e
     {
         Cell* cell = GetCell(world, x_cell, y_cell);
         
-        R32 min_intersect_dist = R32_MAX;
+        R32 min_intersect_dist = NumLimits<R32>::Max();
         Agent* hit = nullptr;
         for(U32 agent_idx : cell->agent_indices)
         {
@@ -598,7 +598,6 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     agent->pos = pos;
     agent->type = type;
     agent->radius = 1.2f;
-    agent->id = 1;          // TODO: Use entity ids
     agent->is_alive = true;
     agent->fov = type == AgentType_Carnivore ? 0.6f : 1.2f;
     agent->nearest_carnivore = nullptr;
@@ -648,7 +647,7 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     // Skeleton
     // TODO: Streamline skeleton creation. Tie it to the phenotype.
     agent->skeleton = CreateSkeleton(arena, 48, 96);
-    agent->phenotype = CreatePhenotype(arena, 5);
+    agent->phenotype = CreatePhenotype(arena, 4);
     InitRandomPhenotype(agent->phenotype);
     InitAgentSkeleton(arena, agent);
 

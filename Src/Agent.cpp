@@ -55,6 +55,26 @@ InitRandomPhenotype(PhenoType* pheno)
     ));
 }
 
+void
+MutatePhenotyhpe(PhenoType* pheno)
+{
+    int max_backbones = 12;
+    R32 discrete_prob = 0.1f;
+    if(RandomBoolDebug(discrete_prob))
+    {
+        int dir = RandomBoolDebug(0.5f) ? -1 : 1;
+        pheno->n_backbones = Clamp(1, pheno->n_backbones+dir, max_backbones);
+    }
+
+    for(U32& has_leg : pheno->has_leg)
+    {
+        if(RandomBoolDebug(discrete_prob))
+        {
+            has_leg = !has_leg;
+        }
+    }
+}
+
 static inline Leg* 
 InitLeg(Agent* agent, Leg* leg, int idx_in_body, int dir, R32 mid_radius, R32 end_radius, U32 color)
 {
