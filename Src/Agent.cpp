@@ -5,28 +5,48 @@
 PhenoType* 
 CreatePhenotype(MemoryArena* arena, int max_backbones)
 {
-    PhenoType* body = PushStruct(arena, PhenoType);
-    *body = {0};
+    PhenoType* pheno = PushStruct(arena, PhenoType);
+    *pheno = {0};
 
-    body->backbone_radius = VecR32Create(arena, max_backbones);
-    body->knee_size = VecR32Create(arena, max_backbones);
-    body->foot_size = VecR32Create(arena, max_backbones);
-    body->step_radius = VecR32Create(arena, max_backbones);
+    pheno->backbone_radius = VecR32Create(arena, max_backbones);
+    pheno->knee_size = VecR32Create(arena, max_backbones);
+    pheno->foot_size = VecR32Create(arena, max_backbones);
+    pheno->step_radius = VecR32Create(arena, max_backbones);
 
-    body->has_leg = CreateArray<U32>(arena, max_backbones);
-    body->has_leg.FillAndSetValue(0);
+    pheno->has_leg = CreateArray<U32>(arena, max_backbones);
+    pheno->has_leg.FillAndSetValue(0);
 
-    body->color = Color_Brown;
+    pheno->color = Color_Brown;
 
-    return body;
+    return pheno;
+}
+
+PhenoType*
+CopyPhenotype(MemoryArena* arena, PhenoType* source)
+{
+    PhenoType* pheno = PushStruct(arena, PhenoType);
+    pheno->n_backbones = source->n_backbones;
+    pheno->backbone_radius = VecR32Copy(arena, &source->backbone_radius);
+    pheno->knee_size = VecR32Copy(arena, &source->knee_size);
+    pheno->foot_size = VecR32Copy(arena, &source->foot_size);
+    pheno->step_radius = VecR32Copy(arena, &source->step_radius);
+
+    pheno->has_leg = CopyArray(arena, &source->has_leg);
+
+    pheno->color = source->color;
+    pheno->elbow_size = source->elbow_size;
+    pheno->hand_size = source->hand_size;
+
+    return pheno;
 }
 
 void
 InitRandomPhenotype(PhenoType* pheno)
 {
-    pheno->n_backbones = RandomIntDebug(1, 4);
+    I32 max_backbones = 4;
+    pheno->n_backbones = RandomIntDebug(1, max_backbones);
 
-    // Bettter make differnt distribution, technically this can go below 0.
+    // Bettter make different distribution, technically this can go below 0.
     pheno->backbone_radius.Set(0);
     pheno->backbone_radius.AddNormal(3.0f, 1.0f);
 
@@ -39,7 +59,7 @@ InitRandomPhenotype(PhenoType* pheno)
     pheno->step_radius.Set(0.0f);
     pheno->step_radius.AddNormal(1.0f, 0.25f);
 
-    for(int i = 0; i < pheno->n_backbones; i++)
+    for(int i = 0; i < max_backbones; i++)
     {
         pheno->has_leg[i] = RandomR32Debug(0, 1) < 0.5f;
     }
@@ -56,14 +76,14 @@ InitRandomPhenotype(PhenoType* pheno)
 }
 
 void
-MutatePhenotyhpe(PhenoType* pheno)
+MutatePhenotype(PhenoType* pheno)
 {
-    int max_backbones = 12;
+    int max_backbones = 4;
     R32 discrete_prob = 0.1f;
     if(RandomBoolDebug(discrete_prob))
     {
         int dir = RandomBoolDebug(0.5f) ? -1 : 1;
-        pheno->n_backbones = Clamp(1, pheno->n_backbones+dir, max_backbones);
+        pheno->n_backbones = Clamp(1, pheno->n_backbones+dir, max_backbones-1);
     }
 
     for(U32& has_leg : pheno->has_leg)

@@ -95,6 +95,14 @@ VecR32Create(MemoryArena* arena, int n)
     return VecR32Create(n, data);
 }
 
+static inline VecR32
+VecR32Copy(MemoryArena* arena, VecR32* source)
+{
+    R32* data = PushArray(arena, R32, source->n);
+    memcpy(data, source->v, source->n*sizeof(R32));
+    return VecR32Create(source->n, data);
+}
+
 static inline VecR32 
 VecR32Create(int n)
 {

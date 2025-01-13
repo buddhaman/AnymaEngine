@@ -30,6 +30,8 @@ struct AgentEye
 
 struct PhenoType
 {
+    U32 size_in_bytes;
+
     int n_backbones = 0;
     VecR32 backbone_radius;
 
@@ -50,8 +52,11 @@ CreatePhenotype(MemoryArena* arena, int max_backbones);
 void
 InitRandomPhenotype(PhenoType* pheno);
 
+PhenoType*
+CopyPhenotype(MemoryArena* arena, PhenoType* source);
+
 void
-MutatePhenotyhpe(PhenoType* pheno);
+MutatePhenotype(PhenoType* pheno);
 
 struct Leg
 {

@@ -262,6 +262,17 @@ CreateArray(MemoryArena* arena, I64 capacity)
 }
 
 template <typename T> Array<T>
+CopyArray(MemoryArena* arena, Array<T>* source)
+{
+    Array<T> array;
+    array.capacity = source->capacity;
+    array.data = (T *)PushAndZeroMemory_(arena, sizeof(T)*array.capacity);
+    array.size = source->size;
+    memcpy(array.data, source->data, source->capacity*sizeof(T));
+    return array;
+}
+
+template <typename T> Array<T>
 CreateArray_(void *dataMemory, I64 capacity)
 {
     Array<T> array = {0};
