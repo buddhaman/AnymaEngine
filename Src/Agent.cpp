@@ -75,24 +75,25 @@ InitRandomPhenotype(PhenoType* pheno)
     ));
 }
 
+static void 
+MutateContinuous(R32* value, R32 dev, R32 min, R32 max)
+{
+    R32 mutation = RandomR32Debug(-dev, dev);
+    *value = Clamp(min, *value+mutation, max);
+}
+
 void
 MutatePhenotype(PhenoType* pheno)
 {
     int max_backbones = 4;
     R32 discrete_prob = 0.02f;
-    R32 continuous_var = 0.04f;
+    R32 continuous_dev = 0.04f;
     R32 c_min = 0.1f;
     R32 c_max = 5.0f;
     if(RandomBoolDebug(discrete_prob))
     {
         int dir = RandomBoolDebug(0.5f) ? -1 : 1;
         pheno->n_backbones = Clamp(1, pheno->n_backbones+dir, max_backbones-1);
-    }
-
-    for(int i = 0; i < max_backbones; i++)
-    {
-        R32 var = RandomR32Debug(-continuous_var, continuous_var);
-        pheno->backbone_radius.v[i] = Clamp(0.1f, var + pheno->backbone_radius.v[i], 5.0f);
     }
 
     for(U32& has_leg : pheno->has_leg)
@@ -102,6 +103,28 @@ MutatePhenotype(PhenoType* pheno)
             has_leg = !has_leg;
         }
     }
+
+    for(int i = 0; i < max_backbones; i++)
+    {
+        MutateContinuous(&pheno->backbone_radius.v[i], continuous_dev, c_min, c_max);
+    }
+
+    for(int i = 0; i < max_backbones; i++)
+    {
+        MutateContinuous(&pheno->knee_size.v[i], continuous_dev, c_min, c_max);
+    }
+
+    for(int i = 0; i < max_backbones; i++)
+    {
+        MutateContinuous(&pheno->step_radius.v[i], continuous_dev, c_min, c_max);
+    }
+    MutateContinuous(&pheno->elbow_size, continuous_dev, c_min, c_max);
+    MutateContinuous(&pheno->hand_size, continuous_dev, c_min, c_max);
+    Vec4 color = ColorToVec4(pheno->color);
+    MutateContinuous(&color.r, continuous_dev, 0, 1);
+    MutateContinuous(&color.g, continuous_dev, 0, 1);
+    MutateContinuous(&color.b, continuous_dev, 0, 1);
+    pheno->color = Vec4ToColor(color);
 }
 
 static inline Leg* 

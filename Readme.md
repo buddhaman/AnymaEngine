@@ -40,7 +40,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 
 #### TODO
 - Smooth transition from top down to detailed rendering.
-- Mutate genes gradually. 
+- Design genes such that limbs appear and disappear gradually.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
 - Create tilemap and interpolate colors on the edges for biomes.
 - Use perlin noise for terain and biome generation.
@@ -49,7 +49,6 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Show work done per thread. Internal profiling tools.
 - I just realized that the lifespan arena is just a more complicated circular
   buffer. Implement circular buffers.
-
 - Design mouth.
 - Make graph in real seconds as units.
 - FUN: Make a creature editor.
@@ -94,6 +93,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Mutate genes gradually. 
 - Turn agent into entity? At least something such that collision detection and
   vision is possible between both plants and agents.
 - Refactor simulationscreen to use renderer. Do this gradually. 
