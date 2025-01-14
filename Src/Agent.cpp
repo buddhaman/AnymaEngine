@@ -79,11 +79,20 @@ void
 MutatePhenotype(PhenoType* pheno)
 {
     int max_backbones = 4;
-    R32 discrete_prob = 0.1f;
+    R32 discrete_prob = 0.02f;
+    R32 continuous_var = 0.04f;
+    R32 c_min = 0.1f;
+    R32 c_max = 5.0f;
     if(RandomBoolDebug(discrete_prob))
     {
         int dir = RandomBoolDebug(0.5f) ? -1 : 1;
         pheno->n_backbones = Clamp(1, pheno->n_backbones+dir, max_backbones-1);
+    }
+
+    for(int i = 0; i < max_backbones; i++)
+    {
+        R32 var = RandomR32Debug(-continuous_var, continuous_var);
+        pheno->backbone_radius.v[i] = Clamp(0.1f, var + pheno->backbone_radius.v[i], 5.0f);
     }
 
     for(U32& has_leg : pheno->has_leg)
