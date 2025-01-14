@@ -121,9 +121,9 @@ MutatePhenotype(PhenoType* pheno)
     MutateContinuous(&pheno->elbow_size, continuous_dev, c_min, c_max);
     MutateContinuous(&pheno->hand_size, continuous_dev, c_min, c_max);
     Vec4 color = ColorToVec4(pheno->color);
-    MutateContinuous(&color.r, continuous_dev, 0, 1);
-    MutateContinuous(&color.g, continuous_dev, 0, 1);
-    MutateContinuous(&color.b, continuous_dev, 0, 1);
+    MutateContinuous(&color.r, continuous_dev*0.2f, 0, 1);
+    MutateContinuous(&color.g, continuous_dev*0.2f, 0, 1);
+    MutateContinuous(&color.b, continuous_dev*0.2f, 0, 1);
     pheno->color = Vec4ToColor(color);
 }
 
@@ -388,22 +388,21 @@ UpdateMovement(World* world, Agent* agent)
 
     if(agent->pos.x < offset.x)
     {
-        agent->pos.x = agent->pos.x + size.x;
+        agent->pos.x = offset.x;
     }
     
     if(agent->pos.x > offset.x + size.x)
     {
-        agent->pos.x = agent->pos.x - size.x;
+        agent->pos.x = offset.x + size.x;
     }
 
     if(agent->pos.y < offset.y)
     {
-        agent->pos.y = agent->pos.y + size.y;
+        agent->pos.y = offset.y;
     }
     
     if(agent->pos.y > offset.y + size.y)
     {
-        agent->pos.y = agent->pos.y - size.y;
+        agent->pos.y = offset.y + size.y;
     }
-
 }

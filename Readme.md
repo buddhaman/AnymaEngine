@@ -93,6 +93,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Turn off toroidal world.
 - Mutate genes gradually. 
 - Turn agent into entity? At least something such that collision detection and
   vision is possible between both plants and agents.
