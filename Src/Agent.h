@@ -41,6 +41,7 @@ struct PhenoType
     VecR32 step_radius;
 
     // Later we want to customize number of limbs.
+    R32 head_size = 0;
     R32 elbow_size = 0;
     R32 hand_size = 0;
     U32 color;

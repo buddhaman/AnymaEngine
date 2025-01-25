@@ -39,7 +39,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Smooth transition from top down to detailed rendering.
+- Fix the scale of the agents.
 - Design genes such that limbs appear and disappear gradually.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
 - Create tilemap and interpolate colors on the edges for biomes.
@@ -215,6 +215,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - For an overview of how the world is evolving, create a kind of sampling minimap. Dont render each individual creature but take a couple of samples for each pixel using the bsp-tree and take the average color. Store these frames and show as animation.
 - Set business rules for evolution.
 - Make interesting presets, make it easier for the user.
+- Cool water shader.
 
 ### Engine and more games.
 - Move game-engine related stuff to different folder and turn into reusable game-engine.
@@ -251,6 +252,6 @@ STYLE:
 
  ### BUGS
   - No agents leads to deadlock? SOLVED
-  - Asserts still show in release.
+  - Asserts still show in release. SOLVED
 
  

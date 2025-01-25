@@ -227,6 +227,14 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
 #else
     for(Agent* agent : world->agents)
     {
+        U32 color = GetAgentColor(agent->type);
+        Vec3 pos;
+        pos.xy = agent->pos;
+        pos.z = 0;
+        RenderZCircle(renderer, pos, agent->radius, color);
+    }
+    for(Agent* agent : world->agents)
+    {
         UpdateAgentSkeleton(agent);
         RenderAgent(renderer, agent);
     }
