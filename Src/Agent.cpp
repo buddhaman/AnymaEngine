@@ -169,6 +169,8 @@ InitAgentSkeleton(MemoryArena* arena, Agent* agent)
     // Body
     R32 diff = 9.0f*scale;
 
+    agent->radius = Max(1.2f, n_backbones*diff/5.0f);
+
     // Offset beginning position by diff*(n_backbones-1)/2 such that the agent is centered.
     pos -= V3((n_backbones-1)*diff/2.0f, 0, 0);
 

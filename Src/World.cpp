@@ -597,7 +597,6 @@ AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
     I64 agent_idx = world->agents.size-1;
     agent->pos = pos;
     agent->type = type;
-    agent->radius = 1.2f;
     agent->is_alive = true;
     agent->fov = type == AgentType_Carnivore ? 0.6f : 1.2f;
     agent->nearest_carnivore = nullptr;
