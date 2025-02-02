@@ -18,11 +18,13 @@ enum GamePhase
     GamePhase_EditorScreen,
 };
 
+constexpr I32 lifetime_multiplication_factor = 5;
+
 struct SimulationSettings
 {
     int max_agents = DEFAULT_MAX_AGENTS;
     int n_initial_agents = DEFAULT_NUM_AGENTS;
-    R32 cell_size = 12.0f;
+    R32 cell_size = 24.0f;
     int x_cells = DEFAULT_AXIS_CHUNKS;
     int y_cells = DEFAULT_AXIS_CHUNKS;
 
@@ -31,11 +33,13 @@ struct SimulationSettings
     I32 charge_duration = 20;     // 60 per second.
     I32 charge_refractory_period = 240;     // 60 per second.
 
-    I32 herbivore_reproduction_ticks = 60*10;
-    I32 herbivore_initial_energy = 60*11;;
+    I32 herbivore_reproduction_ticks = 60*10*lifetime_multiplication_factor;
+    I32 herbivore_initial_energy = 60*11*lifetime_multiplication_factor;
 
-    I32 carnivore_reproduction_ticks = 60*26;
-    I32 carnivore_initial_energy = 60*25;
+    I32 carnivore_reproduction_ticks = 60*26*lifetime_multiplication_factor;
+    I32 carnivore_initial_energy = 60*25*lifetime_multiplication_factor;
+
+    I32 max_lifespan = 60*60*lifetime_multiplication_factor;
 
     // Current phase settings
     GamePhase current_phase = GamePhase_EditorScreen;
