@@ -805,7 +805,6 @@ CreateWorld(MemoryArena* arena)
 
     int max_agents = settings->max_agents;
     int n_initial_agents = settings->n_initial_agents;
-
     // TODO: This is a heuristic. Do something better.
     int max_agents_in_cell = (int)(world->cell_size*world->cell_size*2);
 

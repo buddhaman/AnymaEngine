@@ -4,8 +4,6 @@
 
 This will be the most large scale and fastest evolution simulation out there. 
 
-Brain update rate will be 1 / 6 of the physics update rate.
-
 ## Building
 ~~Make sure you have cmake, vcpkg and all necessary c++ development tools for your operating system.~~
 
@@ -40,10 +38,10 @@ Brain update rate will be 1 / 6 of the physics update rate.
 
 #### TODO
 - Fix the scale of the agents.
+- Make tools to visualize genes and gene changes such that agent phenotype can be designed properly.
 - Design genes such that limbs appear and disappear gradually.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
 - Create tilemap and interpolate colors on the edges for biomes.
-- Use perlin noise for terain and biome generation.
 - Make decorations on the terain, rocks.
 - Collision detection with solid tiles.
 - Show work done per thread. Internal profiling tools.
@@ -93,6 +91,7 @@ Brain update rate will be 1 / 6 of the physics update rate.
 - Make rain and clouds when zooming out. 
 
 ### Done
+- Use perlin noise for terain and biome generation.
 - Turn off toroidal world.
 - Mutate genes gradually. 
 - Turn agent into entity? At least something such that collision detection and

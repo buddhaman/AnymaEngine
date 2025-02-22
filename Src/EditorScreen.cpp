@@ -152,7 +152,6 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
         UpdateTiltedCameraDragInput(&editor->renderer->cam, input);
     }
 
-
     R32 grayscale = 0.6f;
     U32 platform_color = Vec4ToColor(grayscale, grayscale, grayscale, 1.0f);
     R32 shade = 0.6f;

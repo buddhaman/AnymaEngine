@@ -3,13 +3,13 @@
 #include "AnymUtil.h"
 
 #ifdef NDEBUG
-#define DEFAULT_AXIS_CHUNKS 200
-#define DEFAULT_NUM_AGENTS 6000
-#define DEFAULT_MAX_AGENTS 6000
+constexpr int g_default_axis_chunks = 200;
+constexpr int g_default_num_agents = 6000;
+constexpr int g_default_max_agents = 6000;
 #else
-#define DEFAULT_AXIS_CHUNKS 50
-#define DEFAULT_NUM_AGENTS 100
-#define DEFAULT_MAX_AGENTS 100
+constexpr int g_default_axis_chunks = 50;
+constexpr int g_default_num_agents = 100;
+constexpr int g_default_max_agents = 100;
 #endif
 
 enum GamePhase
@@ -22,11 +22,11 @@ constexpr I32 lifetime_multiplication_factor = 5;
 
 struct SimulationSettings
 {
-    int max_agents = DEFAULT_MAX_AGENTS;
-    int n_initial_agents = DEFAULT_NUM_AGENTS;
+    int max_agents = g_default_max_agents;
+    int n_initial_agents = g_default_num_agents;
     R32 cell_size = 24.0f;
-    int x_cells = DEFAULT_AXIS_CHUNKS;
-    int y_cells = DEFAULT_AXIS_CHUNKS;
+    int x_cells = g_default_axis_chunks;
+    int y_cells = g_default_axis_chunks;
 
     R32 mutation_rate = 0.012f;
     I32 energy_transfer_on_hit = 350;
