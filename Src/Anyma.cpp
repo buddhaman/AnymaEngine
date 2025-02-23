@@ -23,6 +23,7 @@
 #include "Skeleton.h"
 #include "Brain.h"
 #include "Agent.h"
+#include "Plant.h"
 #include "SimulationScreen.h"
 #include "SimulationSettings.h"
 #include "ThreadPool.h"
@@ -30,6 +31,7 @@
 
 #include "Brain.cpp"
 #include "Agent.cpp"
+#include "Plant.cpp"
 #include "Array.h"
 #include "Camera2D.cpp"
 #include "TiltCamera.cpp"

@@ -304,7 +304,6 @@ UpdateWorldChanges(World* world)
         world->agents.RemoveIndexUnordered(remove_idx);
     }
     world->removed_agent_indices.Clear();
-
     world->ticks++;
     world->lifespan_arena_swap_ticks--;
     if(world->lifespan_arena_swap_ticks <= 0)
@@ -869,6 +868,15 @@ CreateWorld(MemoryArena* arena)
     world->agents = CreateArray<Agent*>(world->arena, max_agents);
     world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
     world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
+
+    int max_plants = 1200;
+    world->plants = CreateArray<Plant*>(world->arena, max_plants);
+    world->plant_arena = CreateSubArena(world->arena, KiloBytes(128));
+
+    for(int i = 0; i < 10; i++)
+    {
+        Vec2 pos = RandomVec2Debug(V2(0,0), world->size);
+    }
 
     world->spawn_particles = true;
     world->particles = CreateArray<Particle>(1024);

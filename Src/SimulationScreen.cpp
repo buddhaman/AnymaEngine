@@ -238,6 +238,12 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
         UpdateAgentSkeleton(agent);
         RenderAgent(renderer, agent);
     }
+
+    for(Plant* plant : world->plants)
+    {
+        UpdatePlantSkeleton(plant);
+        RenderPlant(renderer, plant);
+    }
 #endif
 
 

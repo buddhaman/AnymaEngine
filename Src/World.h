@@ -63,6 +63,7 @@ struct World
     Array<Agent*> agents;
     Array<Plant*> plants;
 
+
     // Tracking for dynamic entities.
     Array<U32> removed_agent_indices;
     Array<U32> visible_agent_indices;
@@ -75,6 +76,7 @@ struct World
     MemoryArena* arena;
     MemoryArena* lifespan_arena;
     MemoryArena* lifespan_arena_old;
+    MemoryArena* plant_arena;
     I64 lifespan_arena_swap_ticks;
     I64 max_lifespan;
 
