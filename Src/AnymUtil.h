@@ -114,6 +114,11 @@ Lerp(R32 t, R32 a, R32 b)
     return a + t * (b - a);
 }
 
+constexpr R32 DegToRad(R32 degrees)
+{
+    return PI_R32* degrees / 180.0f;
+}
+
 static inline I32
 RandomIntDebug(int min_value, int max_value)
 {

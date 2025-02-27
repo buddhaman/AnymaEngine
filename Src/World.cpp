@@ -871,9 +871,12 @@ CreateWorld(MemoryArena* arena)
 
     int max_plants = 1200;
     world->plants = CreateArray<Plant*>(world->arena, max_plants);
-    world->plant_arena = CreateSubArena(world->arena, KiloBytes(128));
+    world->plant_arena = CreateSubArena(world->arena, KiloBytes(256));
 
-    CreatePlant(world, world->size/2.0f);
+    for(int i = 0; i < 40; i++)
+    {
+        CreatePlant(world, RandomVec2Debug(V2(0,0), world->size));
+    }
 
     for(int i = 0; i < 10; i++)
     {
