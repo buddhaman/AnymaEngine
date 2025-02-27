@@ -37,6 +37,8 @@ This will be the most large scale and fastest evolution simulation out there.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
+- Make plants.
+- Use world inside editor screen. 
 - Fix the scale of the agents.
 - Make tools to visualize genes and gene changes such that agent phenotype can be designed properly.
 - Design genes such that limbs appear and disappear gradually.
@@ -215,6 +217,9 @@ This will be the most large scale and fastest evolution simulation out there.
 - Set business rules for evolution.
 - Make interesting presets, make it easier for the user.
 - Cool water shader.
+- The editor is just a kind of playground where you can test out things in small
+  before letting evolution do its thing. Its a bunch of tools for myself to
+  design genes and bodies. 
 
 ### Engine and more games.
 - Move game-engine related stuff to different folder and turn into reusable game-engine.

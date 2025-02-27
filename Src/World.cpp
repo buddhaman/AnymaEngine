@@ -1,7 +1,7 @@
 #include "World.h"
-
 #include "Noise.h"
 #include "Skeleton.h"
+#include "Plant.h"
 
 static void
 SwapLifespanArenas(World* world)
@@ -872,6 +872,8 @@ CreateWorld(MemoryArena* arena)
     int max_plants = 1200;
     world->plants = CreateArray<Plant*>(world->arena, max_plants);
     world->plant_arena = CreateSubArena(world->arena, KiloBytes(128));
+
+    CreatePlant(world, world->size/2.0f);
 
     for(int i = 0; i < 10; i++)
     {

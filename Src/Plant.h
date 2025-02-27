@@ -7,7 +7,7 @@ struct Plant : Entity
     Skeleton* skeleton;
 };
 
-static Plant* 
+Plant* 
 CreatePlant(World* world, Vec2 pos);
 
 void
