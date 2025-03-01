@@ -890,7 +890,7 @@ CreateWorld(MemoryArena* arena)
     {
         AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
         Agent* agent = AddAgent(world, type, RandomVec2Debug(V2(0,0), world->size));
-        agent->orientation = RandomR32Debug(-(R32)M_PI, -(R32)M_PI);
+        agent->orientation = RandomR32Debug(-PI_R32, PI_R32);
     }
     return world;
 }
