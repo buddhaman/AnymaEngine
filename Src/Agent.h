@@ -12,19 +12,19 @@
 // Forward declarations
 struct World;
 
-enum AgentType
+enum class AgentType
 {
-    AgentType_None = 0,
-    AgentType_Herbivore = 1,
-    AgentType_Carnivore = 2,
-    AgentType_Num
+    None = 0,
+    Herbivore = 1,
+    Carnivore = 2,
+    Num
 };
 
 struct AgentEye
 {
     Ray ray;
     R32 distance;
-    AgentType hit_type;
+    int hit_type;
     R32 orientation;
 };
 
@@ -106,7 +106,7 @@ struct Agent : public Entity
     Brain* brain;
     PhenoType* phenotype;
 
-    AgentType type;
+    AgentType agent_type;
 
     I32 ticks_until_reproduce;
     I32 energy;
@@ -124,8 +124,6 @@ struct Agent : public Entity
     R32 nearest_carnivore_distance;
     R32 nearest_carnivore_angle;
     Agent* nearest_carnivore;
-
-    bool is_alive;
 };
 
 static inline U32
@@ -133,8 +131,8 @@ GetAgentColor(AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return Color_Red;
-    case AgentType_Herbivore: return Color_Green;
+    case AgentType::Carnivore: return Color_Red;
+    case AgentType::Herbivore: return Color_Green;
     default: return Color_White;
     }
 }
@@ -162,4 +160,10 @@ IsCharging(Agent* agent) { return agent->charge; }
 
 static inline bool
 IsRefractory(Agent* agent) { return agent->charge_refractory != 0; }
+
+Agent* 
+CreateAgent(World* world, AgentType type, Vec2 pos, Agent* parent=nullptr);
+
+void
+RemoveAgent(World* world, U32 agent_idx);
 

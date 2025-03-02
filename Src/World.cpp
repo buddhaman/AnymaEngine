@@ -100,7 +100,7 @@ SuperSimpleBehavior(Agent* agent)
     I64 n_eyes = agent->eyes.size;
     if(agent->eyes[0].hit_type)
     {
-        if(agent->eyes[0].hit_type==agent->type)
+        if(agent->eyes[0].hit_type==(int)agent->agent_type)
         {
             agent->orientation += turnspeed;
         }
@@ -111,7 +111,7 @@ SuperSimpleBehavior(Agent* agent)
     }
     if(agent->eyes[n_eyes-1].hit_type)
     {
-        if(agent->eyes[n_eyes-1].hit_type==agent->type)
+        if(agent->eyes[n_eyes-1].hit_type==(int)agent->agent_type)
         {
             agent->orientation -= turnspeed;
         }
@@ -185,7 +185,7 @@ UpdateAgentSensorsAndBrains(World* world, I32 from_idx, I32 to_idx)
                     R32 distance2 = V2Len2(diff);
 
                     // Set as nearest carnivore or herbivore if possible.
-                    if(other->type==AgentType_Carnivore)
+                    if(other->agent_type==AgentType::Carnivore)
                     {
                         R32 l = agent->nearest_carnivore_distance;
                         if(distance2 < l*l)
@@ -264,7 +264,7 @@ UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx)
             {
                 // Try spawn particle
                 R32 vel = 1.4f;
-                U32 color = GetAgentColor(agent->type);
+                U32 color = GetAgentColor(agent->agent_type);
                 for(int i = 0; i < 5; i++)
                 {
                     TrySpawnParticle(world, agent->pos, RandomVec2Debug(V2(-vel, -vel), V2(vel, vel)), 0.45f, color);
@@ -275,17 +275,17 @@ UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx)
         agent->ticks_until_reproduce--;
         if(agent->ticks_until_reproduce <= 0)
         {
-            agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type);
-            if(world->num_agenttype[agent->type] < global_settings.max_agents*0.9f)
+            agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->agent_type);
+            if(world->num_agenttype[(int)agent->agent_type] < global_settings.max_agents*0.9f)
             {
                 Vec2 at_pos = agent->pos+V2(0.5f, 0.5f);
-                int more = agent->type==AgentType_Carnivore ? 4 : 2;
+                int more = agent->agent_type==AgentType::Carnivore ? 4 : 2;
                 int n_rep = RandomR32Debug(0, 1) < 0.25 ?  more : 1;
                 for(int i = 0; i < n_rep; i++)
                 {
                     if(CanAddAgent(world, at_pos))
                     {
-                        AddAgent(world, agent->type, at_pos, agent);
+                        CreateAgent(world, agent->agent_type, at_pos, agent);
                     }
                 }
             }
@@ -316,8 +316,8 @@ UpdateWorldChanges(World* world)
 bool
 HerbivoreCarnivoreCollision(Agent* herbivore, Agent* carnivore)
 {
-    Assert(herbivore->type==AgentType_Herbivore);
-    Assert(carnivore->type==AgentType_Carnivore);
+    Assert(herbivore->agent_type==AgentType::Herbivore);
+    Assert(carnivore->agent_type==AgentType::Carnivore);
 
     if(IsRefractory(herbivore))
     {
@@ -351,11 +351,11 @@ CheckAgentCollisions(Agent* agent0, Agent* agent1)
     if(l2 < radsum*radsum)
     {
         bool resolve = true;
-        if(agent0->type==AgentType_Carnivore && agent1->type==AgentType_Herbivore)
+        if(agent0->agent_type==AgentType::Carnivore && agent1->agent_type==AgentType::Herbivore)
         {
             resolve = HerbivoreCarnivoreCollision(agent1, agent0);
         }
-        else if(agent0->type==AgentType_Herbivore && agent1->type==AgentType_Carnivore)
+        else if(agent0->agent_type==AgentType::Herbivore && agent1->agent_type==AgentType::Carnivore)
         {
             resolve = HerbivoreCarnivoreCollision(agent0, agent1);
         }
@@ -377,7 +377,8 @@ RenderEyeRays(Mesh2D* mesh, Agent* agent, Vec2 uv)
     {
         AgentEye* eye = &agent->eyes[i];
         R32 ray_width = 0.1f;
-        U32 color = GetAgentColor(eye->hit_type);
+        // I hate static cast.
+        U32 color = GetAgentColor((AgentType)(eye->hit_type));
         PushLine(mesh, eye->ray.pos, eye->ray.pos + eye->distance*eye->ray.dir, ray_width, uv, V2(0,0), color);
     }
 
@@ -418,7 +419,6 @@ RenderDetails(Mesh2D* mesh, Agent* agent, Vec2 uv)
     // Pupils
     PushNGon(mesh, agent->pos+dir*eye_d+perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
     PushNGon(mesh, agent->pos+dir*eye_d-perp*eye_d, pupil_r, eye_sides, eye_orientation, uv, pupil_color);
-
 }
 
 void 
@@ -472,7 +472,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay col
 
             default:
             {
-                color = agent->type==AgentType_Herbivore ? herbivore_color : carnivore_color;
+                color = agent->agent_type==AgentType::Herbivore ? herbivore_color : carnivore_color;
             } break;
         }
 
@@ -491,7 +491,7 @@ RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay col
         // TODO: Better just make two completely separate loops
         if(cam->scale > 3)
         {
-            if(agent->type==AgentType_Carnivore)
+            if(agent->agent_type==AgentType::Carnivore)
             {
                 I32 sides = 3;
                 R32 vel_len = V2Len(agent->vel); 
@@ -586,88 +586,6 @@ SortAgentsIntoMultipleCells(World* world)
             cell->agent_indices.PushBack(agent_idx);
         }
     }
-}
-
-Agent* 
-AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
-{
-    Agent* agent = PushNewStruct(world->lifespan_arena, Agent);
-    world->agents.PushBack(agent);
-    I64 agent_idx = world->agents.size-1;
-    agent->pos = pos;
-    agent->type = type;
-    agent->is_alive = true;
-    agent->fov = type == AgentType_Carnivore ? 0.6f : 1.2f;
-    agent->nearest_carnivore = nullptr;
-    agent->nearest_herbivore = nullptr;
-    agent->sight_radius = 40;
-    
-    world->num_agenttype[type]++;
-
-    MemoryArena* arena = world->lifespan_arena;
-
-    // Eyes
-    int n_eyes = 4;
-    agent->eyes = CreateArray<AgentEye>(arena, n_eyes);
-    for(int i = 0; i < n_eyes; i++)
-    {
-        AgentEye* eye = agent->eyes.PushBack();
-        eye->orientation = -agent->fov/2.0f + i*agent->fov/(n_eyes-1);
-    }
-
-    // Brain
-    int inputs = n_eyes*3+1;
-    int outputs = 4;
-    R32 mutation_rate = global_settings.mutation_rate;
-    Brain* brain = agent->brain = CreateBrain(arena, inputs, inputs*2+1, outputs, parent ? parent->brain : nullptr, mutation_rate);
-
-    // Here the gene is known, calculate a nice color to visualize the gene.
-    R32 color_calc[3] = {0,0,0};
-    for(int i = 0; i < brain->gene.n; i++)
-    {
-        color_calc[i%3] += Abs(brain->gene[i]);
-    }
-
-    // Stupid way to calculate max of 3 numbers. Should make library function
-    // for this.
-    R32 max_color = Max(color_calc[0], color_calc[1], color_calc[2]);
-    for(int i = 0; i < 3; i++)
-    {
-        color_calc[i] /= max_color;
-    }
-
-    R32 hue = fmodf(color_calc[0]*480.0f, 360.0f);
-    agent->gene_color = HSVAToRGBA(hue, color_calc[1], color_calc[2], 1.0f);
-
-    agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->type) + (int)RandomR32Debug(-80, 40);
-    agent->energy = GetInitialEnergy(world, agent->type);
-
-    // Skeleton
-    // TODO: Streamline skeleton creation. Tie it to the phenotype.
-    agent->skeleton = CreateSkeleton(arena, 48, 96);
-    if(parent==nullptr)
-    {
-        agent->phenotype = CreatePhenotype(arena, 4);
-        InitRandomPhenotype(agent->phenotype);
-    }
-    else
-    {
-        agent->phenotype = CopyPhenotype(arena, parent->phenotype);
-        MutatePhenotype(agent->phenotype);
-    }
-    InitAgentSkeleton(arena, agent);
-
-    return agent;
-}
-
-void
-RemoveAgent(World* world, U32 agent_idx)
-{
-    Agent* agent = world->agents[agent_idx];
-    agent->is_alive = false;
-    world->num_agenttype[agent->type]--;
-
-    world->removed_agent_indices.PushBack(agent_idx);
 }
 
 Agent* 
@@ -873,6 +791,9 @@ CreateWorld(MemoryArena* arena)
     world->plants = CreateArray<Plant*>(world->arena, max_plants);
     world->plant_arena = CreateSubArena(world->arena, KiloBytes(256));
 
+    // TODO: This is a hack.
+    world->entities = CreateArray<Entity*>(world->arena, max_agents+max_plants);
+
     for(int i = 0; i < 40; i++)
     {
         CreatePlant(world, RandomVec2Debug(V2(0,0), world->size));
@@ -883,13 +804,14 @@ CreateWorld(MemoryArena* arena)
         Vec2 pos = RandomVec2Debug(V2(0,0), world->size);
     }
 
+
     world->spawn_particles = true;
     world->particles = CreateArray<Particle>(1024);
 
     for(int i = 0; i < n_initial_agents; i++)
     {
-        AgentType type = i < n_initial_agents/2 ? AgentType_Carnivore : AgentType_Herbivore;
-        Agent* agent = AddAgent(world, type, RandomVec2Debug(V2(0,0), world->size));
+        AgentType type = i < n_initial_agents/2 ? AgentType::Carnivore : AgentType::Herbivore;
+        Agent* agent = CreateAgent(world, type, RandomVec2Debug(V2(0,0), world->size));
         agent->orientation = RandomR32Debug(-PI_R32, PI_R32);
     }
     return world;

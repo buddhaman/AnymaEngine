@@ -123,6 +123,26 @@ DrawGrid(TiltedRenderer* renderer, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, V
     }
 }
 
+void
+DoTiltedEntityRender(TiltedRenderer* renderer)
+{
+    // for (Entity* entity : renderer->entities)
+    // {
+    //     switch (entity->type)
+    //     {
+    //         case Entity_Agent:
+    //             RenderAgent(renderer, (Agent*)entity);
+    //             break;
+    //         case Entity_Plant:
+    //             RenderPlant(renderer, (Plant*)entity);
+    //             break;
+    //         default:
+    //             // Handle unknown entity type if necessary
+    //             break;
+    //     }
+    // }
+}
+
 static void
 DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
 {
@@ -227,12 +247,13 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
 #else
     for(Agent* agent : world->agents)
     {
-        U32 color = GetAgentColor(agent->type);
+        U32 color = GetAgentColor(agent->agent_type);
         Vec3 pos;
         pos.xy = agent->pos;
         pos.z = 0;
         RenderZCircle(renderer, pos, agent->radius, color);
     }
+
     for(Agent* agent : world->agents)
     {
         UpdateAgentSkeleton(agent);
@@ -376,7 +397,7 @@ EditSettings(SimulationScreen* screen)
         Vec2 pos = screen->cam.pos;
         if(InBounds({V2(0,0), world->size}, pos) && CanAddAgent(world, pos))
         {
-            AddAgent(world, AgentType_Herbivore, pos);
+            CreateAgent(world, AgentType::Herbivore, pos);
         }
     }
 
@@ -385,7 +406,7 @@ EditSettings(SimulationScreen* screen)
         Vec2 pos = screen->cam.pos;
         if(InBounds({V2(0,0), world->size}, pos) && CanAddAgent(world, pos))
         {
-            AddAgent(world, AgentType_Carnivore, pos);
+            CreateAgent(world, AgentType::Carnivore, pos);
         }
     }
 
@@ -423,7 +444,7 @@ DoDebugInfo(SimulationScreen* screen, Window* window)
     ImGuiMemoryArena(world->lifespan_arena, "Current lifespan arena");
     ImGuiMemoryArena(world->lifespan_arena_old, "Old lifespan arena");
     ImGui::Text("Number of agents: %zu, (C: %d, H: %d)", 
-            world->agents.size, world->num_agenttype[AgentType_Carnivore], world->num_agenttype[AgentType_Herbivore]);
+            world->agents.size, world->num_agenttype[static_cast<int>(AgentType::Carnivore)], world->num_agenttype[static_cast<int>(AgentType::Herbivore)]);
 }
 
 void
@@ -485,9 +506,9 @@ DoStatisticsWindow(SimulationScreen* screen)
     {
         screen->track_population_per = 30;
         screen->num_herbivores.Shift(-1);
-        screen->num_herbivores[screen->num_herbivores.size-1] = (R32)world->num_agenttype[AgentType_Herbivore];
+        screen->num_herbivores[screen->num_herbivores.size-1] = (R32)world->num_agenttype[static_cast<int>(AgentType::Herbivore)];
         screen->num_carnivores.Shift(-1);
-        screen->num_carnivores[screen->num_carnivores.size-1] = (R32)world->num_agenttype[AgentType_Carnivore];
+        screen->num_carnivores[screen->num_carnivores.size-1] = (R32)world->num_agenttype[static_cast<int>(AgentType::Carnivore)];
     }
 
     DynamicArray<R32> x_axis(screen->num_herbivores.size);

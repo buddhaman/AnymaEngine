@@ -2,15 +2,16 @@
 
 #include "AnymUtil.h"
 
-enum EntityType
+enum class EntityType
 {
-    Entity_Agent,
-    Entity_Plant,
+    Agent,
+    Plant,
 };
 
 struct Entity
 {
     Vec2 pos;
-    R32 radius;
+    R32 radius = 0.0f;
     EntityType type;
+    bool removed;
 };

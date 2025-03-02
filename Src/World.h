@@ -71,7 +71,7 @@ struct World
 
     I64 ticks;
 
-    I32 num_agenttype[AgentType_Num];
+    I32 num_agenttype[static_cast<int>(AgentType::Num)];
 
     MemoryArena* arena;
     MemoryArena* lifespan_arena;
@@ -128,6 +128,24 @@ GetCellAt(World* world, Vec2 at)
     return GetCell(world, x_cell, y_cell);
 }
 
+template <typename T>
+static inline T*
+CreateEntityWithType(World* world, EntityType type, Vec2 pos)
+{
+    T* entity = PushNewStruct(world->arena, T);
+    entity->type = type;
+    entity->pos = pos;
+    entity->removed = false;
+    world->entities.PushBack(entity);
+    return entity;
+}
+
+static inline void
+RemoveEntity(World* world, Entity* entity)
+{
+    entity->removed = true;
+}
+
 Agent* 
 CastRay(World* world, Ray ray, R32 ray_length, RayCollision *collision, Agent* exclude_agent=nullptr);
 
@@ -163,12 +181,6 @@ UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx);
 
 void
 UpdateWorldChanges(World* world);
-
-Agent* 
-AddAgent(World* world, AgentType type, Vec2 pos, Agent* parent=nullptr);
-
-void
-RemoveAgent(World* world, U32 agent_idx);
 
 Agent* 
 SelectFromWorld(World* world, Vec2 pos, R32 extra_radius = 0.0f);

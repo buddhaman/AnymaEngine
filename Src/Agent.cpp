@@ -326,8 +326,8 @@ GetTicksUntilReproduction(World* world, AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return global_settings.carnivore_reproduction_ticks;
-    case AgentType_Herbivore: return global_settings.herbivore_reproduction_ticks;
+    case AgentType::Carnivore: return global_settings.carnivore_reproduction_ticks;
+    case AgentType::Herbivore: return global_settings.herbivore_reproduction_ticks;
     default: return 0;
     }
 }
@@ -337,8 +337,8 @@ GetInitialEnergy(World* world, AgentType type)
 {
     switch(type)
     {
-    case AgentType_Carnivore: return global_settings.carnivore_initial_energy;
-    case AgentType_Herbivore: return global_settings.herbivore_initial_energy;
+    case AgentType::Carnivore: return global_settings.carnivore_initial_energy;
+    case AgentType::Herbivore: return global_settings.herbivore_initial_energy;
     default: return 0;
     }
 }
@@ -354,7 +354,7 @@ UpdateMovement(World* world, Agent* agent)
     R32 charge_amount = 0;
 
     // Charging is currently only for carnivores.
-    if(agent->type == AgentType_Carnivore)
+    if(agent->agent_type == AgentType::Carnivore)
     {
         if(!agent->charge_refractory && charge_output > charge_threshold)
         {
@@ -407,4 +407,84 @@ UpdateMovement(World* world, Agent* agent)
     {
         agent->pos.y = offset.y + size.y;
     }
+}
+
+Agent* 
+CreateAgent(World* world, AgentType type, Vec2 pos, Agent* parent)
+{
+    Agent* agent = CreateEntityWithType<Agent>(world, EntityType::Agent, pos);
+    world->agents.PushBack(agent);
+    I64 agent_idx = world->agents.size-1;
+    agent->pos = pos;
+    agent->agent_type = type;
+    agent->fov = type == AgentType::Carnivore ? 0.6f : 1.2f;
+    agent->nearest_carnivore = nullptr;
+    agent->nearest_herbivore = nullptr;
+    agent->sight_radius = 40;
+    
+    world->num_agenttype[static_cast<int>(type)]++;
+
+    MemoryArena* arena = world->lifespan_arena;
+
+    // Eyes
+    int n_eyes = 4;
+    agent->eyes = CreateArray<AgentEye>(arena, n_eyes);
+    for(int i = 0; i < n_eyes; i++)
+    {
+        AgentEye* eye = agent->eyes.PushBack();
+        eye->orientation = -agent->fov/2.0f + i*agent->fov/(n_eyes-1);
+    }
+
+    // Brain
+    int inputs = n_eyes*3+1;
+    int outputs = 4;
+    R32 mutation_rate = global_settings.mutation_rate;
+    Brain* brain = agent->brain = CreateBrain(arena, inputs, inputs*2+1, outputs, parent ? parent->brain : nullptr, mutation_rate);
+
+    // Here the gene is known, calculate a nice color to visualize the gene.
+    R32 color_calc[3] = {0,0,0};
+    for(int i = 0; i < brain->gene.n; i++)
+    {
+        color_calc[i%3] += Abs(brain->gene[i]);
+    }
+
+    // Stupid way to calculate max of 3 numbers. Should make library function
+    // for this.
+    R32 max_color = Max(color_calc[0], color_calc[1], color_calc[2]);
+    for(int i = 0; i < 3; i++)
+    {
+        color_calc[i] /= max_color;
+    }
+
+    R32 hue = fmodf(color_calc[0]*480.0f, 360.0f);
+    agent->gene_color = HSVAToRGBA(hue, color_calc[1], color_calc[2], 1.0f);
+
+    agent->ticks_until_reproduce = GetTicksUntilReproduction(world, agent->agent_type) + (int)RandomR32Debug(-80, 40);
+    agent->energy = GetInitialEnergy(world, agent->agent_type);
+
+    // Skeleton
+    // TODO: Streamline skeleton creation. Tie it to the phenotype.
+    agent->skeleton = CreateSkeleton(arena, 48, 96);
+    if(parent==nullptr)
+    {
+        agent->phenotype = CreatePhenotype(arena, 4);
+        InitRandomPhenotype(agent->phenotype);
+    }
+    else
+    {
+        agent->phenotype = CopyPhenotype(arena, parent->phenotype);
+        MutatePhenotype(agent->phenotype);
+    }
+    InitAgentSkeleton(arena, agent);
+
+    return agent;
+}
+
+void
+RemoveAgent(World* world, U32 agent_idx)
+{
+    Agent* agent = world->agents[agent_idx];
+    world->num_agenttype[static_cast<int>(agent->agent_type)]--;
+    world->removed_agent_indices.PushBack(agent_idx);
+    RemoveEntity(world, agent);
 }

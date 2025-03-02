@@ -8,6 +8,7 @@ CreatePlant(World* world, Vec2 pos)
     Plant* plant = PushNewStruct(arena, Plant);
     plant->pos = pos;
     world->plants.PushBack(plant);
+    world->entities.PushBack(plant);
     
     plant->skeleton = CreateSkeleton(arena, 50, 64);
 
@@ -53,7 +54,7 @@ CreateBranches(Skeleton* skeleton, int parent_index, Vec3 pos, R32 length, R32 r
 
         Vec3 child_pos = pos + direction;
 
-        int child_index = skeleton->joints.size; 
+        int child_index = (int)skeleton->joints.size; 
         AddJoint(skeleton, child_pos, next_radius, color);
         Connect(skeleton, parent_index, radius, child_index, next_radius, color);
         

@@ -37,9 +37,9 @@ This will be the most large scale and fastest evolution simulation out there.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
-- Use world inside editor screen. 
+- Move rendering to world and reuse world code in the editor.
 - Fix the scale of the agents.
-- Plants should sleep when no interaction.
+- Plants should sleep when no interaction. (This also fixes the constant rotation).
 - Make tools to visualize genes and gene changes such that agent phenotype can be designed properly.
 - Design genes such that limbs appear and disappear gradually.
 - Create food. Make bushes with berries and herbivore agents have to stand still and collect.
