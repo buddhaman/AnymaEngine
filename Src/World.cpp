@@ -296,14 +296,24 @@ UpdateAgentBehavior(Camera2D* cam, World* world, I32 from_idx, I32 to_idx)
 void
 UpdateWorldChanges(World* world)
 {
-    // Process removed agents, sort indices descending and then actually remove.
-    world->removed_agent_indices.Sort([](U32 a, U32 b) -> int {return b-a;});
-    for(int remove_idx : world->removed_agent_indices)
+    // Do a "GC" sweep to remove entities that are no longer in the world. Reverse iterate and remove.
+    for(int i = (int)world->entities.size-1; i >= 0; i--)
     {
-        Agent* agent = world->agents[remove_idx];
-        world->agents.RemoveIndexUnordered(remove_idx);
+        Entity* entity = world->entities[i];
+        if(entity->removed)
+        {
+            world->entities.RemoveIndexUnordered(i);
+        }
     }
-    world->removed_agent_indices.Clear();
+    for(int i = (int)world->agents.size-1; i >= 0; i--)
+    {
+        Agent* agent = world->agents[i];
+        if(agent->removed)
+        {
+            world->agents.RemoveIndexUnordered(i);
+        }
+    }
+    // Process removed agents, sort indices descending and then actually remove.
     world->ticks++;
     world->lifespan_arena_swap_ticks--;
     if(world->lifespan_arena_swap_ticks <= 0)
@@ -433,118 +443,118 @@ RenderHealth(Mesh2D* mesh, World* world, Agent* agent, Vec2 uv)
     PushRect(mesh, agent->pos-V2(full_bar_width/2.0f, r*1.5f), V2(health_width, bar_height), u, V2(0,0), RGBAColor(0, 255, 0, 255));
 }
 
-void 
-RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay color_overlay)
-{
-    // Draw world as square
-    R32 world_rect_width = 2.0f/cam->scale;
-    PushLineRect(mesh, V2(0,0), world->size, world_rect_width, uv, V2(0,0), RGBAColor(150, 150, 150, 150));
+// void 
+// RenderWorld(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv, ColorOverlay color_overlay)
+// {
+//     // Draw world as square
+//     R32 world_rect_width = 2.0f/cam->scale;
+//     PushLineRect(mesh, V2(0,0), world->size, world_rect_width, uv, V2(0,0), RGBAColor(150, 150, 150, 150));
 
-    // Which agents are visible. Omg this is stupid should be done using cells.
-    world->visible_agent_indices.Clear();
-    for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
-    {
-        Agent* agent = world->agents[agent_idx];
-        if(InBounds(cam->bounds, agent->pos))
-        {
-            world->visible_agent_indices.PushBack(agent_idx);
-        }
-    }
+//     // Which agents are visible. Omg this is stupid should be done using cells.
+//     world->visible_agent_indices.Clear();
+//     for(int agent_idx = 0; agent_idx < world->agents.size; agent_idx++)
+//     {
+//         Agent* agent = world->agents[agent_idx];
+//         if(InBounds(cam->bounds, agent->pos))
+//         {
+//             world->visible_agent_indices.PushBack(agent_idx);
+//         }
+//     }
 
-    for(int i = 0; i < world->visible_agent_indices.size; i++)
-    {
-        Agent* agent = world->agents[world->visible_agent_indices[i]];
+//     for(int i = 0; i < world->visible_agent_indices.size; i++)
+//     {
+//         Agent* agent = world->agents[world->visible_agent_indices[i]];
 
-        R32 r = agent->radius;
-        Vec2 dir = V2Polar(agent->orientation, 1.0f);
-        Vec2 perp = V2(dir.y, -dir.x);
-        Vec4 herbivore_color = V4(0, 1, 0, 1);
-        Vec4 carnivore_color = V4(1, 0, 0, 1);
-        Vec4 color;
+//         R32 r = agent->radius;
+//         Vec2 dir = V2Polar(agent->orientation, 1.0f);
+//         Vec2 perp = V2(dir.y, -dir.x);
+//         Vec4 herbivore_color = V4(0, 1, 0, 1);
+//         Vec4 carnivore_color = V4(1, 0, 0, 1);
+//         Vec4 color;
 
-        // Overwrite for gene info
-        switch(color_overlay)
-        {
-            case ColorOverlay_AgentGenes:
-            {
-                color = ColorToVec4(agent->gene_color);
-            } break;
+//         // Overwrite for gene info
+//         switch(color_overlay)
+//         {
+//             case ColorOverlay_AgentGenes:
+//             {
+//                 color = ColorToVec4(agent->gene_color);
+//             } break;
 
-            default:
-            {
-                color = agent->agent_type==AgentType::Herbivore ? herbivore_color : carnivore_color;
-            } break;
-        }
+//             default:
+//             {
+//                 color = agent->agent_type==AgentType::Herbivore ? herbivore_color : carnivore_color;
+//             } break;
+//         }
 
-        if(IsCharging(agent))
-        {
-            // If charging we know its a carnivore now. Set bright red.
-            color = V4(1.0f, 0.3f, 0.3f, 1.0f);
-            color.a = 1.0f;
-        }
-        else if (IsRefractory(agent))
-        {
-            color = 0.5f * color;
-            color.a = 1.0f;
-        }
+//         if(IsCharging(agent))
+//         {
+//             // If charging we know its a carnivore now. Set bright red.
+//             color = V4(1.0f, 0.3f, 0.3f, 1.0f);
+//             color.a = 1.0f;
+//         }
+//         else if (IsRefractory(agent))
+//         {
+//             color = 0.5f * color;
+//             color.a = 1.0f;
+//         }
 
-        // TODO: Better just make two completely separate loops
-        if(cam->scale > 3)
-        {
-            if(agent->agent_type==AgentType::Carnivore)
-            {
-                I32 sides = 3;
-                R32 vel_len = V2Len(agent->vel); 
-                R32 r = agent->radius/vel_len;
-                Vec2 axis0 = agent->vel*r;
-                Vec2 axis1 = V2(-axis0.y, axis0.x);
-                axis0=(axis0*(1.0f+vel_len));
-                // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
-                axis0 = V2Polar(agent->orientation, agent->radius);
-                axis1 = V2(-axis0.y, axis0.x);
-                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
-            }
-            else
-            {
-                I32 sides = 5;
-                R32 vel_len = V2Len(agent->vel); 
-                R32 r = agent->radius/vel_len;
-                Vec2 axis0 = agent->vel*r;
-                Vec2 axis1 = V2(-axis0.y, axis0.x);
-                axis0=(axis0*(1.0f+vel_len));
-                // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
-                axis0 = V2Polar(agent->orientation, agent->radius);
-                axis1 = V2(-axis0.y, axis0.x);
-                PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
-            }
-            RenderDetails(mesh, agent, uv);
-            RenderHealth(mesh, world, agent, uv);
+//         // TODO: Better just make two completely separate loops
+//         if(cam->scale > 3)
+//         {
+//             if(agent->agent_type==AgentType::Carnivore)
+//             {
+//                 I32 sides = 3;
+//                 R32 vel_len = V2Len(agent->vel); 
+//                 R32 r = agent->radius/vel_len;
+//                 Vec2 axis0 = agent->vel*r;
+//                 Vec2 axis1 = V2(-axis0.y, axis0.x);
+//                 axis0=(axis0*(1.0f+vel_len));
+//                 // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+//                 axis0 = V2Polar(agent->orientation, agent->radius);
+//                 axis1 = V2(-axis0.y, axis0.x);
+//                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+//             }
+//             else
+//             {
+//                 I32 sides = 5;
+//                 R32 vel_len = V2Len(agent->vel); 
+//                 R32 r = agent->radius/vel_len;
+//                 Vec2 axis0 = agent->vel*r;
+//                 Vec2 axis1 = V2(-axis0.y, axis0.x);
+//                 axis0=(axis0*(1.0f+vel_len));
+//                 // PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+//                 axis0 = V2Polar(agent->orientation, agent->radius);
+//                 axis1 = V2(-axis0.y, axis0.x);
+//                 PushNGon(mesh, agent->pos, sides, axis0, axis1, uv, Vec4ToColor(color));
+//             }
+//             RenderDetails(mesh, agent, uv);
+//             RenderHealth(mesh, world, agent, uv);
 
-        }
-        else
-        {
-            I32 sides = 3;
-            PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, Vec4ToColor(color));
-        }
-    }
+//         }
+//         else
+//         {
+//             I32 sides = 3;
+//             PushNGon(mesh, agent->pos, agent->radius, sides, agent->orientation, uv, Vec4ToColor(color));
+//         }
+//     }
 
-    // Render particles
-    if(cam->scale > 3)
-    {
-        Vec2 uv = V2(0,0);
-        for(int particle_idx = 0; particle_idx < world->particles.size; particle_idx++)
-        {
-            Particle& p = world->particles[particle_idx];
-            I32 sides = 5;
-            R32 vel_len = V2Len(p.vel); 
-            R32 r = 1.2f*p.lifetime/vel_len;
-            Vec2 axis0 = p.vel*r;
-            Vec2 axis1 = V2(-axis0.y, axis0.x);
-            axis0=(axis0*(1.0f+vel_len));
-            PushNGon(mesh, p.pos, sides, axis0, axis1, uv, p.color);
-        }
-    }
-}
+//     // Render particles
+//     if(cam->scale > 3)
+//     {
+//         Vec2 uv = V2(0,0);
+//         for(int particle_idx = 0; particle_idx < world->particles.size; particle_idx++)
+//         {
+//             Particle& p = world->particles[particle_idx];
+//             I32 sides = 5;
+//             R32 vel_len = V2Len(p.vel); 
+//             R32 r = 1.2f*p.lifetime/vel_len;
+//             Vec2 axis0 = p.vel*r;
+//             Vec2 axis1 = V2(-axis0.y, axis0.x);
+//             axis0=(axis0*(1.0f+vel_len));
+//             PushNGon(mesh, p.pos, sides, axis0, axis1, uv, p.color);
+//         }
+//     }
+// }
 
 void 
 DrawCells(World* world, Mesh2D* mesh, Camera2D* cam, Vec2 uv)
@@ -784,14 +794,10 @@ CreateWorld(MemoryArena* arena)
     }
 
     world->agents = CreateArray<Agent*>(world->arena, max_agents);
-    world->visible_agent_indices = CreateArray<U32>(world->arena, max_agents);
-    world->removed_agent_indices = CreateArray<U32>(world->arena, max_agents);
 
     int max_plants = 1200;
     world->plants = CreateArray<Plant*>(world->arena, max_plants);
     world->plant_arena = CreateSubArena(world->arena, KiloBytes(256));
-
-    // TODO: This is a hack.
     world->entities = CreateArray<Entity*>(world->arena, max_agents+max_plants);
 
     for(int i = 0; i < 40; i++)

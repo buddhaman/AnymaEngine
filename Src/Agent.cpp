@@ -485,6 +485,5 @@ RemoveAgent(World* world, U32 agent_idx)
 {
     Agent* agent = world->agents[agent_idx];
     world->num_agenttype[static_cast<int>(agent->agent_type)]--;
-    world->removed_agent_indices.PushBack(agent_idx);
     RemoveEntity(world, agent);
 }

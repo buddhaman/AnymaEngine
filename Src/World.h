@@ -63,15 +63,12 @@ struct World
     Array<Agent*> agents;
     Array<Plant*> plants;
 
-
     // Tracking for dynamic entities.
-    Array<U32> removed_agent_indices;
-    Array<U32> visible_agent_indices;
     int max_eyes_per_agent;
 
     I64 ticks;
 
-    I32 num_agenttype[static_cast<int>(AgentType::Num)];
+    I32 num_agenttype[(int)AgentType::Num];
 
     MemoryArena* arena;
     MemoryArena* lifespan_arena;
@@ -145,6 +142,7 @@ RemoveEntity(World* world, Entity* entity)
 {
     entity->removed = true;
 }
+
 
 Agent* 
 CastRay(World* world, Ray ray, R32 ray_length, RayCollision *collision, Agent* exclude_agent=nullptr);

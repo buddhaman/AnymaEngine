@@ -124,23 +124,26 @@ DrawGrid(TiltedRenderer* renderer, Vec2 cam_min, Vec2 cam_max, Vec2 world_min, V
 }
 
 void
-DoTiltedEntityRender(TiltedRenderer* renderer)
+DoTiltedEntityRender(TiltedRenderer* renderer, World* world)
 {
-    // for (Entity* entity : renderer->entities)
-    // {
-    //     switch (entity->type)
-    //     {
-    //         case Entity_Agent:
-    //             RenderAgent(renderer, (Agent*)entity);
-    //             break;
-    //         case Entity_Plant:
-    //             RenderPlant(renderer, (Plant*)entity);
-    //             break;
-    //         default:
-    //             // Handle unknown entity type if necessary
-    //             break;
-    //     }
-    // }
+    world->entities.Sort([](Entity* a, Entity* b) -> int {
+        return (int)(b->pos.y - a->pos.y);
+    });
+    for (Entity* entity : world->entities)
+    {
+        switch (entity->type)
+        {
+            case EntityType::Agent:
+                RenderAgent(renderer, (Agent*)entity);
+                break;
+            case EntityType::Plant:
+                RenderPlant(renderer, (Plant*)entity);
+                break;
+            default:
+                // Handle unknown entity type if necessary
+                break;
+        }
+    }
 }
 
 static void
@@ -257,14 +260,14 @@ DoTiltedScreenWorldRender(SimulationScreen* screen, Window* window)
     for(Agent* agent : world->agents)
     {
         UpdateAgentSkeleton(agent);
-        RenderAgent(renderer, agent);
     }
 
     for(Plant* plant : world->plants)
     {
         UpdatePlantSkeleton(plant);
-        RenderPlant(renderer, plant);
     }
+
+    DoTiltedEntityRender(renderer, world);
 #endif
 
 

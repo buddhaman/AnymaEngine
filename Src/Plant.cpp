@@ -5,10 +5,8 @@ Plant*
 CreatePlant(World* world, Vec2 pos)
 {
     MemoryArena* arena = world->plant_arena;
-    Plant* plant = PushNewStruct(arena, Plant);
-    plant->pos = pos;
+    Plant* plant = CreateEntityWithType<Plant>(world, EntityType::Plant, pos);
     world->plants.PushBack(plant);
-    world->entities.PushBack(plant);
     
     plant->skeleton = CreateSkeleton(arena, 50, 64);
 
