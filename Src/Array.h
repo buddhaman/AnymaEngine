@@ -141,8 +141,9 @@ struct Array
         return max;
     }
 
-    // TODO: Dont be dependent on standard library. Get rid of STDs.
-    inline void Sort(const std::function<int(T, T)>& compare)
+    // Sort with a templated comparator function
+    template<typename Compare>
+    inline void Sort(Compare compare)
     {
         if(size <= 1)
         {
@@ -164,7 +165,8 @@ struct Array
     Iterator end() { return Iterator(data + size); }
 
     private:
-    void Quicksort(I64 low, I64 high, const std::function<int(T, T)>& compare) 
+    template<typename Compare>
+    void Quicksort(I64 low, I64 high, Compare compare) 
     {
         if (low < high) 
         {
@@ -174,7 +176,8 @@ struct Array
         }
     }
 
-    I64 Partition(I64 low, I64 high, const std::function<int(T, T)>& compare) 
+    template<typename Compare>
+    I64 Partition(I64 low, I64 high, Compare compare) 
     {
         T pivot = data[high];
         I64 i = (low - 1);
