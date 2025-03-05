@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <string>
+#include <functional>
 
 #include "AnymUtil.h"
 #include "Array.h"

@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO: REMOVE
-#include <functional>
-
 #include "AnymUtil.h"
 #include "Memory.h"
 
