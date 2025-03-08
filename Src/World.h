@@ -63,7 +63,6 @@ struct World
     Array<Agent*> agents;
     Array<Plant*> plants;
 
-    // Tracking for dynamic entities.
     int max_eyes_per_agent;
 
     I64 ticks;
