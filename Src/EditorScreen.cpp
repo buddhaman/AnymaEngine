@@ -258,6 +258,29 @@ void UpdateTokens(EditorScreen* editor)
         editor->last_chunk_accuracy = editor->current_chunk_accuracy;
         editor->total_chunks_processed++;
         
+        // Long-term tracking: accumulate and sample every N chunks
+        editor->longterm_accuracy_sum += editor->current_chunk_accuracy;
+        editor->longterm_samples_in_period++;
+        editor->longterm_sample_counter++;
+        
+        if(editor->longterm_sample_counter >= editor->longterm_sample_rate)
+        {
+            // Calculate average accuracy over this sample period
+            float avg_accuracy = editor->longterm_accuracy_sum / (float)editor->longterm_samples_in_period;
+            
+            // Store in long-term history (grows indefinitely up to 10000)
+            if(editor->longterm_accuracy_history.size < editor->longterm_accuracy_history.capacity)
+            {
+                editor->longterm_accuracy_history.PushBack(avg_accuracy);
+                editor->longterm_chunk_numbers.PushBack((R32)editor->total_chunks_processed);
+            }
+            
+            // Reset long-term sample counters
+            editor->longterm_sample_counter = 0;
+            editor->longterm_accuracy_sum = 0.0f;
+            editor->longterm_samples_in_period = 0;
+        }
+        
         // Reset chunk counters
         editor->current_chunk_iteration = 0;
         editor->chunk_tokens_processed = 0;
@@ -355,6 +378,12 @@ void EditSoupWindow(EditorScreen* editor)
         editor->current_chunk_accuracy = 0.0f;
         editor->total_chunks_processed = 0;
         editor->current_token_index = 0;
+        // Reset long-term tracking
+        editor->longterm_accuracy_history.Clear();
+        editor->longterm_chunk_numbers.Clear();
+        editor->longterm_sample_counter = 0;
+        editor->longterm_accuracy_sum = 0.0f;
+        editor->longterm_samples_in_period = 0;
     }
     
     ImGui::Separator();
@@ -579,6 +608,61 @@ void EditSoupWindow(EditorScreen* editor)
             ImPlot::PlotLine("Tokens", x_axis_chunks.data, editor->tokens_per_chunk_history.data, (int)editor->tokens_per_chunk_history.size);
             ImPlot::PopStyleColor();
             ImPlot::EndPlot();
+        }
+    }
+    
+    // Long-term accuracy tracking
+    ImGui::Separator();
+    ImGui::Text("Long-Term Accuracy Tracking");
+    ImGui::SliderInt("Sample Every N Chunks", &editor->longterm_sample_rate, 1, 100);
+    ImGui::Text("Long-term samples: %lld", editor->longterm_accuracy_history.size);
+    ImGui::Text("Next sample in: %d chunks", editor->longterm_sample_rate - editor->longterm_sample_counter);
+    
+    if(editor->longterm_accuracy_history.size > 1)
+    {
+        ImPlotFlags longterm_plot_flags = ImPlotFlags_NoBoxSelect | 
+                                ImPlotFlags_NoFrame;
+        
+        // Use chunk numbers as x-axis for proper scaling
+        ImPlot::SetNextAxesToFit();
+        Vec2 longterm_plot_size = V2(-1, 200);
+        if(ImPlot::BeginPlot("Long-Term Accuracy (All Time)", ImVec2(longterm_plot_size.x, longterm_plot_size.y), longterm_plot_flags))
+        {
+            ImPlot::SetupAxes("Chunk #", "Accuracy");
+            Vec4 longterm_color = V4(0.2f, 0.6f, 1.0f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(longterm_color.x, longterm_color.y, longterm_color.z, longterm_color.w));
+            ImPlot::PlotLine("Avg Accuracy", editor->longterm_chunk_numbers.data, editor->longterm_accuracy_history.data, (int)editor->longterm_accuracy_history.size);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+        
+        // Show min/max/current long-term accuracy
+        float min_acc = editor->longterm_accuracy_history[0];
+        float max_acc = editor->longterm_accuracy_history[0];
+        for(int i = 1; i < editor->longterm_accuracy_history.size; i++)
+        {
+            if(editor->longterm_accuracy_history[i] < min_acc) min_acc = editor->longterm_accuracy_history[i];
+            if(editor->longterm_accuracy_history[i] > max_acc) max_acc = editor->longterm_accuracy_history[i];
+        }
+        float latest_acc = editor->longterm_accuracy_history[editor->longterm_accuracy_history.size - 1];
+        ImGui::Text("Min: %.2f%% | Max: %.2f%% | Latest: %.2f%%", min_acc * 100.0f, max_acc * 100.0f, latest_acc * 100.0f);
+        
+        // Show trend (compare first 10% vs last 10%)
+        if(editor->longterm_accuracy_history.size >= 10)
+        {
+            int window = Max(1, (int)editor->longterm_accuracy_history.size / 10);
+            float early_avg = 0.0f;
+            float late_avg = 0.0f;
+            for(int i = 0; i < window; i++)
+            {
+                early_avg += editor->longterm_accuracy_history[i];
+                late_avg += editor->longterm_accuracy_history[editor->longterm_accuracy_history.size - 1 - i];
+            }
+            early_avg /= (float)window;
+            late_avg /= (float)window;
+            float change = late_avg - early_avg;
+            const char* trend = change > 0.01f ? "IMPROVING" : (change < -0.01f ? "DECLINING" : "STABLE");
+            ImGui::Text("Trend: %s (%.2f%% -> %.2f%%)", trend, early_avg * 100.0f, late_avg * 100.0f);
         }
     }
     
@@ -862,6 +946,12 @@ InitEditorScreen(EditorScreen* editor)
     editor->current_chunk_accuracy = 0.0f;
     editor->dopamine_released_this_chunk = false;
     editor->total_chunks_processed = 0;
+    
+    // Initialize long-term tracking
+    editor->longterm_sample_rate = 10;
+    editor->longterm_sample_counter = 0;
+    editor->longterm_accuracy_sum = 0.0f;
+    editor->longterm_samples_in_period = 0;
     
     // Set initial input
     if(editor->soup && editor->training_text)

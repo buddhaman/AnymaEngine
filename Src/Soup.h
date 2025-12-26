@@ -188,7 +188,7 @@ Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_ne
     // Set default parameters
     soup->target_rate = 0.1f;
     soup->eta_threshold = 0.01f;
-    soup->eta_weight = 0.001f;
+    soup->eta_weight = 0.03f;
     soup->eligibility_decay = 0.9f;
 
     // First initialize all neurons (without connections)
