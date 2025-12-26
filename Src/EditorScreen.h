@@ -6,6 +6,7 @@
 #include "Camera2D.h"
 #include "Texture.h"
 #include "Renderer.h"
+#include "Soup.h"
 
 struct EditorScreen
 {
@@ -17,6 +18,8 @@ struct EditorScreen
     TiltedRenderer* renderer;
 
     Agent* agent;
+
+    Soup* soup;
 
     R32 time = 0.0f;
 };

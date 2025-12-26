@@ -222,4 +222,7 @@ InitEditorScreen(EditorScreen* editor)
     PhenoType* pheno = editor->agent->phenotype = CreatePhenotype(arena, 12);
     InitRandomPhenotype(pheno);
     InitAgentSkeleton(arena, editor->agent);
+
+    editor->soup = CreateSoup(arena, 1000, 10);
+
 }
