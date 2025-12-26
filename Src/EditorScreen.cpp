@@ -1,4 +1,5 @@
 #include <imgui.h>
+#include <implot.h>
 #include <gl3w.h>
 
 #include "AnymUtil.h"
@@ -42,7 +43,8 @@ bool EditBoolArray(const char* labelPrefix, uint32_t* array, int count)
     return changed;
 }
 
-bool EditCreatureWindow(PhenoType* pheno)
+// Hidden function - not called
+bool EditCreatureWindowHidden(PhenoType* pheno)
 {
     bool changed = false;
     // Edit the number of backbones with clamping
@@ -85,6 +87,243 @@ bool EditCreatureWindow(PhenoType* pheno)
     return changed;
 }
 
+void EditSoupWindow(EditorScreen* editor)
+{
+    if(!editor->soup) return;
+    
+    Soup* soup = editor->soup;
+    MemoryArena* arena = editor->editor_arena;
+    
+    ImGui::Begin("Soup Editor");
+    
+    // Create new Soup
+    static int new_num_neurons = 1000;
+    static int new_num_connections = 10;
+    ImGui::Text("Create New Soup");
+    ImGui::InputInt("Number of Neurons", &new_num_neurons);
+    ImGui::InputInt("Connections per Neuron", &new_num_connections);
+    new_num_neurons = Clamp(10, new_num_neurons, 10000);
+    new_num_connections = Clamp(1, new_num_connections, 1000);
+    
+    if(ImGui::Button("Create New Soup"))
+    {
+        editor->soup = CreateSoup(arena, new_num_neurons, new_num_connections);
+        soup = editor->soup;
+        // Reset history
+        editor->active_neuron_history.Clear();
+        editor->avg_threshold_history.Clear();
+        editor->firing_rate_history.Clear();
+    }
+    
+    ImGui::Separator();
+    
+    // Edit Soup parameters
+    ImGui::Text("Soup Parameters");
+    ImGui::SliderFloat("Target Rate", &soup->target_rate, 0.0f, 1.0f);
+    ImGui::SliderFloat("Threshold Learning Rate", &soup->eta_threshold, 0.0f, 0.1f);
+    ImGui::SliderFloat("Weight Learning Rate", &soup->eta_weight, 0.0f, 0.01f);
+    ImGui::SliderFloat("Eligibility Decay", &soup->eligibility_decay, 0.0f, 1.0f);
+    
+    ImGui::Separator();
+    
+    // Run controls
+    ImGui::Text("Run Controls");
+    
+    // Play/Pause button
+    if(editor->soup_playing)
+    {
+        if(ImGui::Button(ICON_LC_PAUSE " Pause"))
+        {
+            editor->soup_playing = false;
+        }
+    }
+    else
+    {
+        if(ImGui::Button(ICON_LC_PLAY " Play"))
+        {
+            editor->soup_playing = true;
+        }
+    }
+    
+    ImGui::SameLine();
+    
+    // Step button
+    if(ImGui::Button(ICON_LC_STEP_FORWARD " Step"))
+    {
+        UpdateSoup(*soup);
+    }
+    
+    // Speed control (steps per frame)
+    ImGui::SliderInt("Steps Per Frame", &editor->soup_steps_per_frame, 1, 100);
+    
+    // Execute steps if playing
+    if(editor->soup_playing)
+    {
+        for(int i = 0; i < editor->soup_steps_per_frame; i++)
+        {
+            UpdateSoup(*soup);
+        }
+    }
+    
+    ImGui::Separator();
+    
+    // Statistics
+    int active_count = CountActiveNeurons(*soup);
+    R32 firing_rate = soup->neurons.size > 0 ? (R32)active_count / (R32)soup->neurons.size : 0.0f;
+    
+    R32 avg_threshold = 0.0f;
+    for(Neuron& neuron : soup->neurons)
+    {
+        avg_threshold += neuron.threshold;
+    }
+    if(soup->neurons.size > 0)
+    {
+        avg_threshold /= (R32)soup->neurons.size;
+    }
+    
+    ImGui::Text("Statistics");
+    ImGui::Text("Total Neurons: %lld", soup->neurons.size);
+    ImGui::Text("Active Neurons: %d", active_count);
+    ImGui::Text("Firing Rate: %.3f", firing_rate);
+    ImGui::Text("Average Threshold: %.3f", avg_threshold);
+    
+    // Track history
+    editor->history_track_counter--;
+    if(editor->history_track_counter <= 0)
+    {
+        editor->history_track_counter = editor->track_history_per;
+        
+        // Shift arrays and add new data
+        const int max_history = 200;
+        if(editor->active_neuron_history.size >= max_history)
+        {
+            editor->active_neuron_history.Shift(-1);
+            editor->avg_threshold_history.Shift(-1);
+            editor->firing_rate_history.Shift(-1);
+        }
+        else
+        {
+            editor->active_neuron_history.PushBack((R32)active_count);
+            editor->avg_threshold_history.PushBack(avg_threshold);
+            editor->firing_rate_history.PushBack(firing_rate);
+        }
+        
+        // Update last values
+        if(editor->active_neuron_history.size > 0)
+        {
+            editor->active_neuron_history[editor->active_neuron_history.size - 1] = (R32)active_count;
+            editor->avg_threshold_history[editor->avg_threshold_history.size - 1] = avg_threshold;
+            editor->firing_rate_history[editor->firing_rate_history.size - 1] = firing_rate;
+        }
+    }
+    else if(editor->active_neuron_history.size > 0)
+    {
+        // Update last value even if not tracking new point
+        editor->active_neuron_history[editor->active_neuron_history.size - 1] = (R32)active_count;
+        editor->avg_threshold_history[editor->avg_threshold_history.size - 1] = avg_threshold;
+        editor->firing_rate_history[editor->firing_rate_history.size - 1] = firing_rate;
+    }
+    
+    ImGui::Separator();
+    
+    // Visualizations
+    ImPlotFlags plot_flags = ImPlotFlags_NoBoxSelect | 
+                            ImPlotFlags_NoInputs | 
+                            ImPlotFlags_NoFrame | 
+                            ImPlotFlags_NoLegend;
+    
+    // Active neurons over time
+    if(editor->active_neuron_history.size > 0)
+    {
+        DynamicArray<R32> x_axis(editor->active_neuron_history.size);
+        x_axis.Fill();
+        x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
+        
+        ImPlot::SetNextAxesLimits(0, (int)editor->active_neuron_history.size, 0, (R32)soup->neurons.size, ImPlotCond_Always);
+        Vec2 plot_size = V2(-1, 150);
+        if(ImPlot::BeginPlot("Active Neurons Over Time", ImVec2(plot_size.x, plot_size.y), plot_flags))
+        {
+            ImPlot::PlotLine("Active", x_axis.data, editor->active_neuron_history.data, (int)editor->active_neuron_history.size);
+            ImPlot::EndPlot();
+        }
+    }
+    
+    // Firing rate over time
+    if(editor->firing_rate_history.size > 0)
+    {
+        DynamicArray<R32> x_axis(editor->firing_rate_history.size);
+        x_axis.Fill();
+        x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
+        
+        ImPlot::SetNextAxesLimits(0, (int)editor->firing_rate_history.size, 0.0f, 1.0f, ImPlotCond_Always);
+        Vec2 plot_size2 = V2(-1, 150);
+        if(ImPlot::BeginPlot("Firing Rate Over Time", ImVec2(plot_size2.x, plot_size2.y), plot_flags))
+        {
+            Vec4 color1 = V4(0.3f, 1.0f, 0.3f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color1.x, color1.y, color1.z, color1.w));
+            ImPlot::PlotLine("Firing Rate", x_axis.data, editor->firing_rate_history.data, (int)editor->firing_rate_history.size);
+            ImPlot::PopStyleColor();
+            
+            // Draw target rate line
+            R32 target_line[2] = {soup->target_rate, soup->target_rate};
+            R32 target_x[2] = {0.0f, (R32)editor->firing_rate_history.size};
+            Vec4 color2 = V4(1.0f, 0.3f, 0.3f, 0.5f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color2.x, color2.y, color2.z, color2.w));
+            ImPlot::PlotLine("Target", target_x, target_line, 2);
+            ImPlot::PopStyleColor();
+            
+            ImPlot::EndPlot();
+        }
+    }
+    
+    // Average threshold over time
+    if(editor->avg_threshold_history.size > 0)
+    {
+        DynamicArray<R32> x_axis(editor->avg_threshold_history.size);
+        x_axis.Fill();
+        x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
+        
+        ImPlot::SetNextAxesToFit();
+        Vec2 plot_size3 = V2(-1, 150);
+        if(ImPlot::BeginPlot("Average Threshold Over Time", ImVec2(plot_size3.x, plot_size3.y), plot_flags))
+        {
+            Vec4 color3 = V4(0.3f, 0.3f, 1.0f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color3.x, color3.y, color3.z, color3.w));
+            ImPlot::PlotLine("Threshold", x_axis.data, editor->avg_threshold_history.data, (int)editor->avg_threshold_history.size);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+    }
+    
+    // Neuron states visualization (sample of neurons)
+    const int sample_size = Min(100, (int)soup->neurons.size);
+    if(sample_size > 0)
+    {
+        DynamicArray<R32> neuron_states(sample_size);
+        DynamicArray<R32> neuron_indices(sample_size);
+        
+        for(int i = 0; i < sample_size; i++)
+        {
+            int idx = (int)((I64)i * soup->neurons.size / sample_size);
+            neuron_states.PushBack((R32)soup->neurons[idx].state);
+            neuron_indices.PushBack((R32)i);
+        }
+        
+        ImPlot::SetNextAxesLimits(-1, sample_size, -0.5f, 1.5f, ImPlotCond_Always);
+        Vec2 plot_size4 = V2(-1, 150);
+        if(ImPlot::BeginPlot("Neuron States (Sample)", ImVec2(plot_size4.x, plot_size4.y), plot_flags))
+        {
+            Vec4 color4 = V4(0.3f, 0.8f, 0.3f, 0.6f);
+            ImPlot::PushStyleColor(ImPlotCol_Fill, ImVec4(color4.x, color4.y, color4.z, color4.w));
+            ImPlot::PlotBars("States", neuron_indices.data, neuron_states.data, sample_size, 0.5f);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+    }
+    
+    ImGui::End();
+}
+
 int
 UpdateEditorScreen(EditorScreen* editor, Window* window)
 {
@@ -106,30 +345,10 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     }
     ImGui::EndMainMenuBar();
 
-    ImGui::Begin("Edit Creature");
-    bool reset_creature = false;
-    if(ImGui::Button("Randomize"))
-    {
-        reset_creature = true;
-        InitRandomPhenotype(agent->phenotype);
-    }
-    if(ImGui::Button("Mutate"))
-    {
-        reset_creature = true;
-        MutatePhenotype(agent->phenotype);
-    }
-    if(EditCreatureWindow(agent->phenotype))
-    {
-        reset_creature = true;
-    }
-    ImGui::End();
-
-    if(reset_creature)
-    {
-        // TODO: FIX THIS MEMORY LEAK
-        agent->skeleton = CreateSkeleton(editor->editor_arena, max_joints, max_joints*2);
-        InitAgentSkeleton(editor->editor_arena, agent);
-    }
+    // EditCreatureWindowHidden is not called - moved to separate function
+    
+    // Soup editor window
+    EditSoupWindow(editor);
 
     R32 tilt_speed = -0.01f;
     if(IsKeyDown(input, InputAction_W))
@@ -174,13 +393,10 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     R32 cursor_radius = 1.0f+sinf(editor->time*2)*0.25f;
     RenderZLineCircle(renderer, mouse, cursor_radius, cursor_line_width, Color_Cyan);
 
-    Skeleton* skeleton = agent->skeleton;
-
     // Make the agent walk
     Vec3 direction = V3(0,0,0);
     direction.xy = V2Polar(agent->orientation, 1.0f);
     agent->pos += direction.xy * speed;
-    Vec3 perp = V3(-direction.y, direction.x, 0);
     agent->orientation += turn_speed;
     UpdateAgentSkeleton(agent);
     RenderAgent(renderer, agent);
@@ -208,7 +424,7 @@ void
 InitEditorScreen(EditorScreen* editor)
 {
     // Might be a bit much memory for the editor.
-    MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(32));
+    MemoryArena* arena = editor->editor_arena = CreateMemoryArena(MegaBytes(256));
     editor->time = 0.0f;
     editor->cam.pos = V2(0,0);
     editor->cam.scale = 1;
@@ -224,5 +440,8 @@ InitEditorScreen(EditorScreen* editor)
     InitAgentSkeleton(arena, editor->agent);
 
     editor->soup = CreateSoup(arena, 1000, 10);
-
+    
+    // Tracking arrays are initialized via constructor
+    editor->track_history_per = 1;
+    editor->history_track_counter = 0;
 }

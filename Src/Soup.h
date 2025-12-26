@@ -184,13 +184,14 @@ Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_ne
 {
     Soup* soup = PushNewStruct(arena, Soup);
     soup->neurons = CreateArray<Neuron>(arena, num_neurons);
-    
+
     // Set default parameters
     soup->target_rate = 0.1f;
     soup->eta_threshold = 0.01f;
     soup->eta_weight = 0.001f;
     soup->eligibility_decay = 0.9f;
-    
+
+    // First initialize all neurons (without connections)
     for(int i = 0; i < num_neurons; i++)
     {
         Neuron& neuron = *soup->neurons.PushBack();
@@ -198,7 +199,13 @@ Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_ne
         neuron.prev_state = 0;
         neuron.threshold = 0.1f;
         neuron.connections = CreateArray<Synapse>(arena, num_connections_per_neuron);
-        for(int j = 0; j < num_connections_per_neuron; j++)
+    }
+
+    // Now that all neurons are allocated, initialize connections
+    for (int i = 0; i < num_neurons; i++)
+    {
+        Neuron& neuron = soup->neurons[i];
+        for (int j = 0; j < num_connections_per_neuron; j++)
         {
             Synapse& synapse = *neuron.connections.PushBack();
             synapse.from = &soup->neurons[RandomInt(0, num_neurons-1)];
