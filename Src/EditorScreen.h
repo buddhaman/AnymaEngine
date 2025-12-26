@@ -37,6 +37,19 @@ struct EditorScreen
     bool soup_playing = false;
     int soup_steps_per_frame = 1;
     
+    // Token training
+    const char* training_text;
+    int training_text_length;
+    int current_token_index;
+    int token_window_size;
+    int num_chars;  // Size of one-hot encoding (26 letters + punctuation)
+    int num_input_neurons;
+    int num_actuator_neurons;  // 10 neurons before output
+    int num_output_neurons;
+    int steps_since_actuator;
+    bool waiting_for_actuator;
+    float last_accuracy;
+    
     EditorScreen() : active_neuron_history(200), avg_threshold_history(200), firing_rate_history(200) {}
 };
 

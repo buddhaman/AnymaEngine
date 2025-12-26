@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <gl3w.h>
+#include <cstring>
 
 #include "AnymUtil.h"
 #include "EditorScreen.h"
@@ -10,6 +11,55 @@
 #include "Agent.h"
 
 constexpr R32 speed = 0.34f;
+
+// Character set: a-z (26) + space, period, comma, question mark, exclamation mark = 31
+constexpr int NUM_CHARS = 31;
+const char* CHAR_SET = "abcdefghijklmnopqrstuvwxyz .,?!";
+
+// Test training text
+const char* TRAINING_TEXT = "the quick brown fox jumps over the lazy dog. hello world! how are you? this is a test sentence.";
+
+// One-hot encode a character
+int CharToIndex(char c)
+{
+    if(c >= 'a' && c <= 'z')
+        return c - 'a';
+    if(c == ' ') return 26;
+    if(c == '.') return 27;
+    if(c == ',') return 28;
+    if(c == '?') return 29;
+    if(c == '!') return 30;
+    return 26; // Default to space for unknown chars
+}
+
+char IndexToChar(int idx)
+{
+    if(idx >= 0 && idx < NUM_CHARS)
+        return CHAR_SET[idx];
+    return ' ';
+}
+
+// Get one-hot encoding for a character
+void OneHotEncode(char c, int* output, int size)
+{
+    for(int i = 0; i < size; i++)
+        output[i] = 0;
+    int idx = CharToIndex(c);
+    if(idx >= 0 && idx < size)
+        output[idx] = 1;
+}
+
+// Measure accuracy between predicted and target one-hot
+float MeasureAccuracy(int* predicted, int* target, int size)
+{
+    int matches = 0;
+    for(int i = 0; i < size; i++)
+    {
+        if(predicted[i] == target[i])
+            matches++;
+    }
+    return (float)matches / (float)size;
+}
 constexpr R32 turn_speed = 0.01f;
 constexpr int max_joints = 64;
 static R32 walk_radius = speed/sinf(turn_speed);
@@ -41,6 +91,115 @@ bool EditBoolArray(const char* labelPrefix, uint32_t* array, int count)
         }
     }
     return changed;
+}
+
+void UpdateTokens(EditorScreen* editor)
+{
+    Soup* soup = editor->soup;
+    
+    // Check if we need to move to next token
+    if(editor->waiting_for_actuator)
+    {
+        // Check actuator neurons (10 neurons before output)
+        int actuator_start = soup->neurons.size - editor->num_output_neurons - editor->num_actuator_neurons;
+        int actuator_active = 0;
+        for(int i = 0; i < editor->num_actuator_neurons && (actuator_start + i) < soup->neurons.size; i++)
+        {
+            if(soup->neurons[actuator_start + i].state == 1)
+                actuator_active++;
+        }
+        
+        // 30% threshold = at least 3 out of 10
+        float actuator_ratio = (float)actuator_active / (float)editor->num_actuator_neurons;
+        if(actuator_ratio >= 0.3f)
+        {
+            // Actuator fired! Measure accuracy and apply learning
+            int output_start = soup->neurons.size - editor->num_output_neurons;
+            DynamicArray<int> predicted_output(editor->num_output_neurons);
+            DynamicArray<int> target_output(editor->num_output_neurons);
+            
+            // Get predicted output
+            for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
+            {
+                predicted_output.PushBack(soup->neurons[output_start + i].state);
+            }
+            
+            // Get target output (next character)
+            if(editor->current_token_index < editor->training_text_length - 1)
+            {
+                char target_char = editor->training_text[editor->current_token_index + 1];
+                OneHotEncode(target_char, target_output.data, editor->num_output_neurons);
+                
+                // Measure accuracy
+                editor->last_accuracy = MeasureAccuracy(predicted_output.data, target_output.data, editor->num_output_neurons);
+                
+                // Force output to correct value (for learning)
+                for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
+                {
+                    soup->neurons[output_start + i].state = target_output.data[i];
+                }
+                
+                // Apply dopamine based on accuracy (higher accuracy = more reward)
+                R32 dopamine = editor->last_accuracy;
+                ApplyDopamine(*soup, dopamine);
+                
+                // Reset eligibility for next token
+                ResetEligibility(*soup);
+            }
+            
+            // Move to next token
+            editor->current_token_index++;
+            if(editor->current_token_index >= editor->training_text_length - 1)
+            {
+                // Wrap around to beginning
+                editor->current_token_index = 0;
+            }
+            
+            // Set new input
+            int input_start = 0;
+            for(int token = 0; token < editor->token_window_size; token++)
+            {
+                int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
+                if(text_idx < 0) text_idx = 0;
+                if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
+                
+                char c = editor->training_text[text_idx];
+                int one_hot[NUM_CHARS];
+                OneHotEncode(c, one_hot, NUM_CHARS);
+                
+                // Set input neurons for this token
+                for(int i = 0; i < NUM_CHARS && (input_start + i) < soup->neurons.size; i++)
+                {
+                    soup->neurons[input_start + i].state = one_hot[i];
+                }
+                input_start += NUM_CHARS;
+            }
+            
+            // Clear output neurons initially
+            int output_clear_start = soup->neurons.size - editor->num_output_neurons;
+            for(int i = 0; i < editor->num_output_neurons && (output_clear_start + i) < soup->neurons.size; i++)
+            {
+                soup->neurons[output_clear_start + i].state = 0;
+            }
+            
+            editor->waiting_for_actuator = false;
+            editor->steps_since_actuator = 0;
+        }
+        else
+        {
+            editor->steps_since_actuator++;
+        }
+    }
+    
+    // Regular soup update
+    UpdateSoup(*soup);
+    
+    // If not waiting for actuator, start waiting
+    if(!editor->waiting_for_actuator)
+    {
+        editor->waiting_for_actuator = true;
+        editor->steps_since_actuator = 0;
+    }
 }
 
 // Hidden function - not called
@@ -150,18 +309,119 @@ void EditSoupWindow(EditorScreen* editor)
     // Step button
     if(ImGui::Button(ICON_LC_STEP_FORWARD " Step"))
     {
-        UpdateSoup(*soup);
+        UpdateTokens(editor);
     }
     
     // Speed control (steps per frame)
     ImGui::SliderInt("Steps Per Frame", &editor->soup_steps_per_frame, 1, 100);
+    
+    // Token training controls
+    ImGui::Separator();
+    ImGui::Text("Token Training");
+    int old_window_size = editor->token_window_size;
+    ImGui::SliderInt("Token Window Size", &editor->token_window_size, 1, 10);
+    editor->token_window_size = Clamp(1, editor->token_window_size, 10);
+    if(old_window_size != editor->token_window_size)
+    {
+        editor->num_input_neurons = editor->token_window_size * NUM_CHARS;
+        // Reinitialize input if needed
+        if(editor->soup && editor->training_text)
+        {
+            int input_start = 0;
+            for(int token = 0; token < editor->token_window_size; token++)
+            {
+                int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
+                if(text_idx < 0) text_idx = 0;
+                if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
+                
+                char c = editor->training_text[text_idx];
+                int one_hot[NUM_CHARS];
+                OneHotEncode(c, one_hot, NUM_CHARS);
+                
+                // Set input neurons for this token
+                for(int i = 0; i < NUM_CHARS && (input_start + i) < editor->soup->neurons.size; i++)
+                {
+                    editor->soup->neurons[input_start + i].state = one_hot[i];
+                }
+                input_start += NUM_CHARS;
+            }
+        }
+    }
+    
+    if(editor->training_text)
+    {
+        ImGui::Text("Current Position: %d / %d", editor->current_token_index, editor->training_text_length);
+        
+        // Show current sentence
+        int sentence_start = editor->current_token_index;
+        int sentence_end = editor->current_token_index;
+        
+        // Find sentence start (previous period, exclamation, or question mark)
+        for(int i = editor->current_token_index; i >= 0; i--)
+        {
+            char c = editor->training_text[i];
+            if(c == '.' || c == '!' || c == '?')
+            {
+                sentence_start = i + 1;
+                break;
+            }
+            if(i == 0) sentence_start = 0;
+        }
+        
+        // Find sentence end (next period, exclamation, or question mark)
+        for(int i = editor->current_token_index; i < editor->training_text_length; i++)
+        {
+            char c = editor->training_text[i];
+            if(c == '.' || c == '!' || c == '?')
+            {
+                sentence_end = i + 1;
+                break;
+            }
+        }
+        if(sentence_end == editor->current_token_index)
+            sentence_end = editor->training_text_length;
+        
+        // Display current sentence
+        char sentence[512];
+        int len = 0;
+        for(int i = sentence_start; i < sentence_end && len < 511; i++)
+        {
+            sentence[len++] = editor->training_text[i];
+        }
+        sentence[len] = '\0';
+        ImGui::Text("Current Sentence: %s", sentence);
+        
+        if(editor->current_token_index < editor->training_text_length)
+        {
+            // Show current context
+            int start = Max(0, editor->current_token_index - editor->token_window_size);
+            int end = Min(editor->training_text_length, editor->current_token_index + 1);
+            char context[256];
+            len = 0;
+            for(int i = start; i < end; i++)
+            {
+                if(len < 255)
+                    context[len++] = editor->training_text[i];
+            }
+            context[len] = '\0';
+            ImGui::Text("Context: %s", context);
+            
+            if(editor->current_token_index < editor->training_text_length - 1)
+            {
+                ImGui::Text("Target: '%c'", editor->training_text[editor->current_token_index + 1]);
+            }
+        }
+        ImGui::Text("Waiting for actuator: %s", editor->waiting_for_actuator ? "Yes" : "No");
+        ImGui::Text("Steps since actuator: %d", editor->steps_since_actuator);
+        ImGui::Text("Last accuracy: %.2f%%", editor->last_accuracy * 100.0f);
+    }
     
     // Execute steps if playing
     if(editor->soup_playing)
     {
         for(int i = 0; i < editor->soup_steps_per_frame; i++)
         {
-            UpdateSoup(*soup);
+            UpdateTokens(editor);
         }
     }
     
@@ -444,4 +704,40 @@ InitEditorScreen(EditorScreen* editor)
     // Tracking arrays are initialized via constructor
     editor->track_history_per = 1;
     editor->history_track_counter = 0;
+    
+    // Initialize token training
+    editor->training_text = TRAINING_TEXT;
+    editor->training_text_length = (int)strlen(TRAINING_TEXT);
+    editor->current_token_index = 0;
+    editor->token_window_size = 1;
+    editor->num_chars = NUM_CHARS;
+    editor->num_actuator_neurons = 10;
+    editor->num_output_neurons = NUM_CHARS;
+    editor->num_input_neurons = editor->token_window_size * NUM_CHARS;
+    editor->steps_since_actuator = 0;
+    editor->waiting_for_actuator = false;
+    editor->last_accuracy = 0.0f;
+    
+    // Set initial input
+    if(editor->soup && editor->training_text)
+    {
+        int input_start = 0;
+        for(int token = 0; token < editor->token_window_size; token++)
+        {
+            int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
+            if(text_idx < 0) text_idx = 0;
+            if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
+            
+            char c = editor->training_text[text_idx];
+            int one_hot[NUM_CHARS];
+            OneHotEncode(c, one_hot, NUM_CHARS);
+            
+            // Set input neurons for this token
+            for(int i = 0; i < NUM_CHARS && (input_start + i) < editor->soup->neurons.size; i++)
+            {
+                editor->soup->neurons[input_start + i].state = one_hot[i];
+            }
+            input_start += NUM_CHARS;
+        }
+    }
 }
