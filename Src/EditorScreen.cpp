@@ -113,7 +113,7 @@ void UpdateTokens(EditorScreen* editor)
         float actuator_ratio = (float)actuator_active / (float)editor->num_actuator_neurons;
         if(actuator_ratio >= 0.3f)
         {
-            // Actuator fired! Measure accuracy and apply learning
+            // Actuator fired! Measure accuracy
             int output_start = soup->neurons.size - editor->num_output_neurons;
             DynamicArray<int> predicted_output(editor->num_output_neurons);
             DynamicArray<int> target_output(editor->num_output_neurons);
@@ -129,22 +129,34 @@ void UpdateTokens(EditorScreen* editor)
             {
                 char target_char = editor->training_text[editor->current_token_index + 1];
                 OneHotEncode(target_char, target_output.data, editor->num_output_neurons);
+                target_output.size = editor->num_output_neurons;
                 
-                // Measure accuracy
-                editor->last_accuracy = MeasureAccuracy(predicted_output.data, target_output.data, editor->num_output_neurons);
+                // Measure accuracy - count correct bits with higher weight for correct "1" bits
+                int correct_bits = 0;
+                int correct_ones = 0;
+                for(int i = 0; i < editor->num_output_neurons; i++)
+                {
+                    if(predicted_output[i] == target_output[i])
+                    {
+                        correct_bits++;
+                        if(target_output[i] == 1)
+                            correct_ones++;  // Extra credit for getting the "hot" bit right
+                    }
+                }
+                // Give higher reward if the correct bit was guessed (correct_ones > 0 means we got the hot bit)
+                float base_accuracy = (float)correct_bits / (float)editor->num_output_neurons;
+                float bonus = (correct_ones > 0) ? 0.5f : 0.0f;  // Big bonus for getting the right character
+                editor->last_accuracy = base_accuracy + bonus;
+                
+                // Accumulate chunk accuracy (no dopamine yet - delayed reward)
+                editor->chunk_accuracy_sum += editor->last_accuracy;
+                editor->chunk_tokens_processed++;
                 
                 // Force output to correct value (for learning)
                 for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
                 {
-                    soup->neurons[output_start + i].state = target_output.data[i];
+                    soup->neurons[output_start + i].state = target_output[i];
                 }
-                
-                // Apply dopamine based on accuracy (higher accuracy = more reward)
-                R32 dopamine = editor->last_accuracy;
-                ApplyDopamine(*soup, dopamine);
-                
-                // Reset eligibility for next token
-                ResetEligibility(*soup);
             }
             
             // Move to next token
@@ -193,6 +205,67 @@ void UpdateTokens(EditorScreen* editor)
     
     // Regular soup update
     UpdateSoup(*soup);
+    
+    // Increment chunk iteration counter
+    editor->current_chunk_iteration++;
+    
+    // Check if chunk is complete
+    if(editor->current_chunk_iteration >= editor->chunk_size)
+    {
+        // Calculate chunk accuracy
+        if(editor->chunk_tokens_processed > 0)
+        {
+            editor->current_chunk_accuracy = editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed;
+        }
+        else
+        {
+            editor->current_chunk_accuracy = 0.0f;
+        }
+        
+        // Check if accuracy improved - release dopamine if so
+        editor->dopamine_released_this_chunk = false;
+        if(editor->current_chunk_accuracy > editor->last_chunk_accuracy)
+        {
+            // Accuracy improved! Release dopamine
+            R32 improvement = editor->current_chunk_accuracy - editor->last_chunk_accuracy;
+            R32 dopamine = improvement * 2.0f;  // Scale improvement to dopamine
+            dopamine = Clamp(0.0f, dopamine, 1.0f);
+            ApplyDopamine(*soup, dopamine);
+            editor->dopamine_released_this_chunk = true;
+        }
+        
+        // Track history
+        const int max_history = 200;
+        if(editor->chunk_accuracy_history.size >= max_history)
+        {
+            editor->chunk_accuracy_history.Shift(-1);
+            editor->tokens_per_chunk_history.Shift(-1);
+        }
+        else
+        {
+            editor->chunk_accuracy_history.PushBack(editor->current_chunk_accuracy);
+            editor->tokens_per_chunk_history.PushBack((R32)editor->chunk_tokens_processed);
+        }
+        
+        // Update last values
+        if(editor->chunk_accuracy_history.size > 0)
+        {
+            editor->chunk_accuracy_history[editor->chunk_accuracy_history.size - 1] = editor->current_chunk_accuracy;
+            editor->tokens_per_chunk_history[editor->tokens_per_chunk_history.size - 1] = (R32)editor->chunk_tokens_processed;
+        }
+        
+        // Store current accuracy as last for next chunk comparison
+        editor->last_chunk_accuracy = editor->current_chunk_accuracy;
+        editor->total_chunks_processed++;
+        
+        // Reset chunk counters
+        editor->current_chunk_iteration = 0;
+        editor->chunk_tokens_processed = 0;
+        editor->chunk_accuracy_sum = 0.0f;
+        
+        // Reset eligibility for next chunk
+        ResetEligibility(*soup);
+    }
     
     // If not waiting for actuator, start waiting
     if(!editor->waiting_for_actuator)
@@ -272,6 +345,16 @@ void EditSoupWindow(EditorScreen* editor)
         editor->active_neuron_history.Clear();
         editor->avg_threshold_history.Clear();
         editor->firing_rate_history.Clear();
+        // Reset chunk tracking
+        editor->chunk_accuracy_history.Clear();
+        editor->tokens_per_chunk_history.Clear();
+        editor->current_chunk_iteration = 0;
+        editor->chunk_tokens_processed = 0;
+        editor->chunk_accuracy_sum = 0.0f;
+        editor->last_chunk_accuracy = 0.0f;
+        editor->current_chunk_accuracy = 0.0f;
+        editor->total_chunks_processed = 0;
+        editor->current_token_index = 0;
     }
     
     ImGui::Separator();
@@ -414,6 +497,20 @@ void EditSoupWindow(EditorScreen* editor)
         ImGui::Text("Waiting for actuator: %s", editor->waiting_for_actuator ? "Yes" : "No");
         ImGui::Text("Steps since actuator: %d", editor->steps_since_actuator);
         ImGui::Text("Last accuracy: %.2f%%", editor->last_accuracy * 100.0f);
+        
+        // Chunk-based delayed reward info
+        ImGui::Separator();
+        ImGui::Text("Delayed Reward (Chunk-Based)");
+        ImGui::SliderInt("Chunk Size (iterations)", &editor->chunk_size, 10, 1000);
+        ImGui::Text("Chunk Iteration: %d / %d", editor->current_chunk_iteration, editor->chunk_size);
+        ImGui::Text("Tokens this chunk: %d", editor->chunk_tokens_processed);
+        ImGui::Text("Last chunk accuracy: %.2f%%", editor->last_chunk_accuracy * 100.0f);
+        ImGui::Text("Current chunk accuracy: %.2f%%", 
+            editor->chunk_tokens_processed > 0 
+                ? (editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed) * 100.0f 
+                : 0.0f);
+        ImGui::Text("Total chunks: %d", editor->total_chunks_processed);
+        ImGui::Text("Dopamine released: %s", editor->dopamine_released_this_chunk ? "Yes" : "No");
     }
     
     // Execute steps if playing
@@ -446,6 +543,44 @@ void EditSoupWindow(EditorScreen* editor)
     ImGui::Text("Active Neurons: %d", active_count);
     ImGui::Text("Firing Rate: %.3f", firing_rate);
     ImGui::Text("Average Threshold: %.3f", avg_threshold);
+    
+    // Chunk accuracy graph
+    if(editor->chunk_accuracy_history.size > 0)
+    {
+        ImGui::Separator();
+        ImGui::Text("Chunk Accuracy Over Time");
+        
+        DynamicArray<R32> x_axis_chunks(editor->chunk_accuracy_history.size);
+        x_axis_chunks.Fill();
+        x_axis_chunks.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
+        
+        ImPlotFlags chunk_plot_flags = ImPlotFlags_NoBoxSelect | 
+                                ImPlotFlags_NoInputs | 
+                                ImPlotFlags_NoFrame;
+        
+        ImPlot::SetNextAxesLimits(0, (int)editor->chunk_accuracy_history.size, 0.0f, 2.0f, ImPlotCond_Always);
+        Vec2 chunk_plot_size = V2(-1, 150);
+        if(ImPlot::BeginPlot("Chunk Accuracy", ImVec2(chunk_plot_size.x, chunk_plot_size.y), chunk_plot_flags))
+        {
+            Vec4 accuracy_color = V4(0.2f, 0.8f, 0.2f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(accuracy_color.x, accuracy_color.y, accuracy_color.z, accuracy_color.w));
+            ImPlot::PlotLine("Accuracy", x_axis_chunks.data, editor->chunk_accuracy_history.data, (int)editor->chunk_accuracy_history.size);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+        
+        // Tokens per chunk graph
+        ImPlot::SetNextAxesToFit();
+        Vec2 tokens_plot_size = V2(-1, 100);
+        if(ImPlot::BeginPlot("Tokens Per Chunk", ImVec2(tokens_plot_size.x, tokens_plot_size.y), chunk_plot_flags))
+        {
+            Vec4 tokens_color = V4(0.8f, 0.6f, 0.2f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(tokens_color.x, tokens_color.y, tokens_color.z, tokens_color.w));
+            ImPlot::PlotLine("Tokens", x_axis_chunks.data, editor->tokens_per_chunk_history.data, (int)editor->tokens_per_chunk_history.size);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+    }
     
     // Track history
     editor->history_track_counter--;
@@ -717,6 +852,16 @@ InitEditorScreen(EditorScreen* editor)
     editor->steps_since_actuator = 0;
     editor->waiting_for_actuator = false;
     editor->last_accuracy = 0.0f;
+    
+    // Initialize chunk-based delayed reward
+    editor->chunk_size = 100;
+    editor->current_chunk_iteration = 0;
+    editor->chunk_tokens_processed = 0;
+    editor->chunk_accuracy_sum = 0.0f;
+    editor->last_chunk_accuracy = 0.0f;
+    editor->current_chunk_accuracy = 0.0f;
+    editor->dopamine_released_this_chunk = false;
+    editor->total_chunks_processed = 0;
     
     // Set initial input
     if(editor->soup && editor->training_text)

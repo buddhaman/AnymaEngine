@@ -50,7 +50,22 @@ struct EditorScreen
     bool waiting_for_actuator;
     float last_accuracy;
     
-    EditorScreen() : active_neuron_history(200), avg_threshold_history(200), firing_rate_history(200) {}
+    // Delayed reward tracking (chunk-based)
+    int chunk_size = 100;           // Iterations per chunk
+    int current_chunk_iteration = 0;
+    int chunk_tokens_processed = 0;
+    float chunk_accuracy_sum = 0.0f;
+    float last_chunk_accuracy = 0.0f;
+    float current_chunk_accuracy = 0.0f;
+    bool dopamine_released_this_chunk = false;
+    
+    // Chunk accuracy history for graphing
+    DynamicArray<R32> chunk_accuracy_history;
+    DynamicArray<R32> tokens_per_chunk_history;
+    int total_chunks_processed = 0;
+    
+    EditorScreen() : active_neuron_history(200), avg_threshold_history(200), firing_rate_history(200),
+                     chunk_accuracy_history(200), tokens_per_chunk_history(200) {}
 };
 
 int
