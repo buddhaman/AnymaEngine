@@ -1,32 +1,43 @@
 #include <iostream>
+#include <atomic>
+#include "../test.h"
+#include "ThreadPool.h"
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_session.hpp>
-#include <catch2/catch_approx.hpp>
-
-#include "../../src/ThreadPool.h"
-
-TEST_CASE("Setup worker threads")
+TEST_CASE("DynamicArray operations")
 {
     DynamicArray<int> test;
     for(int i = 0; i < 12; i++)
     {
         test.PushBack(i);
     }
-    PrintArray(test);
-    test.RemoveRange(1,5);
-    PrintArray(test);
 
+    REQUIRE(test.size == 12);
+    REQUIRE(test[0] == 0);
+    REQUIRE(test[11] == 11);
+
+    test.RemoveRange(1, 5);
+    REQUIRE(test.size == 7);
+    REQUIRE(test[0] == 0);
+    REQUIRE(test[1] == 6);
+}
+
+TEST_CASE("ThreadPool executes all jobs")
+{
     ThreadPool* pool = CreateThreadPool(4);
 
-    for(int i = 0; i < 100; i++)
+    std::atomic<int> counter{0};
+    const int num_jobs = 100;
+
+    for(int i = 0; i < num_jobs; i++)
     {
-        pool->AddJob(new std::function([i](){
-            std::cout << "Hello from function " << i << std::endl;
+        pool->AddJob(new std::function([&counter](){
+            counter.fetch_add(1, std::memory_order_relaxed);
         }));
     }
 
     pool->StartAndWaitForFinish();
-    std::cout << "Gracefully finished every job" << std::endl;
+
+    REQUIRE(counter.load() == num_jobs);
+
     DestroyThreadPool(pool);
 }

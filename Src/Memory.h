@@ -47,7 +47,7 @@ HeapAllocSize(U64 size)
     return calloc(1, size);
 }
 
-#define HeapAlloc(type) (type*)HeapAllocSize(sizeof(type))
+#define AllocType(type) (type*)HeapAllocSize(sizeof(type))
 
 static inline void
 HeapFree(void* ptr)

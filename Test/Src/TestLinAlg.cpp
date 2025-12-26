@@ -1,15 +1,8 @@
-#include <iostream>
+#include "../test.h"
+#include "linalg.h"
+#include "Memory.cpp"
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_session.hpp>
-#include <catch2/catch_approx.hpp>
-
-#include "../../src/linalg.h"
-#include "../../src/Memory.cpp"
-
-MemoryArena* arena;
-
-using namespace Catch;
+extern MemoryArena* arena;
 
 TEST_CASE("Vector operations", "[VecR32]") 
 {
@@ -46,7 +39,7 @@ TEST_CASE("Vector operations", "[VecR32]")
 TEST_CASE("Allocation")
 {
     VecR32 a = VecR32Create(arena, 12);
-    //a.Apply([](int i, R32 x) -> R32 {return i;});
+    a.Apply([](int i, R32 x) -> R32 {return (R32)i;});
 
     VecR32 b = VecR32Create(arena, 12);
     b.Apply([](R32 x) -> R32 {return 2;});
@@ -87,9 +80,3 @@ TEST_CASE("Matrix-vector multiplication", "[MatR32]")
     }
 }
 
-int main(int argc, char** argv)
-{
-    arena = CreateMemoryArena(MegaBytes(16));
-    int result = Session().run(argc, argv);
-    return result;
-}

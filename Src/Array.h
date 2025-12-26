@@ -27,7 +27,7 @@ struct Array
     {
         Assert(offset >= 0);
         Assert(offset+new_array_size <= size);
-        return Array<T>{0, new_array_size, data+offset};
+        return Array<T>{new_array_size, new_array_size, data+offset};
     }
 
     template <typename Func> inline void 
@@ -113,13 +113,14 @@ struct Array
         int idx;
         for(idx = 0; idx < size; idx++)
         {
-            if(data[idx]==element) 
+            if(data[idx]==element)
             {
                 RemoveIndexUnordered(idx);
                 return idx;
             }
         }
         InvalidCodePath();
+        return -1;
     }
 
     inline T MinElement() 
@@ -291,7 +292,7 @@ CreateArray(U64 capacity)
     return array;
 }
 
-template <typename T> Array<T>
+template <typename T> void
 DestroyArray(Array<T> array)
 {
     free(array.data);
@@ -307,5 +308,3 @@ PrintArray(Array<int>& arr)
     }
     std::cout << std::endl;
 }
-
-

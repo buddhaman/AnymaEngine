@@ -169,7 +169,7 @@ Execute(ThreadPool* pool, Worker* worker, Job job)
 static ThreadPool* 
 CreateThreadPool(I32 num_workers)
 {
-    ThreadPool* pool = new (HeapAlloc(ThreadPool))ThreadPool();
+    ThreadPool* pool = new (AllocType(ThreadPool))ThreadPool();
     pool->at_id = 1;
     pool->workers = CreateArray<Worker*>(num_workers);
     for(int i = 0; i < num_workers; i++)

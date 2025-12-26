@@ -1,0 +1,32 @@
+[
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Src/Anyma.cpp",
+    "file": "Src/Anyma.cpp"
+  },
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Test/TestRunner.cpp",
+    "file": "Test/TestRunner.cpp"
+  },
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Test/Src/TestArray.cpp",
+    "file": "Test/Src/TestArray.cpp"
+  },
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Test/Src/TestLinAlg.cpp",
+    "file": "Test/Src/TestLinAlg.cpp"
+  },
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Test/Src/TestString.cpp",
+    "file": "Test/Src/TestString.cpp"
+  },
+  {
+    "directory": "C:/Code/AnymaEngine",
+    "command": "cl.exe -std=c++20 /Od /Zi /MT /EHsc /W3 -I Src -I external/sdl2/include -I external/opengl -I external/imgui/include -I external/imgui/backends -I external/implot/include /c Test/Src/TestThreadPool.cpp",
+    "file": "Test/Src/TestThreadPool.cpp"
+  }
+]
