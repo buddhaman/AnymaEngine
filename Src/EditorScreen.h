@@ -72,9 +72,17 @@ struct EditorScreen
     float longterm_accuracy_sum = 0.0f;        // Accumulate accuracy over sample period
     int longterm_samples_in_period = 0;
     
+    // Prediction history - last N predictions vs actual targets
+    static constexpr int prediction_history_size = 50;
+    DynamicArray<char> predicted_chars;   // What the model predicted
+    DynamicArray<char> target_chars;      // What the target was
+    int last_predicted_index = -1;        // Index of last predicted character
+    float last_softmax_confidence = 0.0f; // Confidence of the prediction
+    
     EditorScreen() : active_neuron_history(200), avg_bias_history(200), firing_rate_history(200),
                      chunk_accuracy_history(200), tokens_per_chunk_history(200),
-                     longterm_accuracy_history(10000), longterm_chunk_numbers(10000) {}
+                     longterm_accuracy_history(10000), longterm_chunk_numbers(10000),
+                     predicted_chars(50), target_chars(50) {}
 };
 
 int

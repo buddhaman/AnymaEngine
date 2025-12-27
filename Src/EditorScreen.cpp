@@ -60,6 +60,83 @@ float MeasureAccuracy(int* predicted, int* target, int size)
     }
     return (float)matches / (float)size;
 }
+
+// Softmax-based prediction: use neuron activations to predict character
+// Returns the index of the predicted character and the softmax confidence
+int SoftmaxPredict(Soup* soup, int output_start, int num_outputs, float* out_confidence)
+{
+    // Get activations from output neurons
+    float max_activation = -1e30f;
+    int best_index = 0;
+    
+    // Find max for numerical stability
+    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
+    {
+        float act = soup->neurons[output_start + i].activation;
+        if(act > max_activation)
+        {
+            max_activation = act;
+            best_index = i;
+        }
+    }
+    
+    // Compute softmax probabilities
+    float sum_exp = 0.0f;
+    float target_exp = 0.0f;
+    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
+    {
+        float act = soup->neurons[output_start + i].activation;
+        float exp_val = expf(act - max_activation);  // Subtract max for numerical stability
+        sum_exp += exp_val;
+        if(i == best_index)
+        {
+            target_exp = exp_val;
+        }
+    }
+    
+    // Confidence is the softmax probability of the best index
+    if(out_confidence && sum_exp > 0.0f)
+    {
+        *out_confidence = target_exp / sum_exp;
+    }
+    
+    return best_index;
+}
+
+// Compute softmax probability for a specific target index (for reward calculation)
+float SoftmaxProbability(Soup* soup, int output_start, int num_outputs, int target_index)
+{
+    // Find max activation for numerical stability
+    float max_activation = -1e30f;
+    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
+    {
+        float act = soup->neurons[output_start + i].activation;
+        if(act > max_activation)
+        {
+            max_activation = act;
+        }
+    }
+    
+    // Compute softmax denominator and target numerator
+    float sum_exp = 0.0f;
+    float target_exp = 0.0f;
+    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
+    {
+        float act = soup->neurons[output_start + i].activation;
+        float exp_val = expf(act - max_activation);
+        sum_exp += exp_val;
+        if(i == target_index)
+        {
+            target_exp = exp_val;
+        }
+    }
+    
+    if(sum_exp > 0.0f)
+    {
+        return target_exp / sum_exp;
+    }
+    return 0.0f;
+}
 constexpr R32 turn_speed = 0.01f;
 constexpr int max_joints = 64;
 static R32 walk_radius = speed/sinf(turn_speed);
@@ -128,25 +205,37 @@ void UpdateTokens(EditorScreen* editor)
             if(editor->current_token_index < editor->training_text_length - 1)
             {
                 char target_char = editor->training_text[editor->current_token_index + 1];
+                int target_index = CharToIndex(target_char);
                 OneHotEncode(target_char, target_output.data, editor->num_output_neurons);
                 target_output.size = editor->num_output_neurons;
                 
-                // Measure accuracy - count correct bits with higher weight for correct "1" bits
-                int correct_bits = 0;
-                int correct_ones = 0;
-                for(int i = 0; i < editor->num_output_neurons; i++)
+                // Softmax-based prediction: use activation values
+                float confidence = 0.0f;
+                int predicted_index = SoftmaxPredict(soup, output_start, editor->num_output_neurons, &confidence);
+                char predicted_char = IndexToChar(predicted_index);
+                
+                // Store prediction in history
+                editor->last_predicted_index = predicted_index;
+                editor->last_softmax_confidence = confidence;
+                
+                // Add to prediction history (shift if full, else push back)
+                if(editor->predicted_chars.size >= editor->prediction_history_size)
                 {
-                    if(predicted_output[i] == target_output[i])
-                    {
-                        correct_bits++;
-                        if(target_output[i] == 1)
-                            correct_ones++;  // Extra credit for getting the "hot" bit right
-                    }
+                    editor->predicted_chars.Shift(-1);
+                    editor->target_chars.Shift(-1);
+                    // Update last element after shift
+                    editor->predicted_chars[editor->predicted_chars.size - 1] = predicted_char;
+                    editor->target_chars[editor->target_chars.size - 1] = target_char;
                 }
-                // Give higher reward if the correct bit was guessed (correct_ones > 0 means we got the hot bit)
-                float base_accuracy = (float)correct_bits / (float)editor->num_output_neurons;
-                float bonus = (correct_ones > 0) ? 0.5f : 0.0f;  // Big bonus for getting the right character
-                editor->last_accuracy = base_accuracy + bonus;
+                else
+                {
+                    editor->predicted_chars.PushBack(predicted_char);
+                    editor->target_chars.PushBack(target_char);
+                }
+                
+                // Use softmax probability of correct answer as accuracy metric
+                float softmax_prob = SoftmaxProbability(soup, output_start, editor->num_output_neurons, target_index);
+                editor->last_accuracy = softmax_prob;
                 
                 // Accumulate chunk accuracy (no dopamine yet - delayed reward)
                 editor->chunk_accuracy_sum += editor->last_accuracy;
@@ -205,6 +294,28 @@ void UpdateTokens(EditorScreen* editor)
     
     // Regular soup update
     UpdateSoup(*soup);
+    
+    // Re-clamp input neurons to current context window (UpdateSoup resets all states)
+    {
+        int input_start = 0;
+        for(int token = 0; token < editor->token_window_size; token++)
+        {
+            int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
+            if(text_idx < 0) text_idx = 0;
+            if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
+            
+            char c = editor->training_text[text_idx];
+            int one_hot[NUM_CHARS];
+            OneHotEncode(c, one_hot, NUM_CHARS);
+            
+            // Set input neurons for this token
+            for(int i = 0; i < NUM_CHARS && (input_start + i) < soup->neurons.size; i++)
+            {
+                soup->neurons[input_start + i].state = one_hot[i];
+            }
+            input_start += NUM_CHARS;
+        }
+    }
     
     // Increment chunk iteration counter
     editor->current_chunk_iteration++;
@@ -384,6 +495,11 @@ void EditSoupWindow(EditorScreen* editor)
         editor->longterm_sample_counter = 0;
         editor->longterm_accuracy_sum = 0.0f;
         editor->longterm_samples_in_period = 0;
+        // Reset prediction history
+        editor->predicted_chars.Clear();
+        editor->target_chars.Clear();
+        editor->last_predicted_index = -1;
+        editor->last_softmax_confidence = 0.0f;
     }
     
     ImGui::Separator();
@@ -526,7 +642,45 @@ void EditSoupWindow(EditorScreen* editor)
         }
         ImGui::Text("Waiting for actuator: %s", editor->waiting_for_actuator ? "Yes" : "No");
         ImGui::Text("Steps since actuator: %d", editor->steps_since_actuator);
-        ImGui::Text("Last accuracy: %.2f%%", editor->last_accuracy * 100.0f);
+        ImGui::Text("Last accuracy (softmax prob): %.2f%%", editor->last_accuracy * 100.0f);
+        ImGui::Text("Last prediction confidence: %.2f%%", editor->last_softmax_confidence * 100.0f);
+        
+        // Display prediction history
+        if(editor->predicted_chars.size > 0)
+        {
+            ImGui::Separator();
+            ImGui::Text("Prediction History (Last %d tokens):", (int)editor->predicted_chars.size);
+            
+            // Build predicted string
+            char predicted_str[128] = {0};
+            char target_str[128] = {0};
+            char match_str[128] = {0};
+            int display_count = Min((int)editor->predicted_chars.size, 50);
+            int start_idx = (int)editor->predicted_chars.size - display_count;
+            
+            for(int i = 0; i < display_count && i < 127; i++)
+            {
+                predicted_str[i] = editor->predicted_chars[start_idx + i];
+                target_str[i] = editor->target_chars[start_idx + i];
+                match_str[i] = (predicted_str[i] == target_str[i]) ? '^' : ' ';
+            }
+            predicted_str[display_count] = '\0';
+            target_str[display_count] = '\0';
+            match_str[display_count] = '\0';
+            
+            // Count correct predictions
+            int correct = 0;
+            for(int i = 0; i < display_count; i++)
+            {
+                if(predicted_str[i] == target_str[i]) correct++;
+            }
+            float hit_rate = (float)correct / (float)display_count * 100.0f;
+            
+            ImGui::Text("Predicted: %s", predicted_str);
+            ImGui::Text("Target:    %s", target_str);
+            ImGui::Text("Matches:   %s", match_str);
+            ImGui::Text("Hit rate: %d/%d (%.1f%%)", correct, display_count, hit_rate);
+        }
         
         // Chunk-based delayed reward info
         ImGui::Separator();
@@ -937,6 +1091,8 @@ InitEditorScreen(EditorScreen* editor)
     editor->steps_since_actuator = 0;
     editor->waiting_for_actuator = false;
     editor->last_accuracy = 0.0f;
+    editor->last_predicted_index = -1;
+    editor->last_softmax_confidence = 0.0f;
     
     // Initialize chunk-based delayed reward
     editor->chunk_size = 100;
