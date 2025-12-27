@@ -28,7 +28,7 @@ struct EditorScreen
     
     // Tracking arrays for Soup visualization
     DynamicArray<R32> active_neuron_history;
-    DynamicArray<R32> avg_threshold_history;
+    DynamicArray<R32> avg_bias_history;
     DynamicArray<R32> firing_rate_history;
     int track_history_per = 1;
     int history_track_counter = 0;
@@ -72,7 +72,7 @@ struct EditorScreen
     float longterm_accuracy_sum = 0.0f;        // Accumulate accuracy over sample period
     int longterm_samples_in_period = 0;
     
-    EditorScreen() : active_neuron_history(200), avg_threshold_history(200), firing_rate_history(200),
+    EditorScreen() : active_neuron_history(200), avg_bias_history(200), firing_rate_history(200),
                      chunk_accuracy_history(200), tokens_per_chunk_history(200),
                      longterm_accuracy_history(10000), longterm_chunk_numbers(10000) {}
 };

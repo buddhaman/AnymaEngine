@@ -3,6 +3,7 @@
 #include "Array.h"
 #include <random>
 #include <cmath>
+#include <algorithm>
 
 struct Neuron;
 
@@ -18,10 +19,18 @@ struct Neuron
 {
     int state;        // x_j(t) - current binary state: 0 or 1
     int prev_state;   // x_j(t-1) - previous state for causal Hebbian
-    R32 threshold;    // B_j, homeostatic threshold
+    R32 bias;         // B_j - homeostatic bias (added to activation)
+    R32 activation;   // u_j - current activation = input + bias
     
     // Pointers. This is inefficient, but its simple when we have multiple layers.
     Array<Synapse> connections;
+};
+
+// Helper for sorting neurons by activation
+struct NeuronActivation
+{
+    int index;
+    R32 activation;
 };
 
 struct Soup
@@ -29,9 +38,9 @@ struct Soup
     Array<Neuron> neurons;
     
     // Global parameters
-    R32 target_rate;        // ρ - target firing rate (~0.1)
-    R32 eta_threshold;      // η_B - threshold learning rate
-    R32 eta_weight;         // η_w - weight learning rate (η_w << η_B)
+    R32 target_rate;        // ρ - fraction of neurons that fire each step (~0.1)
+    R32 eta_bias;           // η_B - bias learning rate for homeostasis
+    R32 eta_weight;         // η_w - weight learning rate
     R32 eligibility_decay;  // λ - eligibility decay
 };
 
@@ -72,8 +81,11 @@ void NormalizeNeuronWeights(Neuron& neuron)
 
 void UpdateSoup(Soup& soup)
 {
-    // Step 1: Compute neuron inputs and fire
-    // u_j(t) = Σ w_ij * x_i(t), x_j(t) = 1[u_j(t) > B_j]
+    int num_neurons = (int)soup.neurons.size;
+    if(num_neurons == 0) return;
+    
+    // Step 1: Compute activations for all neurons
+    // activation = input_sum + bias (bias acts as homeostatic boost)
     for(Neuron& neuron : soup.neurons)
     {
         R32 u = 0.0f;
@@ -81,10 +93,39 @@ void UpdateSoup(Soup& soup)
         {
             u += syn.from->state * syn.weight;
         }
-        neuron.state = (u > neuron.threshold) ? 1 : 0;
+        neuron.activation = u + neuron.bias;
+        neuron.state = 0;  // Reset all states first
     }
     
-    // Step 2: Causal Hebbian eligibility trace
+    // Step 2: Select top k neurons by activation (enforced sparsity)
+    // k = target_rate * num_neurons (at most p fraction can fire)
+    int k = (int)(soup.target_rate * num_neurons);
+    if(k < 1) k = 1;
+    if(k > num_neurons) k = num_neurons;
+    
+    // Collect activations and find top-k
+    static std::vector<NeuronActivation> activations;
+    activations.resize(num_neurons);
+    
+    for(int i = 0; i < num_neurons; i++)
+    {
+        activations[i].index = i;
+        activations[i].activation = soup.neurons[i].activation;
+    }
+    
+    // Partial sort to find the k-th largest
+    std::nth_element(activations.begin(), activations.begin() + k, activations.end(),
+        [](const NeuronActivation& a, const NeuronActivation& b) {
+            return a.activation > b.activation;  // Descending order
+        });
+    
+    // Fire the top k neurons
+    for(int i = 0; i < k; i++)
+    {
+        soup.neurons[activations[i].index].state = 1;
+    }
+    
+    // Step 3: Causal Hebbian eligibility trace
     // e_ij(t) = λ * e_ij(t-1) + x_i(t-1) * x_j(t)
     for(Neuron& neuron : soup.neurons)
     {
@@ -95,24 +136,26 @@ void UpdateSoup(Soup& soup)
         }
     }
     
-    // Step 3: Threshold homeostasis
-    // B_j += η_B if x_j=1, B_j -= η_B * ρ/(1-ρ) if x_j=0
+    // Step 4: Bias homeostasis
+    // If fired: decrease bias (less boost next time, harder to compete)
+    // If didn't fire: increase bias (more boost next time, easier to compete)
+    // This self-balances: inactive neurons get boosted, overactive ones get dampened
     R32 rho = soup.target_rate;
-    R32 eta_B = soup.eta_threshold;
-    R32 down_rate = eta_B * rho / (1.0f - rho);
+    R32 eta_B = soup.eta_bias;
+    R32 up_rate = eta_B * rho / (1.0f - rho);  // Rate for neurons that didn't fire
     for(Neuron& neuron : soup.neurons)
     {
         if(neuron.state == 1)
         {
-            neuron.threshold += eta_B;
+            neuron.bias -= eta_B;  // Fired: reduce boost
         }
         else
         {
-            neuron.threshold -= down_rate;
+            neuron.bias += up_rate;  // Didn't fire: increase boost
         }
     }
     
-    // Step 4: Store current state as previous for next timestep
+    // Step 5: Store current state as previous for next timestep
     for(Neuron& neuron : soup.neurons)
     {
         neuron.prev_state = neuron.state;
@@ -186,8 +229,8 @@ Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_ne
     soup->neurons = CreateArray<Neuron>(arena, num_neurons);
 
     // Set default parameters
-    soup->target_rate = 0.1f;
-    soup->eta_threshold = 0.01f;
+    soup->target_rate = 0.1f;       // 10% of neurons fire each step
+    soup->eta_bias = 0.01f;         // Bias learning rate for homeostasis
     soup->eta_weight = 0.03f;
     soup->eligibility_decay = 0.9f;
 
@@ -197,7 +240,8 @@ Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_ne
         Neuron& neuron = *soup->neurons.PushBack();
         neuron.state = 0;
         neuron.prev_state = 0;
-        neuron.threshold = 0.1f;
+        neuron.bias = 0.0f;         // Start with no bias
+        neuron.activation = 0.0f;
         neuron.connections = CreateArray<Synapse>(arena, num_connections_per_neuron);
     }
 

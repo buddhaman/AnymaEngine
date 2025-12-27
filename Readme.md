@@ -37,6 +37,7 @@ This will be the most large scale and fastest evolution simulation out there.
  - IDEA: Genetic playback, show entire evolution of phenotype as animation.
 
 #### TODO
+- Brain soup experiment: better token representation. (Not only one-hot)
 - Put all entities in a giant list and do a kind of GC sweep to remove entities
   out of their respective list. 
 - Fix the scale of the agents.

@@ -366,7 +366,7 @@ void EditSoupWindow(EditorScreen* editor)
         soup = editor->soup;
         // Reset history
         editor->active_neuron_history.Clear();
-        editor->avg_threshold_history.Clear();
+        editor->avg_bias_history.Clear();
         editor->firing_rate_history.Clear();
         // Reset chunk tracking
         editor->chunk_accuracy_history.Clear();
@@ -391,9 +391,10 @@ void EditSoupWindow(EditorScreen* editor)
     // Edit Soup parameters
     ImGui::Text("Soup Parameters");
     ImGui::SliderFloat("Target Rate", &soup->target_rate, 0.0f, 1.0f);
-    ImGui::SliderFloat("Threshold Learning Rate", &soup->eta_threshold, 0.0f, 0.1f);
-    ImGui::SliderFloat("Weight Learning Rate", &soup->eta_weight, 0.0f, 0.01f);
+    ImGui::SliderFloat("Bias Learning Rate", &soup->eta_bias, 0.0f, 0.5f);
+    ImGui::SliderFloat("Weight Learning Rate", &soup->eta_weight, 0.0f, 0.5f);
     ImGui::SliderFloat("Eligibility Decay", &soup->eligibility_decay, 0.0f, 1.0f);
+    ImGui::InputFloat("Learning Rate (Manual)", &soup->eta_weight);
     
     ImGui::Separator();
     
@@ -425,7 +426,7 @@ void EditSoupWindow(EditorScreen* editor)
     }
     
     // Speed control (steps per frame)
-    ImGui::SliderInt("Steps Per Frame", &editor->soup_steps_per_frame, 1, 100);
+    ImGui::SliderInt("Steps Per Frame", &editor->soup_steps_per_frame, 1, 1000);
     
     // Token training controls
     ImGui::Separator();
@@ -557,21 +558,21 @@ void EditSoupWindow(EditorScreen* editor)
     int active_count = CountActiveNeurons(*soup);
     R32 firing_rate = soup->neurons.size > 0 ? (R32)active_count / (R32)soup->neurons.size : 0.0f;
     
-    R32 avg_threshold = 0.0f;
+    R32 avg_bias = 0.0f;
     for(Neuron& neuron : soup->neurons)
     {
-        avg_threshold += neuron.threshold;
+        avg_bias += neuron.bias;
     }
     if(soup->neurons.size > 0)
     {
-        avg_threshold /= (R32)soup->neurons.size;
+        avg_bias /= (R32)soup->neurons.size;
     }
     
     ImGui::Text("Statistics");
     ImGui::Text("Total Neurons: %lld", soup->neurons.size);
     ImGui::Text("Active Neurons: %d", active_count);
     ImGui::Text("Firing Rate: %.3f", firing_rate);
-    ImGui::Text("Average Threshold: %.3f", avg_threshold);
+    ImGui::Text("Average Bias: %.3f", avg_bias);
     
     // Chunk accuracy graph
     if(editor->chunk_accuracy_history.size > 0)
@@ -677,13 +678,13 @@ void EditSoupWindow(EditorScreen* editor)
         if(editor->active_neuron_history.size >= max_history)
         {
             editor->active_neuron_history.Shift(-1);
-            editor->avg_threshold_history.Shift(-1);
+            editor->avg_bias_history.Shift(-1);
             editor->firing_rate_history.Shift(-1);
         }
         else
         {
             editor->active_neuron_history.PushBack((R32)active_count);
-            editor->avg_threshold_history.PushBack(avg_threshold);
+            editor->avg_bias_history.PushBack(avg_bias);
             editor->firing_rate_history.PushBack(firing_rate);
         }
         
@@ -691,7 +692,7 @@ void EditSoupWindow(EditorScreen* editor)
         if(editor->active_neuron_history.size > 0)
         {
             editor->active_neuron_history[editor->active_neuron_history.size - 1] = (R32)active_count;
-            editor->avg_threshold_history[editor->avg_threshold_history.size - 1] = avg_threshold;
+            editor->avg_bias_history[editor->avg_bias_history.size - 1] = avg_bias;
             editor->firing_rate_history[editor->firing_rate_history.size - 1] = firing_rate;
         }
     }
@@ -699,7 +700,7 @@ void EditSoupWindow(EditorScreen* editor)
     {
         // Update last value even if not tracking new point
         editor->active_neuron_history[editor->active_neuron_history.size - 1] = (R32)active_count;
-        editor->avg_threshold_history[editor->avg_threshold_history.size - 1] = avg_threshold;
+        editor->avg_bias_history[editor->avg_bias_history.size - 1] = avg_bias;
         editor->firing_rate_history[editor->firing_rate_history.size - 1] = firing_rate;
     }
     
@@ -755,20 +756,20 @@ void EditSoupWindow(EditorScreen* editor)
         }
     }
     
-    // Average threshold over time
-    if(editor->avg_threshold_history.size > 0)
+    // Average bias over time
+    if(editor->avg_bias_history.size > 0)
     {
-        DynamicArray<R32> x_axis(editor->avg_threshold_history.size);
+        DynamicArray<R32> x_axis(editor->avg_bias_history.size);
         x_axis.Fill();
         x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
         
         ImPlot::SetNextAxesToFit();
         Vec2 plot_size3 = V2(-1, 150);
-        if(ImPlot::BeginPlot("Average Threshold Over Time", ImVec2(plot_size3.x, plot_size3.y), plot_flags))
+        if(ImPlot::BeginPlot("Average Bias Over Time", ImVec2(plot_size3.x, plot_size3.y), plot_flags))
         {
             Vec4 color3 = V4(0.3f, 0.3f, 1.0f, 1.0f);
             ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color3.x, color3.y, color3.z, color3.w));
-            ImPlot::PlotLine("Threshold", x_axis.data, editor->avg_threshold_history.data, (int)editor->avg_threshold_history.size);
+            ImPlot::PlotLine("Bias", x_axis.data, editor->avg_bias_history.data, (int)editor->avg_bias_history.size);
             ImPlot::PopStyleColor();
             ImPlot::EndPlot();
         }
