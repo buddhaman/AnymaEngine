@@ -62,10 +62,11 @@ float MeasureAccuracy(int* predicted, int* target, int size)
 }
 
 // Softmax-based prediction: use neuron activations to predict character
+// output_start is the index into soup->neurons (processing neurons)
 // Returns the index of the predicted character and the softmax confidence
 int SoftmaxPredict(Soup* soup, int output_start, int num_outputs, float* out_confidence)
 {
-    // Get activations from output neurons
+    // Get activations from output neurons (in processing layer)
     float max_activation = -1e30f;
     int best_index = 0;
     
@@ -104,6 +105,7 @@ int SoftmaxPredict(Soup* soup, int output_start, int num_outputs, float* out_con
 }
 
 // Compute softmax probability for a specific target index (for reward calculation)
+// output_start is the index into soup->neurons (processing neurons)
 float SoftmaxProbability(Soup* soup, int output_start, int num_outputs, int target_index)
 {
     // Find max activation for numerical stability
@@ -136,6 +138,28 @@ float SoftmaxProbability(Soup* soup, int output_start, int num_outputs, int targ
         return target_exp / sum_exp;
     }
     return 0.0f;
+}
+
+// Helper to set input layer from one-hot encoded tokens
+void SetInputFromContext(Soup* soup, const char* text, int text_length, int current_index, int window_size)
+{
+    int input_idx = 0;
+    for(int token = 0; token < window_size; token++)
+    {
+        int text_idx = current_index - window_size + 1 + token;
+        if(text_idx < 0) text_idx = 0;
+        if(text_idx >= text_length) text_idx = text_length - 1;
+        
+        char c = text[text_idx];
+        int char_idx = CharToIndex(c);
+        
+        // Set one-hot encoding in input layer (soup->inputs is Array<Neuron>)
+        for(int i = 0; i < NUM_CHARS && input_idx < (int)soup->inputs.size; i++)
+        {
+            soup->inputs[input_idx].state = (i == char_idx) ? 1 : 0;
+            input_idx++;
+        }
+    }
 }
 constexpr R32 turn_speed = 0.01f;
 constexpr int max_joints = 64;
@@ -173,157 +197,84 @@ bool EditBoolArray(const char* labelPrefix, uint32_t* array, int count)
 void UpdateTokens(EditorScreen* editor)
 {
     Soup* soup = editor->soup;
+    int output_start = (int)soup->neurons.size - editor->num_output_neurons;
     
-    // Check if we need to move to next token
-    if(editor->waiting_for_actuator)
+    // Get target for this step (next character after current position)
+    char target_char = ' ';
+    int target_index = 26;  // space
+    if(editor->current_token_index < editor->training_text_length - 1)
     {
-        // Check actuator neurons (10 neurons before output)
-        int actuator_start = soup->neurons.size - editor->num_output_neurons - editor->num_actuator_neurons;
-        int actuator_active = 0;
-        for(int i = 0; i < editor->num_actuator_neurons && (actuator_start + i) < soup->neurons.size; i++)
-        {
-            if(soup->neurons[actuator_start + i].state == 1)
-                actuator_active++;
-        }
-        
-        // 30% threshold = at least 3 out of 10
-        float actuator_ratio = (float)actuator_active / (float)editor->num_actuator_neurons;
-        if(actuator_ratio >= 0.3f)
-        {
-            // Actuator fired! Measure accuracy
-            int output_start = soup->neurons.size - editor->num_output_neurons;
-            DynamicArray<int> predicted_output(editor->num_output_neurons);
-            DynamicArray<int> target_output(editor->num_output_neurons);
-            
-            // Get predicted output
-            for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
-            {
-                predicted_output.PushBack(soup->neurons[output_start + i].state);
-            }
-            
-            // Get target output (next character)
-            if(editor->current_token_index < editor->training_text_length - 1)
-            {
-                char target_char = editor->training_text[editor->current_token_index + 1];
-                int target_index = CharToIndex(target_char);
-                OneHotEncode(target_char, target_output.data, editor->num_output_neurons);
-                target_output.size = editor->num_output_neurons;
-                
-                // Softmax-based prediction: use activation values
-                float confidence = 0.0f;
-                int predicted_index = SoftmaxPredict(soup, output_start, editor->num_output_neurons, &confidence);
-                char predicted_char = IndexToChar(predicted_index);
-                
-                // Store prediction in history
-                editor->last_predicted_index = predicted_index;
-                editor->last_softmax_confidence = confidence;
-                
-                // Add to prediction history (shift if full, else push back)
-                if(editor->predicted_chars.size >= editor->prediction_history_size)
-                {
-                    editor->predicted_chars.Shift(-1);
-                    editor->target_chars.Shift(-1);
-                    // Update last element after shift
-                    editor->predicted_chars[editor->predicted_chars.size - 1] = predicted_char;
-                    editor->target_chars[editor->target_chars.size - 1] = target_char;
-                }
-                else
-                {
-                    editor->predicted_chars.PushBack(predicted_char);
-                    editor->target_chars.PushBack(target_char);
-                }
-                
-                // Use softmax probability of correct answer as accuracy metric
-                float softmax_prob = SoftmaxProbability(soup, output_start, editor->num_output_neurons, target_index);
-                editor->last_accuracy = softmax_prob;
-                
-                // Accumulate chunk accuracy (no dopamine yet - delayed reward)
-                editor->chunk_accuracy_sum += editor->last_accuracy;
-                editor->chunk_tokens_processed++;
-                
-                // Force output to correct value (for learning)
-                for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
-                {
-                    soup->neurons[output_start + i].state = target_output[i];
-                }
-            }
-            
-            // Move to next token
-            editor->current_token_index++;
-            if(editor->current_token_index >= editor->training_text_length - 1)
-            {
-                // Wrap around to beginning
-                editor->current_token_index = 0;
-            }
-            
-            // Set new input
-            int input_start = 0;
-            for(int token = 0; token < editor->token_window_size; token++)
-            {
-                int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
-                if(text_idx < 0) text_idx = 0;
-                if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
-                
-                char c = editor->training_text[text_idx];
-                int one_hot[NUM_CHARS];
-                OneHotEncode(c, one_hot, NUM_CHARS);
-                
-                // Set input neurons for this token
-                for(int i = 0; i < NUM_CHARS && (input_start + i) < soup->neurons.size; i++)
-                {
-                    soup->neurons[input_start + i].state = one_hot[i];
-                }
-                input_start += NUM_CHARS;
-            }
-            
-            // Clear output neurons initially
-            int output_clear_start = soup->neurons.size - editor->num_output_neurons;
-            for(int i = 0; i < editor->num_output_neurons && (output_clear_start + i) < soup->neurons.size; i++)
-            {
-                soup->neurons[output_clear_start + i].state = 0;
-            }
-            
-            editor->waiting_for_actuator = false;
-            editor->steps_since_actuator = 0;
-        }
-        else
-        {
-            editor->steps_since_actuator++;
-        }
+        target_char = editor->training_text[editor->current_token_index + 1];
+        target_index = CharToIndex(target_char);
     }
     
-    // Regular soup update
-    UpdateSoup(*soup);
+    // Run soup update WITHOUT eligibility update (we'll do supervised eligibility)
+    UpdateSoup(*soup, false);
     
-    // Re-clamp input neurons to current context window (UpdateSoup resets all states)
+    // Measure prediction BEFORE setting correct output
+    float confidence = 0.0f;
+    int predicted_index = SoftmaxPredict(soup, output_start, editor->num_output_neurons, &confidence);
+    char predicted_char = IndexToChar(predicted_index);
+    float softmax_prob = SoftmaxProbability(soup, output_start, editor->num_output_neurons, target_index);
+    
+    editor->last_predicted_index = predicted_index;
+    editor->last_softmax_confidence = confidence;
+    editor->last_accuracy = softmax_prob;
+    
+    // SUPERVISED LEARNING: Set output neurons to CORRECT values
+    // This is the key fix - we build eligibility traces for correct output, not random output
+    for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
     {
-        int input_start = 0;
-        for(int token = 0; token < editor->token_window_size; token++)
-        {
-            int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
-            if(text_idx < 0) text_idx = 0;
-            if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
-            
-            char c = editor->training_text[text_idx];
-            int one_hot[NUM_CHARS];
-            OneHotEncode(c, one_hot, NUM_CHARS);
-            
-            // Set input neurons for this token
-            for(int i = 0; i < NUM_CHARS && (input_start + i) < soup->neurons.size; i++)
-            {
-                soup->neurons[input_start + i].state = one_hot[i];
-            }
-            input_start += NUM_CHARS;
-        }
+        soup->neurons[output_start + i].state = (i == target_index) ? 1 : 0;
     }
     
-    // Increment chunk iteration counter
+    // NOW update eligibility based on correct output pattern
+    // This builds traces: "these input patterns should produce this correct output"
+    UpdateEligibility(*soup);
+    
+    // Apply dopamine - always positive for supervised learning
+    // Stronger signal when prediction was wrong (more to learn)
+    float dopamine = 1.0f;  // Always reinforce correct pattern
+    ApplyDopamine(*soup, dopamine);
+    editor->last_dopamine = dopamine;
+    
+    // Store prev states for next step
+    StorePrevStates(*soup);
+    
+    // Track prediction accuracy (for monitoring, not for learning)
+    editor->chunk_accuracy_sum += (predicted_index == target_index) ? 1.0f : 0.0f;
+    editor->chunk_tokens_processed++;
+    
+    // Add to prediction history
+    if(editor->predicted_chars.size >= editor->prediction_history_size)
+    {
+        editor->predicted_chars.Shift(-1);
+        editor->target_chars.Shift(-1);
+        editor->predicted_chars[editor->predicted_chars.size - 1] = predicted_char;
+        editor->target_chars[editor->target_chars.size - 1] = target_char;
+    }
+    else
+    {
+        editor->predicted_chars.PushBack(predicted_char);
+        editor->target_chars.PushBack(target_char);
+    }
+    
+    // Move to next token every step (no actuator waiting)
+    editor->current_token_index++;
+    if(editor->current_token_index >= editor->training_text_length - 1)
+    {
+        editor->current_token_index = 0;  // Wrap around
+    }
+    
+    // Set new input for next step
+    SetInputFromContext(soup, editor->training_text, editor->training_text_length, 
+                       editor->current_token_index, editor->token_window_size);
+    
+    // Track chunk statistics (for visualization)
     editor->current_chunk_iteration++;
-    
-    // Check if chunk is complete
     if(editor->current_chunk_iteration >= editor->chunk_size)
     {
-        // Calculate chunk accuracy
+        // Calculate chunk accuracy for display (now tracking exact match rate)
         if(editor->chunk_tokens_processed > 0)
         {
             editor->current_chunk_accuracy = editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed;
@@ -333,60 +284,32 @@ void UpdateTokens(EditorScreen* editor)
             editor->current_chunk_accuracy = 0.0f;
         }
         
-        // Check if accuracy improved - release dopamine if so
-        editor->dopamine_released_this_chunk = false;
-        if(editor->current_chunk_accuracy > editor->last_chunk_accuracy)
-        {
-            // Accuracy improved! Release dopamine
-            R32 improvement = editor->current_chunk_accuracy - editor->last_chunk_accuracy;
-            R32 dopamine = improvement * 2.0f;  // Scale improvement to dopamine
-            dopamine = Clamp(0.0f, dopamine, 1.0f);
-            ApplyDopamine(*soup, dopamine);
-            editor->dopamine_released_this_chunk = true;
-        }
-        
-        // Track history
+        // Track history for plotting
         const int max_history = 200;
         if(editor->chunk_accuracy_history.size >= max_history)
         {
             editor->chunk_accuracy_history.Shift(-1);
             editor->tokens_per_chunk_history.Shift(-1);
         }
-        else
-        {
-            editor->chunk_accuracy_history.PushBack(editor->current_chunk_accuracy);
-            editor->tokens_per_chunk_history.PushBack((R32)editor->chunk_tokens_processed);
-        }
+        editor->chunk_accuracy_history.PushBack(editor->current_chunk_accuracy);
+        editor->tokens_per_chunk_history.PushBack((R32)editor->chunk_tokens_processed);
         
-        // Update last values
-        if(editor->chunk_accuracy_history.size > 0)
-        {
-            editor->chunk_accuracy_history[editor->chunk_accuracy_history.size - 1] = editor->current_chunk_accuracy;
-            editor->tokens_per_chunk_history[editor->tokens_per_chunk_history.size - 1] = (R32)editor->chunk_tokens_processed;
-        }
-        
-        // Store current accuracy as last for next chunk comparison
         editor->last_chunk_accuracy = editor->current_chunk_accuracy;
         editor->total_chunks_processed++;
         
-        // Long-term tracking: accumulate and sample every N chunks
+        // Long-term tracking
         editor->longterm_accuracy_sum += editor->current_chunk_accuracy;
         editor->longterm_samples_in_period++;
         editor->longterm_sample_counter++;
         
         if(editor->longterm_sample_counter >= editor->longterm_sample_rate)
         {
-            // Calculate average accuracy over this sample period
             float avg_accuracy = editor->longterm_accuracy_sum / (float)editor->longterm_samples_in_period;
-            
-            // Store in long-term history (grows indefinitely up to 10000)
             if(editor->longterm_accuracy_history.size < editor->longterm_accuracy_history.capacity)
             {
                 editor->longterm_accuracy_history.PushBack(avg_accuracy);
                 editor->longterm_chunk_numbers.PushBack((R32)editor->total_chunks_processed);
             }
-            
-            // Reset long-term sample counters
             editor->longterm_sample_counter = 0;
             editor->longterm_accuracy_sum = 0.0f;
             editor->longterm_samples_in_period = 0;
@@ -396,16 +319,6 @@ void UpdateTokens(EditorScreen* editor)
         editor->current_chunk_iteration = 0;
         editor->chunk_tokens_processed = 0;
         editor->chunk_accuracy_sum = 0.0f;
-        
-        // Reset eligibility for next chunk
-        ResetEligibility(*soup);
-    }
-    
-    // If not waiting for actuator, start waiting
-    if(!editor->waiting_for_actuator)
-    {
-        editor->waiting_for_actuator = true;
-        editor->steps_since_actuator = 0;
     }
 }
 
@@ -463,17 +376,25 @@ void EditSoupWindow(EditorScreen* editor)
     ImGui::Begin("Soup Editor");
     
     // Create new Soup
-    static int new_num_neurons = 1000;
+    static int new_num_processing = 1000;
     static int new_num_connections = 10;
+    static int new_context_length = 10;
     ImGui::Text("Create New Soup");
-    ImGui::InputInt("Number of Neurons", &new_num_neurons);
+    ImGui::InputInt("Context Length (tokens)", &new_context_length);
+    ImGui::InputInt("Processing Neurons", &new_num_processing);
     ImGui::InputInt("Connections per Neuron", &new_num_connections);
-    new_num_neurons = Clamp(10, new_num_neurons, 10000);
+    new_context_length = Clamp(1, new_context_length, 20);
+    new_num_processing = Clamp(10, new_num_processing, 10000);
     new_num_connections = Clamp(1, new_num_connections, 1000);
+    
+    int new_num_inputs = new_context_length * NUM_CHARS;
+    ImGui::Text("Input neurons: %d (%d tokens x %d chars)", new_num_inputs, new_context_length, NUM_CHARS);
     
     if(ImGui::Button("Create New Soup"))
     {
-        editor->soup = CreateSoup(arena, new_num_neurons, new_num_connections);
+        editor->token_window_size = new_context_length;
+        editor->num_input_neurons = new_num_inputs;
+        editor->soup = CreateSoup(arena, new_num_inputs, new_num_processing, new_num_connections);
         soup = editor->soup;
         // Reset history
         editor->active_neuron_history.Clear();
@@ -500,6 +421,11 @@ void EditSoupWindow(EditorScreen* editor)
         editor->target_chars.Clear();
         editor->last_predicted_index = -1;
         editor->last_softmax_confidence = 0.0f;
+        editor->last_dopamine = 0.0f;
+        
+        // Set initial input
+        SetInputFromContext(soup, editor->training_text, editor->training_text_length,
+                           editor->current_token_index, editor->token_window_size);
     }
     
     ImGui::Separator();
@@ -547,35 +473,7 @@ void EditSoupWindow(EditorScreen* editor)
     // Token training controls
     ImGui::Separator();
     ImGui::Text("Token Training");
-    int old_window_size = editor->token_window_size;
-    ImGui::SliderInt("Token Window Size", &editor->token_window_size, 1, 10);
-    editor->token_window_size = Clamp(1, editor->token_window_size, 10);
-    if(old_window_size != editor->token_window_size)
-    {
-        editor->num_input_neurons = editor->token_window_size * NUM_CHARS;
-        // Reinitialize input if needed
-        if(editor->soup && editor->training_text)
-        {
-            int input_start = 0;
-            for(int token = 0; token < editor->token_window_size; token++)
-            {
-                int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
-                if(text_idx < 0) text_idx = 0;
-                if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
-                
-                char c = editor->training_text[text_idx];
-                int one_hot[NUM_CHARS];
-                OneHotEncode(c, one_hot, NUM_CHARS);
-                
-                // Set input neurons for this token
-                for(int i = 0; i < NUM_CHARS && (input_start + i) < editor->soup->neurons.size; i++)
-                {
-                    editor->soup->neurons[input_start + i].state = one_hot[i];
-                }
-                input_start += NUM_CHARS;
-            }
-        }
-    }
+    ImGui::Text("Context Length: %d tokens (%d input neurons)", editor->token_window_size, editor->num_input_neurons);
     
     if(editor->training_text)
     {
@@ -640,9 +538,7 @@ void EditSoupWindow(EditorScreen* editor)
                 ImGui::Text("Target: '%c'", editor->training_text[editor->current_token_index + 1]);
             }
         }
-        ImGui::Text("Waiting for actuator: %s", editor->waiting_for_actuator ? "Yes" : "No");
-        ImGui::Text("Steps since actuator: %d", editor->steps_since_actuator);
-        ImGui::Text("Last accuracy (softmax prob): %.2f%%", editor->last_accuracy * 100.0f);
+        ImGui::Text("Last softmax prob for target: %.2f%%", editor->last_accuracy * 100.0f);
         ImGui::Text("Last prediction confidence: %.2f%%", editor->last_softmax_confidence * 100.0f);
         
         // Display prediction history
@@ -682,19 +578,20 @@ void EditSoupWindow(EditorScreen* editor)
             ImGui::Text("Hit rate: %d/%d (%.1f%%)", correct, display_count, hit_rate);
         }
         
-        // Chunk-based delayed reward info
+        // Immediate per-token reward info
         ImGui::Separator();
-        ImGui::Text("Delayed Reward (Chunk-Based)");
-        ImGui::SliderInt("Chunk Size (iterations)", &editor->chunk_size, 10, 1000);
-        ImGui::Text("Chunk Iteration: %d / %d", editor->current_chunk_iteration, editor->chunk_size);
-        ImGui::Text("Tokens this chunk: %d", editor->chunk_tokens_processed);
-        ImGui::Text("Last chunk accuracy: %.2f%%", editor->last_chunk_accuracy * 100.0f);
-        ImGui::Text("Current chunk accuracy: %.2f%%", 
+        ImGui::Text("Immediate Per-Token Reward");
+        ImGui::Text("Last dopamine applied: %.3f", editor->last_dopamine);
+        ImGui::Text("Baseline (random): %.2f%%", 100.0f / (float)NUM_CHARS);
+        
+        // Chunk stats (for visualization only)
+        ImGui::SliderInt("Stats Window Size", &editor->chunk_size, 10, 1000);
+        ImGui::Text("Tokens in window: %d", editor->chunk_tokens_processed);
+        ImGui::Text("Window accuracy: %.2f%%", 
             editor->chunk_tokens_processed > 0 
                 ? (editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed) * 100.0f 
                 : 0.0f);
-        ImGui::Text("Total chunks: %d", editor->total_chunks_processed);
-        ImGui::Text("Dopamine released: %s", editor->dopamine_released_this_chunk ? "Yes" : "No");
+        ImGui::Text("Total windows: %d", editor->total_chunks_processed);
     }
     
     // Execute steps if playing
@@ -709,6 +606,7 @@ void EditSoupWindow(EditorScreen* editor)
     ImGui::Separator();
     
     // Statistics
+    int active_inputs = CountActiveInputs(*soup);
     int active_count = CountActiveNeurons(*soup);
     R32 firing_rate = soup->neurons.size > 0 ? (R32)active_count / (R32)soup->neurons.size : 0.0f;
     
@@ -723,10 +621,11 @@ void EditSoupWindow(EditorScreen* editor)
     }
     
     ImGui::Text("Statistics");
-    ImGui::Text("Total Neurons: %lld", soup->neurons.size);
-    ImGui::Text("Active Neurons: %d", active_count);
+    ImGui::Text("Input Neurons: %lld (active: %d)", soup->inputs.size, active_inputs);
+    ImGui::Text("Processing Neurons: %lld (active: %d)", soup->neurons.size, active_count);
     ImGui::Text("Firing Rate: %.3f", firing_rate);
     ImGui::Text("Average Bias: %.3f", avg_bias);
+    ImGui::Text("Last Dopamine: %.3f", editor->last_dopamine);
     
     // Chunk accuracy graph
     if(editor->chunk_accuracy_history.size > 0)
@@ -1073,17 +972,15 @@ InitEditorScreen(EditorScreen* editor)
     InitRandomPhenotype(pheno);
     InitAgentSkeleton(arena, editor->agent);
 
-    editor->soup = CreateSoup(arena, 1000, 10);
-    
     // Tracking arrays are initialized via constructor
     editor->track_history_per = 1;
     editor->history_track_counter = 0;
     
-    // Initialize token training
+    // Initialize token training with default context length of 10
     editor->training_text = TRAINING_TEXT;
     editor->training_text_length = (int)strlen(TRAINING_TEXT);
     editor->current_token_index = 0;
-    editor->token_window_size = 1;
+    editor->token_window_size = 10;  // Default context length
     editor->num_chars = NUM_CHARS;
     editor->num_actuator_neurons = 10;
     editor->num_output_neurons = NUM_CHARS;
@@ -1093,8 +990,13 @@ InitEditorScreen(EditorScreen* editor)
     editor->last_accuracy = 0.0f;
     editor->last_predicted_index = -1;
     editor->last_softmax_confidence = 0.0f;
+    editor->last_dopamine = 0.0f;
     
-    // Initialize chunk-based delayed reward
+    // Create soup with separate input layer
+    // CreateSoup(arena, num_inputs, num_processing, num_connections)
+    editor->soup = CreateSoup(arena, editor->num_input_neurons, 1000, 10);
+    
+    // Initialize chunk tracking (for visualization)
     editor->chunk_size = 100;
     editor->current_chunk_iteration = 0;
     editor->chunk_tokens_processed = 0;
@@ -1110,26 +1012,10 @@ InitEditorScreen(EditorScreen* editor)
     editor->longterm_accuracy_sum = 0.0f;
     editor->longterm_samples_in_period = 0;
     
-    // Set initial input
+    // Set initial input using the separate input layer
     if(editor->soup && editor->training_text)
     {
-        int input_start = 0;
-        for(int token = 0; token < editor->token_window_size; token++)
-        {
-            int text_idx = editor->current_token_index - editor->token_window_size + 1 + token;
-            if(text_idx < 0) text_idx = 0;
-            if(text_idx >= editor->training_text_length) text_idx = editor->training_text_length - 1;
-            
-            char c = editor->training_text[text_idx];
-            int one_hot[NUM_CHARS];
-            OneHotEncode(c, one_hot, NUM_CHARS);
-            
-            // Set input neurons for this token
-            for(int i = 0; i < NUM_CHARS && (input_start + i) < editor->soup->neurons.size; i++)
-            {
-                editor->soup->neurons[input_start + i].state = one_hot[i];
-            }
-            input_start += NUM_CHARS;
-        }
+        SetInputFromContext(editor->soup, editor->training_text, editor->training_text_length,
+                           editor->current_token_index, editor->token_window_size);
     }
 }

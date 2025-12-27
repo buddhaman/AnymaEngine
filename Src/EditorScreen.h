@@ -78,6 +78,7 @@ struct EditorScreen
     DynamicArray<char> target_chars;      // What the target was
     int last_predicted_index = -1;        // Index of last predicted character
     float last_softmax_confidence = 0.0f; // Confidence of the prediction
+    float last_dopamine = 0.0f;           // Last dopamine signal applied
     
     EditorScreen() : active_neuron_history(200), avg_bias_history(200), firing_rate_history(200),
                      chunk_accuracy_history(200), tokens_per_chunk_history(200),

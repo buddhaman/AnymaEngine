@@ -7,23 +7,23 @@
 
 struct Neuron;
 
+// Synapse with direct pointer to source neuron
 struct Synapse
 {
-    Neuron* from;
+    Neuron* from;     // Direct pointer to source neuron (can be input or processing)
     R32 weight;
     R32 eligibility;  // eligibility trace
 };
 
-// Neurons are sparsely connected. Number of weights is arbitrary.
+// Same neuron struct used for both input and processing neurons
 struct Neuron
 {
     int state;        // x_j(t) - current binary state: 0 or 1
     int prev_state;   // x_j(t-1) - previous state for causal Hebbian
-    R32 bias;         // B_j - homeostatic bias (added to activation)
-    R32 activation;   // u_j - current activation = input + bias
+    R32 bias;         // B_j - homeostatic bias (only used for processing neurons)
+    R32 activation;   // u_j - current activation (only used for processing neurons)
     
-    // Pointers. This is inefficient, but its simple when we have multiple layers.
-    Array<Synapse> connections;
+    Array<Synapse> connections;  // Empty for input neurons
 };
 
 // Helper for sorting neurons by activation
@@ -35,10 +35,11 @@ struct NeuronActivation
 
 struct Soup
 {
-    Array<Neuron> neurons;
+    Array<Neuron> inputs;   // Input layer - state set externally, no incoming connections
+    Array<Neuron> neurons;  // Processing neurons with incoming connections
     
     // Global parameters
-    R32 target_rate;        // ρ - fraction of neurons that fire each step (~0.1)
+    R32 target_rate;        // ρ - fraction of processing neurons that fire each step (~0.1)
     R32 eta_bias;           // η_B - bias learning rate for homeostasis
     R32 eta_weight;         // η_w - weight learning rate
     R32 eligibility_decay;  // λ - eligibility decay
@@ -79,13 +80,42 @@ void NormalizeNeuronWeights(Neuron& neuron)
     }
 }
 
-void UpdateSoup(Soup& soup)
+// Update eligibility traces based on current states
+// Call this AFTER setting correct output states for supervised learning
+void UpdateEligibility(Soup& soup)
+{
+    // Causal Hebbian eligibility trace
+    // e_ij(t) = λ * e_ij(t-1) + x_i(t-1) * x_j(t)
+    for(Neuron& neuron : soup.neurons)
+    {
+        for(Synapse& syn : neuron.connections)
+        {
+            syn.eligibility = soup.eligibility_decay * syn.eligibility 
+                            + syn.from->prev_state * neuron.state;
+        }
+    }
+}
+
+// Store current states as previous (call at end of step)
+void StorePrevStates(Soup& soup)
+{
+    for(Neuron& input : soup.inputs)
+    {
+        input.prev_state = input.state;
+    }
+    for(Neuron& neuron : soup.neurons)
+    {
+        neuron.prev_state = neuron.state;
+    }
+}
+
+void UpdateSoup(Soup& soup, bool update_eligibility = true)
 {
     int num_neurons = (int)soup.neurons.size;
     if(num_neurons == 0) return;
     
-    // Step 1: Compute activations for all neurons
-    // activation = input_sum + bias (bias acts as homeostatic boost)
+    // Step 1: Compute activations for processing neurons
+    // Input neurons keep their externally-set state
     for(Neuron& neuron : soup.neurons)
     {
         R32 u = 0.0f;
@@ -94,11 +124,10 @@ void UpdateSoup(Soup& soup)
             u += syn.from->state * syn.weight;
         }
         neuron.activation = u + neuron.bias;
-        neuron.state = 0;  // Reset all states first
+        neuron.state = 0;  // Reset states first
     }
     
     // Step 2: Select top k neurons by activation (enforced sparsity)
-    // k = target_rate * num_neurons (at most p fraction can fire)
     int k = (int)(soup.target_rate * num_neurons);
     if(k < 1) k = 1;
     if(k > num_neurons) k = num_neurons;
@@ -125,24 +154,16 @@ void UpdateSoup(Soup& soup)
         soup.neurons[activations[i].index].state = 1;
     }
     
-    // Step 3: Causal Hebbian eligibility trace
-    // e_ij(t) = λ * e_ij(t-1) + x_i(t-1) * x_j(t)
-    for(Neuron& neuron : soup.neurons)
+    // Step 3: Eligibility update (can be skipped for supervised learning)
+    if(update_eligibility)
     {
-        for(Synapse& syn : neuron.connections)
-        {
-            syn.eligibility = soup.eligibility_decay * syn.eligibility 
-                            + syn.from->prev_state * neuron.state;
-        }
+        UpdateEligibility(soup);
     }
     
-    // Step 4: Bias homeostasis
-    // If fired: decrease bias (less boost next time, harder to compete)
-    // If didn't fire: increase bias (more boost next time, easier to compete)
-    // This self-balances: inactive neurons get boosted, overactive ones get dampened
+    // Step 4: Bias homeostasis for processing neurons
     R32 rho = soup.target_rate;
     R32 eta_B = soup.eta_bias;
-    R32 up_rate = eta_B * rho / (1.0f - rho);  // Rate for neurons that didn't fire
+    R32 up_rate = eta_B * rho / (1.0f - rho);
     for(Neuron& neuron : soup.neurons)
     {
         if(neuron.state == 1)
@@ -155,15 +176,12 @@ void UpdateSoup(Soup& soup)
         }
     }
     
-    // Step 5: Store current state as previous for next timestep
-    for(Neuron& neuron : soup.neurons)
-    {
-        neuron.prev_state = neuron.state;
-    }
+    // NOTE: StorePrevStates() must be called manually after UpdateSoup
+    // This allows setting correct output states before eligibility update
 }
 
 // Apply dopamine-gated weight consolidation
-// dopamine ∈ [0,1] - continuous reward signal (e.g. model's probability for true token)
+// dopamine can be positive (reward) or negative (punishment)
 // w_ij = w_ij + η_w * dopamine * e_ij, then L2 normalize
 void ApplyDopamine(Soup& soup, R32 dopamine)
 {
@@ -192,16 +210,16 @@ void ResetEligibility(Soup& soup)
     }
 }
 
-// Set input neurons (first n neurons)
+// Set input neuron states
 void SetInput(Soup& soup, int* input_states, int num_inputs)
 {
-    for(int i = 0; i < num_inputs && i < soup.neurons.size; i++)
+    for(int i = 0; i < num_inputs && i < soup.inputs.size; i++)
     {
-        soup.neurons[i].state = input_states[i];
+        soup.inputs[i].state = input_states[i];
     }
 }
 
-// Get output neuron states (last n neurons)
+// Get output neuron states (last n processing neurons)
 void GetOutput(Soup& soup, int* output_states, int num_outputs)
 {
     I64 start = soup.neurons.size - num_outputs;
@@ -212,7 +230,7 @@ void GetOutput(Soup& soup, int* output_states, int num_outputs)
     }
 }
 
-// Count how many neurons are currently firing
+// Count how many processing neurons are currently firing
 int CountActiveNeurons(Soup& soup)
 {
     int count = 0;
@@ -223,36 +241,69 @@ int CountActiveNeurons(Soup& soup)
     return count;
 }
 
-Soup* CreateSoup(MemoryArena* arena, int num_neurons, int num_connections_per_neuron)
+// Count how many input neurons are currently active
+int CountActiveInputs(Soup& soup)
+{
+    int count = 0;
+    for(Neuron& input : soup.inputs)
+    {
+        count += input.state;
+    }
+    return count;
+}
+
+Soup* CreateSoup(MemoryArena* arena, int num_input_neurons, int num_processing_neurons, int num_connections_per_neuron)
 {
     Soup* soup = PushNewStruct(arena, Soup);
-    soup->neurons = CreateArray<Neuron>(arena, num_neurons);
+    soup->inputs = CreateArray<Neuron>(arena, num_input_neurons);
+    soup->neurons = CreateArray<Neuron>(arena, num_processing_neurons);
 
     // Set default parameters
-    soup->target_rate = 0.1f;       // 10% of neurons fire each step
+    soup->target_rate = 0.1f;       // 10% of processing neurons fire each step
     soup->eta_bias = 0.01f;         // Bias learning rate for homeostasis
     soup->eta_weight = 0.03f;
-    soup->eligibility_decay = 0.9f;
+    soup->eligibility_decay = 0.95f;  // Slower decay for better credit assignment
 
-    // First initialize all neurons (without connections)
-    for(int i = 0; i < num_neurons; i++)
+    // Initialize input neurons (no connections)
+    for(int i = 0; i < num_input_neurons; i++)
+    {
+        Neuron& input = *soup->inputs.PushBack();
+        input.state = 0;
+        input.prev_state = 0;
+        input.bias = 0.0f;
+        input.activation = 0.0f;
+        input.connections = CreateArray<Synapse>(arena, 0);  // No incoming connections
+    }
+
+    // Initialize processing neurons (with connections)
+    for(int i = 0; i < num_processing_neurons; i++)
     {
         Neuron& neuron = *soup->neurons.PushBack();
         neuron.state = 0;
         neuron.prev_state = 0;
-        neuron.bias = 0.0f;         // Start with no bias
+        neuron.bias = 0.0f;
         neuron.activation = 0.0f;
         neuron.connections = CreateArray<Synapse>(arena, num_connections_per_neuron);
     }
 
-    // Now that all neurons are allocated, initialize connections
-    for (int i = 0; i < num_neurons; i++)
+    // Initialize connections for processing neurons
+    // Each connection can point to either an input neuron or another processing neuron
+    int total_sources = num_input_neurons + num_processing_neurons;
+    for(int i = 0; i < num_processing_neurons; i++)
     {
         Neuron& neuron = soup->neurons[i];
-        for (int j = 0; j < num_connections_per_neuron; j++)
+        for(int j = 0; j < num_connections_per_neuron; j++)
         {
             Synapse& synapse = *neuron.connections.PushBack();
-            synapse.from = &soup->neurons[RandomInt(0, num_neurons-1)];
+            int source_idx = RandomInt(0, total_sources - 1);
+            if(source_idx < num_input_neurons)
+            {
+                synapse.from = &soup->inputs[source_idx];
+            }
+            else
+            {
+                synapse.from = &soup->neurons[source_idx - num_input_neurons];
+            }
             synapse.weight = RandomR32(-1.0f, 1.0f);
             synapse.eligibility = 0.0f;
         }
