@@ -367,174 +367,6 @@ void UpdateTokens(EditorScreen* editor)
     }
 }
 
-void EditSimpleTestWindow(EditorScreen* editor)
-{
-    ImGui::Begin("Simple Test: Learn 'ab' Pattern");
-
-    ImGui::TextWrapped("Simplest possible test: Learn that 'a' predicts 'b' and 'b' predicts 'a'");
-    ImGui::Separator();
-
-    // Create new test
-    static int num_hidden = 20;
-    static int connections = 5;
-    ImGui::InputInt("Hidden Neurons", &num_hidden);
-    ImGui::InputInt("Connections per Neuron", &connections);
-    num_hidden = Clamp(5, num_hidden, 100);
-    connections = Clamp(2, connections, 20);
-
-    if(ImGui::Button("Create New Test"))
-    {
-        editor->simple_test = CreateSimpleTest(editor->editor_arena, num_hidden, connections);
-        editor->simple_test_step = 0;
-        editor->simple_test_current_input = 0;
-        editor->simple_test_accuracy.Clear();
-        editor->simple_test_playing = false;
-    }
-
-    if(!editor->simple_test)
-    {
-        ImGui::End();
-        return;
-    }
-
-    ImGui::Separator();
-
-    // Play/Pause/Step controls
-    if(editor->simple_test_playing)
-    {
-        if(ImGui::Button(ICON_LC_PAUSE " Pause"))
-            editor->simple_test_playing = false;
-    }
-    else
-    {
-        if(ImGui::Button(ICON_LC_PLAY " Play"))
-            editor->simple_test_playing = true;
-    }
-
-    ImGui::SameLine();
-    bool do_step = ImGui::Button(ICON_LC_STEP_FORWARD " Step");
-
-    ImGui::Separator();
-
-    // Training loop
-    if(editor->simple_test_playing || do_step)
-    {
-        // Alternate between 'a' (0) and 'b' (1)
-        int current_input = editor->simple_test_step % 2;
-        int target_output = (editor->simple_test_step + 1) % 2;  // Next in sequence
-
-        // Train one step
-        TrainSimpleStep(editor->simple_test, current_input, target_output);
-
-        // Test prediction every 10 steps
-        if(editor->simple_test_step % 10 == 0)
-        {
-            // Test on 'a' -> should predict 'b' (1)
-            int pred_a;
-            R32 conf_a;
-            TestSimplePrediction(editor->simple_test, 0, &pred_a, &conf_a);
-
-            // Test on 'b' -> should predict 'a' (0)
-            int pred_b;
-            R32 conf_b;
-            TestSimplePrediction(editor->simple_test, 1, &pred_b, &conf_b);
-
-            // Accuracy: both predictions must be correct
-            R32 accuracy = ((pred_a == 1) && (pred_b == 0)) ? 1.0f : 0.0f;
-
-            // Track accuracy
-            const int max_history = 1000;
-            if(editor->simple_test_accuracy.size >= max_history)
-            {
-                editor->simple_test_accuracy.Shift(-1);
-                editor->simple_test_accuracy.size--;
-            }
-            editor->simple_test_accuracy.PushBack(accuracy);
-        }
-
-        editor->simple_test_step++;
-    }
-
-    // Display current state
-    ImGui::Text("Training Step: %d", editor->simple_test_step);
-
-    // Test current prediction
-    int pred_a, pred_b;
-    R32 conf_a, conf_b;
-    TestSimplePrediction(editor->simple_test, 0, &pred_a, &conf_a);
-    TestSimplePrediction(editor->simple_test, 1, &pred_b, &conf_b);
-
-    ImGui::Text("Input 'a' (0) predicts: '%c' (%d) with %.1f%% confidence",
-                pred_a == 0 ? 'a' : 'b', pred_a, conf_a * 100.0f);
-    ImGui::Text("Input 'b' (1) predicts: '%c' (%d) with %.1f%% confidence",
-                pred_b == 0 ? 'a' : 'b', pred_b, conf_b * 100.0f);
-
-    bool both_correct = (pred_a == 1) && (pred_b == 0);
-    if(both_correct)
-    {
-        ImGui::TextColored(ImVec4(0, 1, 0, 1), "BOTH CORRECT!");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Still learning...");
-    }
-
-    // Accuracy graph
-    if(editor->simple_test_accuracy.size > 0)
-    {
-        ImGui::Separator();
-        ImGui::Text("Accuracy Over Time (sampled every 10 steps)");
-
-        DynamicArray<R32> x_axis(editor->simple_test_accuracy.size);
-        x_axis.Fill();
-        x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i * 10.0f;});
-
-        ImPlotFlags plot_flags = ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame;
-        ImPlot::SetNextAxesLimits(0, (R32)editor->simple_test_accuracy.size * 10.0f, -0.1f, 1.1f, ImPlotCond_Always);
-        Vec2 plot_size = V2(-1, 200);
-        if(ImPlot::BeginPlot("Accuracy", ImVec2(plot_size.x, plot_size.y), plot_flags))
-        {
-            Vec4 color = V4(0.2f, 1.0f, 0.2f, 1.0f);
-            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color.x, color.y, color.z, color.w));
-            ImPlot::PlotLine("Correct", x_axis.data, editor->simple_test_accuracy.data, (int)editor->simple_test_accuracy.size);
-            ImPlot::PopStyleColor();
-            ImPlot::EndPlot();
-        }
-
-        // Show when it first learned (if ever)
-        int first_correct = -1;
-        for(int i = 0; i < editor->simple_test_accuracy.size; i++)
-        {
-            if(editor->simple_test_accuracy[i] > 0.5f)
-            {
-                first_correct = i * 10;
-                break;
-            }
-        }
-        if(first_correct >= 0)
-        {
-            ImGui::Text("First correct prediction at step: %d", first_correct);
-        }
-    }
-
-    // Network stats
-    ImGui::Separator();
-    ImGui::Text("Network Structure:");
-    ImGui::Text("  Inputs: %lld", editor->simple_test->inputs.size);
-    ImGui::Text("  Hidden: %lld", editor->simple_test->hidden.size);
-    ImGui::Text("  Outputs: %lld", editor->simple_test->outputs.size);
-
-    int hidden_active = 0;
-    for(Neuron& n : editor->simple_test->hidden)
-        if(n.state == 1) hidden_active++;
-
-    ImGui::Text("Hidden neurons active: %d / %lld (%.1f%%)",
-                hidden_active, editor->simple_test->hidden.size,
-                100.0f * hidden_active / (float)editor->simple_test->hidden.size);
-
-    ImGui::End();
-}
-
 bool EditCreatureWindowHidden(PhenoType* pheno)
 {
     bool changed = false;
@@ -576,6 +408,114 @@ bool EditCreatureWindowHidden(PhenoType* pheno)
     changed |= ImGui::ColorPicker3("Color", color.elements);
     pheno->color = Vec4ToColor(color);
     return changed;
+}
+
+void EditChatWindow(EditorScreen* editor)
+{
+    if(!editor->soup) return;
+
+    ImGui::Begin("Chat with Model", &editor->chat_show_window);
+
+    ImGui::Text("Talk to the neural network!");
+    ImGui::Text("Enter a prompt and the network will generate text.");
+
+    ImGui::Separator();
+
+    // Input field
+    ImGui::Text("Your prompt:");
+    ImGui::InputText("##prompt", editor->chat_input_buffer, sizeof(editor->chat_input_buffer));
+
+    ImGui::SliderInt("Tokens to generate", &editor->chat_tokens_to_generate, 1, 200);
+
+    if(ImGui::Button("Generate") && strlen(editor->chat_input_buffer) > 0)
+    {
+        // Clear previous output
+        editor->chat_output.Clear();
+
+        // Set input from the prompt
+        const char* prompt = editor->chat_input_buffer;
+        int prompt_len = (int)strlen(prompt);
+
+        // Add prompt to output
+        for(int i = 0; i < prompt_len; i++)
+            editor->chat_output.PushBack(prompt[i]);
+
+        // Generate tokens
+        for(int gen = 0; gen < editor->chat_tokens_to_generate; gen++)
+        {
+            // Set input from last N characters of current output
+            int context_start = Max(0, (int)editor->chat_output.size - editor->token_window_size);
+            int context_len = (int)editor->chat_output.size - context_start;
+
+            // Set input neurons from context
+            int input_idx = 0;
+            for(int token = 0; token < editor->token_window_size; token++)
+            {
+                char c = ' ';
+                int char_offset = context_start + token;
+                if(char_offset < editor->chat_output.size)
+                    c = editor->chat_output[char_offset];
+                else
+                    c = ' ';  // Pad with spaces if context too short
+
+                int char_idx = CharToIndex(c);
+                for(int i = 0; i < NUM_CHARS && input_idx < editor->soup->inputs.size; i++)
+                {
+                    editor->soup->inputs[input_idx].state = (i == char_idx) ? 1 : 0;
+                    input_idx++;
+                }
+            }
+
+            // Forward pass
+            ForwardSoup(*editor->soup);
+
+            // Get prediction (argmax over outputs[0-30])
+            R32 char_max_act = -1e30f;
+            int predicted_char_idx = 0;
+            for(int i = 0; i < 31; i++)
+            {
+                if(editor->soup->outputs[i].activation > char_max_act)
+                {
+                    char_max_act = editor->soup->outputs[i].activation;
+                    predicted_char_idx = i;
+                }
+            }
+
+            char predicted_char = IndexToChar(predicted_char_idx);
+            editor->chat_output.PushBack(predicted_char);
+
+            // Update states for next iteration (no learning in chat mode)
+            for(int i = 0; i < 33; i++)
+                editor->soup->outputs[i].state = (i == predicted_char_idx && i < 31) ? 1 : 0;
+            StorePrevStates(*editor->soup);
+        }
+    }
+
+    ImGui::SameLine();
+    if(ImGui::Button("Clear"))
+    {
+        editor->chat_output.Clear();
+        editor->chat_input_buffer[0] = '\0';
+    }
+
+    ImGui::Separator();
+
+    // Display output
+    if(editor->chat_output.size > 0)
+    {
+        ImGui::Text("Generated text:");
+
+        // Build output string
+        char output_str[2048] = {0};
+        int copy_len = Min((int)editor->chat_output.size, 2047);
+        for(int i = 0; i < copy_len; i++)
+            output_str[i] = editor->chat_output[i];
+        output_str[copy_len] = '\0';
+
+        ImGui::TextWrapped("%s", output_str);
+    }
+
+    ImGui::End();
 }
 
 void EditSoupWindow(EditorScreen* editor)
@@ -681,7 +621,15 @@ void EditSoupWindow(EditorScreen* editor)
     {
         UpdateTokens(editor);
     }
-    
+
+    ImGui::SameLine();
+
+    // Chat button
+    if(ImGui::Button(ICON_LC_MESSAGE_CIRCLE " Chat"))
+    {
+        editor->chat_show_window = !editor->chat_show_window;
+    }
+
     // Speed control (steps per frame)
     ImGui::SliderInt("Steps Per Frame", &editor->soup_steps_per_frame, 1, 1000);
     
@@ -1178,10 +1126,13 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     // EditCreatureWindowHidden is not called - moved to separate function
 
     // Simple test window (minimal learning test)
-    EditSimpleTestWindow(editor);
 
     // Soup editor window
     EditSoupWindow(editor);
+
+    // Chat window (only shown when enabled)
+    if(editor->chat_show_window)
+        EditChatWindow(editor);
 
     R32 tilt_speed = -0.01f;
     if(IsKeyDown(input, InputAction_W))
