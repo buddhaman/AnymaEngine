@@ -5,47 +5,47 @@
 #include <cmath>
 #include <algorithm>
 
+// CLEAN 3-LAYER ARCHITECTURE:
+// Input (10 chars one-hot) -> Hidden (soup layer) -> Output (char prediction + next_token signal)
+//
+// Learning:
+// - Hidden layer: Hebbian with 1-step delay (prev_state correlation), dopamine-gated
+// - Output layer: Perceptron-style, learns more aggressively
+// - Learning ONLY happens when predicting (when next_token fires)
+
 struct Neuron;
 
-// Synapse with direct pointer to source neuron
 struct Synapse
 {
-    Neuron* from;     // Direct pointer to source neuron (can be input or processing)
+    Neuron* from;
     R32 weight;
-    R32 eligibility;  // eligibility trace
+    R32 eligibility;  // Causal Hebbian trace: pre(t-1) * post(t)
 };
 
-// Same neuron struct used for both input and processing neurons
 struct Neuron
 {
-    int state;        // x_j(t) - current binary state: 0 or 1
-    int prev_state;   // x_j(t-1) - previous state for causal Hebbian
-    R32 bias;         // B_j - homeostatic bias (only used for processing neurons)
-    R32 activation;   // u_j - current activation (only used for processing neurons)
-    
-    Array<Synapse> connections;  // Empty for input neurons
-};
-
-// Helper for sorting neurons by activation
-struct NeuronActivation
-{
-    int index;
+    int state;       // 0 or 1
+    int prev_state;  // Previous timestep
+    R32 bias;
     R32 activation;
+    Array<Synapse> connections;
 };
 
 struct Soup
 {
-    Array<Neuron> inputs;   // Input layer - state set externally, no incoming connections
-    Array<Neuron> neurons;  // Processing neurons with incoming connections
-    
-    // Global parameters
-    R32 target_rate;        // ρ - fraction of processing neurons that fire each step (~0.1)
-    R32 eta_bias;           // η_B - bias learning rate for homeostasis
-    R32 eta_weight;         // η_w - weight learning rate
-    R32 eligibility_decay;  // λ - eligibility decay
+    Array<Neuron> inputs;   // 310 neurons (10 tokens * 31 chars)
+    Array<Neuron> hidden;   // ~1000 neurons
+    Array<Neuron> outputs;  // 33 neurons: 31 char prediction + 2 next_token signal
+
+    // Parameters
+    R32 hidden_target_rate;    // ~0.1 (10% active)
+    R32 eta_hidden_hebbian;    // Hebbian learning for hidden layer
+    R32 eta_output_perceptron; // Perceptron learning for output layer
+    R32 eta_bias;              // Bias homeostasis
+    R32 eligibility_decay;     // Decay for Hebbian traces
 };
 
-// Static random generator helpers
+// Random helpers
 inline std::mt19937& StaticRng() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -62,252 +62,248 @@ inline R32 RandomR32(R32 a, R32 b) {
     return dist(StaticRng());
 }
 
-// L2 normalize incoming weights for a neuron
-void NormalizeNeuronWeights(Neuron& neuron)
+struct NeuronActivation
 {
-    R32 sum_sq = 0.0f;
-    for(Synapse& syn : neuron.connections)
-    {
-        sum_sq += syn.weight * syn.weight;
-    }
-    if(sum_sq > 0.0f)
-    {
-        R32 inv_norm = 1.0f / sqrtf(sum_sq);
-        for(Synapse& syn : neuron.connections)
-        {
-            syn.weight *= inv_norm;
-        }
-    }
-}
+    int index;
+    R32 activation;
+};
 
-// Update eligibility traces based on current states
-// Call this AFTER setting correct output states for supervised learning
-void UpdateEligibility(Soup& soup)
+// Create soup
+Soup* CreateSoup(MemoryArena* arena, int num_input, int num_hidden, int num_output,
+                int hidden_connections, int output_connections)
 {
-    // Causal Hebbian eligibility trace
-    // e_ij(t) = λ * e_ij(t-1) + x_i(t-1) * x_j(t)
-    for(Neuron& neuron : soup.neurons)
-    {
-        for(Synapse& syn : neuron.connections)
-        {
-            syn.eligibility = soup.eligibility_decay * syn.eligibility 
-                            + syn.from->prev_state * neuron.state;
-        }
-    }
-}
+    Soup* soup = PushNewStruct(arena, Soup);
 
-// Store current states as previous (call at end of step)
-void StorePrevStates(Soup& soup)
-{
-    for(Neuron& input : soup.inputs)
-    {
-        input.prev_state = input.state;
-    }
-    for(Neuron& neuron : soup.neurons)
-    {
-        neuron.prev_state = neuron.state;
-    }
-}
+    soup->inputs = CreateArray<Neuron>(arena, num_input);
+    soup->hidden = CreateArray<Neuron>(arena, num_hidden);
+    soup->outputs = CreateArray<Neuron>(arena, num_output);
 
-void UpdateSoup(Soup& soup, bool update_eligibility = true)
-{
-    int num_neurons = (int)soup.neurons.size;
-    if(num_neurons == 0) return;
-    
-    // Step 1: Compute activations for processing neurons
-    // Input neurons keep their externally-set state
-    for(Neuron& neuron : soup.neurons)
-    {
-        R32 u = 0.0f;
-        for(Synapse& syn : neuron.connections)
-        {
-            u += syn.from->state * syn.weight;
-        }
-        neuron.activation = u + neuron.bias;
-        neuron.state = 0;  // Reset states first
-    }
-    
-    // Step 2: Select top k neurons by activation (enforced sparsity)
-    int k = (int)(soup.target_rate * num_neurons);
-    if(k < 1) k = 1;
-    if(k > num_neurons) k = num_neurons;
-    
-    // Collect activations and find top-k
-    static std::vector<NeuronActivation> activations;
-    activations.resize(num_neurons);
-    
-    for(int i = 0; i < num_neurons; i++)
-    {
-        activations[i].index = i;
-        activations[i].activation = soup.neurons[i].activation;
-    }
-    
-    // Partial sort to find the k-th largest
-    std::nth_element(activations.begin(), activations.begin() + k, activations.end(),
-        [](const NeuronActivation& a, const NeuronActivation& b) {
-            return a.activation > b.activation;  // Descending order
-        });
-    
-    // Fire the top k neurons
-    for(int i = 0; i < k; i++)
-    {
-        soup.neurons[activations[i].index].state = 1;
-    }
-    
-    // Step 3: Eligibility update (can be skipped for supervised learning)
-    if(update_eligibility)
-    {
-        UpdateEligibility(soup);
-    }
-    
-    // Step 4: Bias homeostasis for processing neurons
-    R32 rho = soup.target_rate;
-    R32 eta_B = soup.eta_bias;
-    R32 up_rate = eta_B * rho / (1.0f - rho);
-    for(Neuron& neuron : soup.neurons)
-    {
-        if(neuron.state == 1)
-        {
-            neuron.bias -= eta_B;  // Fired: reduce boost
-        }
-        else
-        {
-            neuron.bias += up_rate;  // Didn't fire: increase boost
-        }
-    }
-    
-    // NOTE: StorePrevStates() must be called manually after UpdateSoup
-    // This allows setting correct output states before eligibility update
-}
+    // Parameters
+    soup->hidden_target_rate = 0.1f;
+    soup->eta_hidden_hebbian = 0.05f;
+    soup->eta_output_perceptron = 0.3f;
+    soup->eta_bias = 0.001f;
+    soup->eligibility_decay = 0.95f;
 
-// Apply dopamine-gated weight consolidation
-// dopamine can be positive (reward) or negative (punishment)
-// w_ij = w_ij + η_w * dopamine * e_ij, then L2 normalize
-void ApplyDopamine(Soup& soup, R32 dopamine)
-{
-    if(dopamine == 0.0f) return;
-    
-    R32 eta_w = soup.eta_weight;
-    for(Neuron& neuron : soup.neurons)
+    // Initialize input neurons
+    for(int i = 0; i < num_input; i++)
     {
-        for(Synapse& syn : neuron.connections)
-        {
-            syn.weight += eta_w * dopamine * syn.eligibility;
-        }
-        NormalizeNeuronWeights(neuron);
+        Neuron& n = *soup->inputs.PushBack();
+        n.state = 0;
+        n.prev_state = 0;
+        n.bias = 0.0f;
+        n.activation = 0.0f;
+        n.connections = CreateArray<Synapse>(arena, 0);
     }
-}
 
-// Reset all eligibility traces to zero
-void ResetEligibility(Soup& soup)
-{
-    for(Neuron& neuron : soup.neurons)
+    // Initialize hidden neurons (connect from inputs)
+    for(int i = 0; i < num_hidden; i++)
     {
-        for(Synapse& syn : neuron.connections)
+        Neuron& n = *soup->hidden.PushBack();
+        n.state = 0;
+        n.prev_state = 0;
+        n.bias = 0.0f;
+        n.activation = 0.0f;
+        n.connections = CreateArray<Synapse>(arena, hidden_connections);
+
+        for(int j = 0; j < hidden_connections; j++)
         {
+            Synapse& syn = *n.connections.PushBack();
+            syn.from = &soup->inputs[RandomInt(0, num_input - 1)];
+            syn.weight = RandomR32(-0.5f, 0.5f);
             syn.eligibility = 0.0f;
         }
     }
+
+    // Initialize output neurons (connect from hidden + inputs, heavily connected)
+    int total_sources = num_input + num_hidden;
+    for(int i = 0; i < num_output; i++)
+    {
+        Neuron& n = *soup->outputs.PushBack();
+        n.state = 0;
+        n.prev_state = 0;
+        n.bias = 0.0f;
+        n.activation = 0.0f;
+        n.connections = CreateArray<Synapse>(arena, output_connections);
+
+        for(int j = 0; j < output_connections; j++)
+        {
+            Synapse& syn = *n.connections.PushBack();
+            int src_idx = RandomInt(0, total_sources - 1);
+            if(src_idx < num_input)
+                syn.from = &soup->inputs[src_idx];
+            else
+                syn.from = &soup->hidden[src_idx - num_input];
+
+            syn.weight = RandomR32(-0.5f, 0.5f);
+            syn.eligibility = 0.0f;
+        }
+    }
+
+    return soup;
 }
 
-// Set input neuron states
-void SetInput(Soup& soup, int* input_states, int num_inputs)
+// Forward pass
+void ForwardSoup(Soup& soup)
 {
-    for(int i = 0; i < num_inputs && i < soup.inputs.size; i++)
+    // Hidden layer: winner-take-all
+    for(Neuron& n : soup.hidden)
     {
-        soup.inputs[i].state = input_states[i];
+        R32 u = 0.0f;
+        for(Synapse& syn : n.connections)
+            u += syn.from->state * syn.weight;
+        n.activation = u + n.bias;
+        n.state = 0;
+    }
+
+    int k = Max(1, (int)(soup.hidden_target_rate * soup.hidden.size));
+    static std::vector<NeuronActivation> acts;
+    acts.resize(soup.hidden.size);
+    for(int i = 0; i < soup.hidden.size; i++)
+    {
+        acts[i].index = i;
+        acts[i].activation = soup.hidden[i].activation;
+    }
+    std::nth_element(acts.begin(), acts.begin() + k, acts.end(),
+        [](const NeuronActivation& a, const NeuronActivation& b) {
+            return a.activation > b.activation;
+        });
+    for(int i = 0; i < k; i++)
+        soup.hidden[acts[i].index].state = 1;
+
+    // Output layer: compute activations
+    for(Neuron& n : soup.outputs)
+    {
+        R32 u = 0.0f;
+        for(Synapse& syn : n.connections)
+            u += syn.from->state * syn.weight;
+        n.activation = u + n.bias;
     }
 }
 
-// Get output neuron states (last n processing neurons)
-void GetOutput(Soup& soup, int* output_states, int num_outputs)
+// Update eligibility (causal Hebbian: pre(t-1) * post(t))
+void UpdateEligibility(Soup& soup)
 {
-    I64 start = soup.neurons.size - num_outputs;
-    if(start < 0) start = 0;
-    for(int i = 0; i < num_outputs && (start + i) < soup.neurons.size; i++)
+    for(Neuron& n : soup.hidden)
     {
-        output_states[i] = soup.neurons[start + i].state;
+        for(Synapse& syn : n.connections)
+        {
+            syn.eligibility = soup.eligibility_decay * syn.eligibility
+                            + syn.from->prev_state * n.state;
+        }
     }
 }
 
-// Count how many processing neurons are currently firing
-int CountActiveNeurons(Soup& soup)
+// Normalize neuron weights (L1 normalization to keep activations in reasonable range)
+void NormalizeNeuronWeights(Neuron& neuron)
+{
+    R32 sum_abs = 0.0f;
+    for(Synapse& syn : neuron.connections)
+        sum_abs += fabs(syn.weight);
+
+    if(sum_abs > 0.0f)
+    {
+        R32 scale = (R32)neuron.connections.size / sum_abs;  // Scale to maintain average magnitude
+        for(Synapse& syn : neuron.connections)
+            syn.weight *= scale;
+    }
+}
+
+// Apply Hebbian learning to hidden layer (dopamine-gated)
+void ApplyHebbian(Soup& soup, R32 dopamine)
+{
+    R32 eta = soup.eta_hidden_hebbian;
+    for(Neuron& n : soup.hidden)
+    {
+        for(Synapse& syn : n.connections)
+        {
+            syn.weight += eta * dopamine * syn.eligibility;
+            syn.weight = Clamp(-3.0f, syn.weight, 3.0f);
+        }
+        // Removed NormalizeNeuronWeights - it was destroying learning!
+    }
+}
+
+// Apply perceptron learning to output layer
+void ApplyOutputLearning(Soup& soup, int* correct_pattern, bool was_correct)
+{
+    R32 eta = soup.eta_output_perceptron;
+
+    for(int i = 0; i < soup.outputs.size; i++)
+    {
+        Neuron& out = soup.outputs[i];
+        int target = correct_pattern[i];
+
+        if(was_correct)
+        {
+            // Correct: reinforce active when should fire, suppress when shouldn't
+            for(Synapse& syn : out.connections)
+            {
+                if(target == 1 && syn.from->state == 1)
+                    syn.weight += eta;
+                else if(target == 0 && syn.from->state == 1)
+                    syn.weight -= eta * 0.5f;
+            }
+        }
+        else
+        {
+            // Wrong: perceptron error correction
+            R32 error = (R32)target - (R32)out.state;
+            for(Synapse& syn : out.connections)
+            {
+                R32 input = (R32)syn.from->state;
+                syn.weight += eta * error * input;
+            }
+            out.bias += eta * error;
+        }
+
+        for(Synapse& syn : out.connections)
+            syn.weight = Clamp(-5.0f, syn.weight, 5.0f);
+        out.bias = Clamp(-5.0f, out.bias, 5.0f);
+        // Removed NormalizeNeuronWeights - it was destroying learning!
+    }
+}
+
+// Homeostasis
+void ApplyHomeostasis(Soup& soup)
+{
+    R32 rho = soup.hidden_target_rate;
+    R32 eta = soup.eta_bias;
+    R32 up_rate = eta * rho / (1.0f - rho);
+
+    for(Neuron& n : soup.hidden)
+    {
+        if(n.state == 1)
+            n.bias -= eta;
+        else
+            n.bias += up_rate;
+    }
+}
+
+// Store prev states
+void StorePrevStates(Soup& soup)
+{
+    for(Neuron& n : soup.inputs)
+        n.prev_state = n.state;
+    for(Neuron& n : soup.hidden)
+        n.prev_state = n.state;
+    for(Neuron& n : soup.outputs)
+        n.prev_state = n.state;
+}
+
+// Count active neurons
+int CountActiveHidden(Soup& soup)
 {
     int count = 0;
-    for(Neuron& neuron : soup.neurons)
-    {
-        count += neuron.state;
-    }
+    for(Neuron& n : soup.hidden)
+        if(n.state == 1) count++;
     return count;
 }
 
-// Count how many input neurons are currently active
 int CountActiveInputs(Soup& soup)
 {
     int count = 0;
-    for(Neuron& input : soup.inputs)
-    {
-        count += input.state;
-    }
+    for(Neuron& n : soup.inputs)
+        if(n.state == 1) count++;
     return count;
-}
-
-Soup* CreateSoup(MemoryArena* arena, int num_input_neurons, int num_processing_neurons, int num_connections_per_neuron)
-{
-    Soup* soup = PushNewStruct(arena, Soup);
-    soup->inputs = CreateArray<Neuron>(arena, num_input_neurons);
-    soup->neurons = CreateArray<Neuron>(arena, num_processing_neurons);
-
-    // Set default parameters
-    soup->target_rate = 0.1f;       // 10% of processing neurons fire each step
-    soup->eta_bias = 0.01f;         // Bias learning rate for homeostasis
-    soup->eta_weight = 0.03f;
-    soup->eligibility_decay = 0.95f;  // Slower decay for better credit assignment
-
-    // Initialize input neurons (no connections)
-    for(int i = 0; i < num_input_neurons; i++)
-    {
-        Neuron& input = *soup->inputs.PushBack();
-        input.state = 0;
-        input.prev_state = 0;
-        input.bias = 0.0f;
-        input.activation = 0.0f;
-        input.connections = CreateArray<Synapse>(arena, 0);  // No incoming connections
-    }
-
-    // Initialize processing neurons (with connections)
-    for(int i = 0; i < num_processing_neurons; i++)
-    {
-        Neuron& neuron = *soup->neurons.PushBack();
-        neuron.state = 0;
-        neuron.prev_state = 0;
-        neuron.bias = 0.0f;
-        neuron.activation = 0.0f;
-        neuron.connections = CreateArray<Synapse>(arena, num_connections_per_neuron);
-    }
-
-    // Initialize connections for processing neurons
-    // Each connection can point to either an input neuron or another processing neuron
-    int total_sources = num_input_neurons + num_processing_neurons;
-    for(int i = 0; i < num_processing_neurons; i++)
-    {
-        Neuron& neuron = soup->neurons[i];
-        for(int j = 0; j < num_connections_per_neuron; j++)
-        {
-            Synapse& synapse = *neuron.connections.PushBack();
-            int source_idx = RandomInt(0, total_sources - 1);
-            if(source_idx < num_input_neurons)
-            {
-                synapse.from = &soup->inputs[source_idx];
-            }
-            else
-            {
-                synapse.from = &soup->neurons[source_idx - num_input_neurons];
-            }
-            synapse.weight = RandomR32(-1.0f, 1.0f);
-            synapse.eligibility = 0.0f;
-        }
-        NormalizeNeuronWeights(neuron);
-    }
-    return soup;
 }

@@ -8,6 +8,7 @@
 #include "Renderer.h"
 #include "Soup.h"
 #include "Array.h"
+#include "SimpleTest.h"
 
 struct Agent;  // Forward declaration
 
@@ -23,6 +24,13 @@ struct EditorScreen
     Agent* agent;
 
     Soup* soup;
+
+    // Simple learning test
+    SimpleTestSoup* simple_test;
+    int simple_test_step;
+    int simple_test_current_input;
+    DynamicArray<R32> simple_test_accuracy;
+    bool simple_test_playing;
 
     R32 time = 0.0f;
     
@@ -79,11 +87,25 @@ struct EditorScreen
     int last_predicted_index = -1;        // Index of last predicted character
     float last_softmax_confidence = 0.0f; // Confidence of the prediction
     float last_dopamine = 0.0f;           // Last dopamine signal applied
-    
+
+    // Chat interface
+    char chat_input_buffer[256] = {0};    // Input for seeding the network
+    DynamicArray<char> chat_output;       // Generated output from the network
+    bool chat_show_window = false;        // Whether to show chat window
+    int chat_tokens_to_generate = 20;     // How many tokens to generate
+
     EditorScreen() : active_neuron_history(200), avg_bias_history(200), firing_rate_history(200),
                      chunk_accuracy_history(200), tokens_per_chunk_history(200),
                      longterm_accuracy_history(10000), longterm_chunk_numbers(10000),
-                     predicted_chars(50), target_chars(50) {}
+                     predicted_chars(50), target_chars(50),
+                     simple_test_accuracy(1000),
+                     chat_output(1000)
+    {
+        simple_test = nullptr;
+        simple_test_step = 0;
+        simple_test_current_input = 0;
+        simple_test_playing = false;
+    }
 };
 
 int

@@ -61,85 +61,6 @@ float MeasureAccuracy(int* predicted, int* target, int size)
     return (float)matches / (float)size;
 }
 
-// Softmax-based prediction: use neuron activations to predict character
-// output_start is the index into soup->neurons (processing neurons)
-// Returns the index of the predicted character and the softmax confidence
-int SoftmaxPredict(Soup* soup, int output_start, int num_outputs, float* out_confidence)
-{
-    // Get activations from output neurons (in processing layer)
-    float max_activation = -1e30f;
-    int best_index = 0;
-    
-    // Find max for numerical stability
-    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
-    {
-        float act = soup->neurons[output_start + i].activation;
-        if(act > max_activation)
-        {
-            max_activation = act;
-            best_index = i;
-        }
-    }
-    
-    // Compute softmax probabilities
-    float sum_exp = 0.0f;
-    float target_exp = 0.0f;
-    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
-    {
-        float act = soup->neurons[output_start + i].activation;
-        float exp_val = expf(act - max_activation);  // Subtract max for numerical stability
-        sum_exp += exp_val;
-        if(i == best_index)
-        {
-            target_exp = exp_val;
-        }
-    }
-    
-    // Confidence is the softmax probability of the best index
-    if(out_confidence && sum_exp > 0.0f)
-    {
-        *out_confidence = target_exp / sum_exp;
-    }
-    
-    return best_index;
-}
-
-// Compute softmax probability for a specific target index (for reward calculation)
-// output_start is the index into soup->neurons (processing neurons)
-float SoftmaxProbability(Soup* soup, int output_start, int num_outputs, int target_index)
-{
-    // Find max activation for numerical stability
-    float max_activation = -1e30f;
-    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
-    {
-        float act = soup->neurons[output_start + i].activation;
-        if(act > max_activation)
-        {
-            max_activation = act;
-        }
-    }
-    
-    // Compute softmax denominator and target numerator
-    float sum_exp = 0.0f;
-    float target_exp = 0.0f;
-    for(int i = 0; i < num_outputs && (output_start + i) < soup->neurons.size; i++)
-    {
-        float act = soup->neurons[output_start + i].activation;
-        float exp_val = expf(act - max_activation);
-        sum_exp += exp_val;
-        if(i == target_index)
-        {
-            target_exp = exp_val;
-        }
-    }
-    
-    if(sum_exp > 0.0f)
-    {
-        return target_exp / sum_exp;
-    }
-    return 0.0f;
-}
-
 // Helper to set input layer from one-hot encoded tokens
 void SetInputFromContext(Soup* soup, const char* text, int text_length, int current_index, int window_size)
 {
@@ -194,114 +115,239 @@ bool EditBoolArray(const char* labelPrefix, uint32_t* array, int count)
     return changed;
 }
 
+// Helper: Set input layer from context
+void SetInputFromContext(Neuron* inputs, const char* text, int text_length, int current_index, int window_size, int num_chars)
+{
+    int input_idx = 0;
+    for(int token = 0; token < window_size; token++)
+    {
+        int text_idx = current_index - window_size + 1 + token;
+
+        // Wrap around properly (modulo)
+        while(text_idx < 0) text_idx += text_length;
+        while(text_idx >= text_length) text_idx -= text_length;
+
+        char c = text[text_idx];
+        int char_idx = CharToIndex(c);
+
+        for(int i = 0; i < num_chars && input_idx < window_size * num_chars; i++)
+        {
+            inputs[input_idx].state = (i == char_idx) ? 1 : 0;
+            input_idx++;
+        }
+    }
+}
+
 void UpdateTokens(EditorScreen* editor)
 {
     Soup* soup = editor->soup;
-    int output_start = (int)soup->neurons.size - editor->num_output_neurons;
-    
-    // Get target for this step (next character after current position)
-    char target_char = ' ';
-    int target_index = 26;  // space
-    if(editor->current_token_index < editor->training_text_length - 1)
+    if(!soup) return;
+
+    // Get target character (next character in sequence)
+    int next_index = editor->current_token_index + 1;
+    if(next_index >= editor->training_text_length)
+        next_index = 0;  // Wrap around
+
+    char target_char = editor->training_text[next_index];
+    int target_index = CharToIndex(target_char);
+
+    // Forward pass
+    ForwardSoup(*soup);
+
+    // Check next_token signal (outputs[31] vs outputs[32]) using softmax
+    R32 next_act = soup->outputs[31].activation;
+    R32 not_next_act = soup->outputs[32].activation;
+    R32 max_act = Max(next_act, not_next_act);
+    R32 next_exp = expf(next_act - max_act);
+    R32 not_next_exp = expf(not_next_act - max_act);
+    R32 sum_exp = next_exp + not_next_exp;
+    R32 next_prob = next_exp / sum_exp;
+
+    // Predict character (argmax over outputs[0-30])
+    R32 char_max_act = -1e30f;
+    int predicted_char_idx = 0;
+    for(int i = 0; i < 31; i++)
     {
-        target_char = editor->training_text[editor->current_token_index + 1];
-        target_index = CharToIndex(target_char);
-    }
-    
-    // Run soup update WITHOUT eligibility update (we'll do supervised eligibility)
-    UpdateSoup(*soup, false);
-    
-    // Measure prediction BEFORE setting correct output
-    float confidence = 0.0f;
-    int predicted_index = SoftmaxPredict(soup, output_start, editor->num_output_neurons, &confidence);
-    char predicted_char = IndexToChar(predicted_index);
-    float softmax_prob = SoftmaxProbability(soup, output_start, editor->num_output_neurons, target_index);
-    
-    editor->last_predicted_index = predicted_index;
-    editor->last_softmax_confidence = confidence;
-    editor->last_accuracy = softmax_prob;
-    
-    // SUPERVISED LEARNING: Set output neurons to CORRECT values
-    // This is the key fix - we build eligibility traces for correct output, not random output
-    for(int i = 0; i < editor->num_output_neurons && (output_start + i) < soup->neurons.size; i++)
-    {
-        soup->neurons[output_start + i].state = (i == target_index) ? 1 : 0;
-    }
-    
-    // NOW update eligibility based on correct output pattern
-    // This builds traces: "these input patterns should produce this correct output"
-    UpdateEligibility(*soup);
-    
-    // Apply dopamine - always positive for supervised learning
-    // Stronger signal when prediction was wrong (more to learn)
-    float dopamine = 1.0f;  // Always reinforce correct pattern
-    ApplyDopamine(*soup, dopamine);
-    editor->last_dopamine = dopamine;
-    
-    // Store prev states for next step
-    StorePrevStates(*soup);
-    
-    // Track prediction accuracy (for monitoring, not for learning)
-    editor->chunk_accuracy_sum += (predicted_index == target_index) ? 1.0f : 0.0f;
-    editor->chunk_tokens_processed++;
-    
-    // Add to prediction history
-    if(editor->predicted_chars.size >= editor->prediction_history_size)
-    {
-        editor->predicted_chars.Shift(-1);
-        editor->target_chars.Shift(-1);
-        editor->predicted_chars[editor->predicted_chars.size - 1] = predicted_char;
-        editor->target_chars[editor->target_chars.size - 1] = target_char;
-    }
-    else
-    {
-        editor->predicted_chars.PushBack(predicted_char);
-        editor->target_chars.PushBack(target_char);
-    }
-    
-    // Move to next token every step (no actuator waiting)
-    editor->current_token_index++;
-    if(editor->current_token_index >= editor->training_text_length - 1)
-    {
-        editor->current_token_index = 0;  // Wrap around
-    }
-    
-    // Set new input for next step
-    SetInputFromContext(soup, editor->training_text, editor->training_text_length, 
-                       editor->current_token_index, editor->token_window_size);
-    
-    // Track chunk statistics (for visualization)
-    editor->current_chunk_iteration++;
-    if(editor->current_chunk_iteration >= editor->chunk_size)
-    {
-        // Calculate chunk accuracy for display (now tracking exact match rate)
-        if(editor->chunk_tokens_processed > 0)
+        if(soup->outputs[i].activation > char_max_act)
         {
-            editor->current_chunk_accuracy = editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed;
+            char_max_act = soup->outputs[i].activation;
+            predicted_char_idx = i;
+        }
+    }
+
+    // Compute softmax probabilities for both target and predicted
+    R32 char_sum_exp = 0.0f;
+    R32 char_target_exp = 0.0f;
+    R32 char_predicted_exp = 0.0f;
+    for(int i = 0; i < 31; i++)
+    {
+        R32 exp_val = expf(soup->outputs[i].activation - char_max_act);
+        char_sum_exp += exp_val;
+        if(i == target_index)
+            char_target_exp = exp_val;
+        if(i == predicted_char_idx)
+            char_predicted_exp = exp_val;
+    }
+    R32 target_prob = char_target_exp / char_sum_exp;
+    R32 char_confidence = char_predicted_exp / char_sum_exp;
+
+    editor->last_predicted_index = predicted_char_idx;
+    editor->last_softmax_confidence = char_confidence;
+    editor->last_accuracy = target_prob;  // Probability assigned to the correct target
+
+    // Network decides to predict when next_token has higher activation than not_next_token
+    bool network_wants_predict = (next_prob > 0.5f);
+    bool correct = (predicted_char_idx == target_index);
+    
+    // Track steps since last prediction
+    editor->steps_since_actuator++;
+    
+    // Inactivity thresholds
+    const int PUNISH_THRESHOLD = 30;   // Punish for not predicting after this many steps
+    const int FORCE_THRESHOLD = 50;    // Force prediction after this many steps
+    
+    bool too_long_without_predict = (editor->steps_since_actuator > PUNISH_THRESHOLD);
+    bool force_predict = (editor->steps_since_actuator >= FORCE_THRESHOLD);
+    
+    // Determine if we should do a training step
+    bool should_train = network_wants_predict || too_long_without_predict;
+    bool should_advance = network_wants_predict || force_predict;
+    
+    if(should_train)
+    {
+        // Build correct pattern for character prediction
+        int correct_pattern[33];
+        for(int i = 0; i < 31; i++)
+            correct_pattern[i] = (i == target_index) ? 1 : 0;
+        
+        // Determine actuator target based on situation:
+        // - Network predicted correctly: actuator SHOULD have fired
+        // - Network predicted wrongly: actuator should NOT have fired
+        // - Network stayed silent too long: actuator SHOULD have fired (punish inactivity)
+        bool actuator_should_fire;
+        if(network_wants_predict)
+        {
+            // Network chose to predict - was it right?
+            actuator_should_fire = correct;
         }
         else
         {
-            editor->current_chunk_accuracy = 0.0f;
+            // Network didn't predict but we're training due to inactivity
+            // Punish: actuator SHOULD have fired (teach it to be more active)
+            actuator_should_fire = true;
         }
         
-        // Track history for plotting
+        if(actuator_should_fire)
+        {
+            correct_pattern[31] = 1;  // next_token ON
+            correct_pattern[32] = 0;  // not_next_token OFF
+        }
+        else
+        {
+            correct_pattern[31] = 0;  // next_token OFF
+            correct_pattern[32] = 1;  // not_next_token ON
+        }
+
+        // Set output states from network's actual predictions BEFORE learning
+        // For character outputs (0-30): use argmax (one-hot)
+        for(int i = 0; i < 31; i++)
+            soup->outputs[i].state = (i == predicted_char_idx) ? 1 : 0;
+        // For next_token signals (31-32): what network actually output
+        soup->outputs[31].state = network_wants_predict ? 1 : 0;
+        soup->outputs[32].state = network_wants_predict ? 0 : 1;
+
+        // Determine if this counts as "correct" for learning purposes
+        bool learning_correct = network_wants_predict && correct;
+        
+        // Learn (ApplyOutputLearning uses states vs target to compute error)
+        UpdateEligibility(*soup);
+        ApplyOutputLearning(*soup, correct_pattern, learning_correct);
+
+        // Dopamine: positive for correct predictions, negative otherwise
+        R32 dopamine;
+        if(network_wants_predict && correct)
+            dopamine = 1.0f;      // Good prediction!
+        else if(network_wants_predict && !correct)
+            dopamine = -0.5f;     // Bad prediction - should have waited
+        else
+            dopamine = -0.3f;     // Too inactive - should have predicted
+        
+        ApplyHebbian(*soup, dopamine);
+
+        // NOW force outputs to correct pattern for next timestep
+        for(int i = 0; i < 33; i++)
+            soup->outputs[i].state = correct_pattern[i];
+
+        editor->last_dopamine = dopamine;
+
+        // Track accuracy only for actual predictions (not forced)
+        if(network_wants_predict)
+        {
+            editor->chunk_accuracy_sum += correct ? 1.0f : 0.0f;
+            editor->chunk_tokens_processed++;
+
+            // Prediction history
+            char predicted_char = IndexToChar(predicted_char_idx);
+            if(editor->predicted_chars.size >= editor->prediction_history_size)
+            {
+                editor->predicted_chars.Shift(-1);
+                editor->predicted_chars.size--;
+                editor->target_chars.Shift(-1);
+                editor->target_chars.size--;
+            }
+            editor->predicted_chars.PushBack(predicted_char);
+            editor->target_chars.PushBack(target_char);
+        }
+    }
+    else
+    {
+        editor->last_dopamine = 0.0f;
+    }
+    
+    // Advance token when network predicts OR forced after timeout
+    if(should_advance)
+    {
+        editor->steps_since_actuator = 0;  // Reset counter
+        
+        editor->current_token_index++;
+        if(editor->current_token_index >= editor->training_text_length)
+            editor->current_token_index = 0;
+
+        SetInputFromContext(soup->inputs.data, editor->training_text, editor->training_text_length,
+                           editor->current_token_index, editor->token_window_size, NUM_CHARS);
+    }
+
+    ApplyHomeostasis(*soup);
+    StorePrevStates(*soup);
+
+    // Chunk statistics
+    editor->current_chunk_iteration++;
+    if(editor->current_chunk_iteration >= editor->chunk_size)
+    {
+        if(editor->chunk_tokens_processed > 0)
+            editor->current_chunk_accuracy = editor->chunk_accuracy_sum / (float)editor->chunk_tokens_processed;
+        else
+            editor->current_chunk_accuracy = 0.0f;
+
         const int max_history = 200;
         if(editor->chunk_accuracy_history.size >= max_history)
         {
             editor->chunk_accuracy_history.Shift(-1);
+            editor->chunk_accuracy_history.size--;
             editor->tokens_per_chunk_history.Shift(-1);
+            editor->tokens_per_chunk_history.size--;
         }
         editor->chunk_accuracy_history.PushBack(editor->current_chunk_accuracy);
         editor->tokens_per_chunk_history.PushBack((R32)editor->chunk_tokens_processed);
-        
+
         editor->last_chunk_accuracy = editor->current_chunk_accuracy;
         editor->total_chunks_processed++;
-        
+
         // Long-term tracking
         editor->longterm_accuracy_sum += editor->current_chunk_accuracy;
         editor->longterm_samples_in_period++;
         editor->longterm_sample_counter++;
-        
+
         if(editor->longterm_sample_counter >= editor->longterm_sample_rate)
         {
             float avg_accuracy = editor->longterm_accuracy_sum / (float)editor->longterm_samples_in_period;
@@ -314,15 +360,181 @@ void UpdateTokens(EditorScreen* editor)
             editor->longterm_accuracy_sum = 0.0f;
             editor->longterm_samples_in_period = 0;
         }
-        
-        // Reset chunk counters
+
         editor->current_chunk_iteration = 0;
         editor->chunk_tokens_processed = 0;
         editor->chunk_accuracy_sum = 0.0f;
     }
 }
 
-// Hidden function - not called
+void EditSimpleTestWindow(EditorScreen* editor)
+{
+    ImGui::Begin("Simple Test: Learn 'ab' Pattern");
+
+    ImGui::TextWrapped("Simplest possible test: Learn that 'a' predicts 'b' and 'b' predicts 'a'");
+    ImGui::Separator();
+
+    // Create new test
+    static int num_hidden = 20;
+    static int connections = 5;
+    ImGui::InputInt("Hidden Neurons", &num_hidden);
+    ImGui::InputInt("Connections per Neuron", &connections);
+    num_hidden = Clamp(5, num_hidden, 100);
+    connections = Clamp(2, connections, 20);
+
+    if(ImGui::Button("Create New Test"))
+    {
+        editor->simple_test = CreateSimpleTest(editor->editor_arena, num_hidden, connections);
+        editor->simple_test_step = 0;
+        editor->simple_test_current_input = 0;
+        editor->simple_test_accuracy.Clear();
+        editor->simple_test_playing = false;
+    }
+
+    if(!editor->simple_test)
+    {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::Separator();
+
+    // Play/Pause/Step controls
+    if(editor->simple_test_playing)
+    {
+        if(ImGui::Button(ICON_LC_PAUSE " Pause"))
+            editor->simple_test_playing = false;
+    }
+    else
+    {
+        if(ImGui::Button(ICON_LC_PLAY " Play"))
+            editor->simple_test_playing = true;
+    }
+
+    ImGui::SameLine();
+    bool do_step = ImGui::Button(ICON_LC_STEP_FORWARD " Step");
+
+    ImGui::Separator();
+
+    // Training loop
+    if(editor->simple_test_playing || do_step)
+    {
+        // Alternate between 'a' (0) and 'b' (1)
+        int current_input = editor->simple_test_step % 2;
+        int target_output = (editor->simple_test_step + 1) % 2;  // Next in sequence
+
+        // Train one step
+        TrainSimpleStep(editor->simple_test, current_input, target_output);
+
+        // Test prediction every 10 steps
+        if(editor->simple_test_step % 10 == 0)
+        {
+            // Test on 'a' -> should predict 'b' (1)
+            int pred_a;
+            R32 conf_a;
+            TestSimplePrediction(editor->simple_test, 0, &pred_a, &conf_a);
+
+            // Test on 'b' -> should predict 'a' (0)
+            int pred_b;
+            R32 conf_b;
+            TestSimplePrediction(editor->simple_test, 1, &pred_b, &conf_b);
+
+            // Accuracy: both predictions must be correct
+            R32 accuracy = ((pred_a == 1) && (pred_b == 0)) ? 1.0f : 0.0f;
+
+            // Track accuracy
+            const int max_history = 1000;
+            if(editor->simple_test_accuracy.size >= max_history)
+            {
+                editor->simple_test_accuracy.Shift(-1);
+                editor->simple_test_accuracy.size--;
+            }
+            editor->simple_test_accuracy.PushBack(accuracy);
+        }
+
+        editor->simple_test_step++;
+    }
+
+    // Display current state
+    ImGui::Text("Training Step: %d", editor->simple_test_step);
+
+    // Test current prediction
+    int pred_a, pred_b;
+    R32 conf_a, conf_b;
+    TestSimplePrediction(editor->simple_test, 0, &pred_a, &conf_a);
+    TestSimplePrediction(editor->simple_test, 1, &pred_b, &conf_b);
+
+    ImGui::Text("Input 'a' (0) predicts: '%c' (%d) with %.1f%% confidence",
+                pred_a == 0 ? 'a' : 'b', pred_a, conf_a * 100.0f);
+    ImGui::Text("Input 'b' (1) predicts: '%c' (%d) with %.1f%% confidence",
+                pred_b == 0 ? 'a' : 'b', pred_b, conf_b * 100.0f);
+
+    bool both_correct = (pred_a == 1) && (pred_b == 0);
+    if(both_correct)
+    {
+        ImGui::TextColored(ImVec4(0, 1, 0, 1), "BOTH CORRECT!");
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Still learning...");
+    }
+
+    // Accuracy graph
+    if(editor->simple_test_accuracy.size > 0)
+    {
+        ImGui::Separator();
+        ImGui::Text("Accuracy Over Time (sampled every 10 steps)");
+
+        DynamicArray<R32> x_axis(editor->simple_test_accuracy.size);
+        x_axis.Fill();
+        x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i * 10.0f;});
+
+        ImPlotFlags plot_flags = ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame;
+        ImPlot::SetNextAxesLimits(0, (R32)editor->simple_test_accuracy.size * 10.0f, -0.1f, 1.1f, ImPlotCond_Always);
+        Vec2 plot_size = V2(-1, 200);
+        if(ImPlot::BeginPlot("Accuracy", ImVec2(plot_size.x, plot_size.y), plot_flags))
+        {
+            Vec4 color = V4(0.2f, 1.0f, 0.2f, 1.0f);
+            ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color.x, color.y, color.z, color.w));
+            ImPlot::PlotLine("Correct", x_axis.data, editor->simple_test_accuracy.data, (int)editor->simple_test_accuracy.size);
+            ImPlot::PopStyleColor();
+            ImPlot::EndPlot();
+        }
+
+        // Show when it first learned (if ever)
+        int first_correct = -1;
+        for(int i = 0; i < editor->simple_test_accuracy.size; i++)
+        {
+            if(editor->simple_test_accuracy[i] > 0.5f)
+            {
+                first_correct = i * 10;
+                break;
+            }
+        }
+        if(first_correct >= 0)
+        {
+            ImGui::Text("First correct prediction at step: %d", first_correct);
+        }
+    }
+
+    // Network stats
+    ImGui::Separator();
+    ImGui::Text("Network Structure:");
+    ImGui::Text("  Inputs: %lld", editor->simple_test->inputs.size);
+    ImGui::Text("  Hidden: %lld", editor->simple_test->hidden.size);
+    ImGui::Text("  Outputs: %lld", editor->simple_test->outputs.size);
+
+    int hidden_active = 0;
+    for(Neuron& n : editor->simple_test->hidden)
+        if(n.state == 1) hidden_active++;
+
+    ImGui::Text("Hidden neurons active: %d / %lld (%.1f%%)",
+                hidden_active, editor->simple_test->hidden.size,
+                100.0f * hidden_active / (float)editor->simple_test->hidden.size);
+
+    ImGui::End();
+}
+
 bool EditCreatureWindowHidden(PhenoType* pheno)
 {
     bool changed = false;
@@ -377,30 +589,35 @@ void EditSoupWindow(EditorScreen* editor)
     
     // Create new Soup
     static int new_num_processing = 1000;
-    static int new_num_connections = 10;
+    static int new_num_connections = 100;  // Default to 100 for better connectivity
     static int new_context_length = 10;
     ImGui::Text("Create New Soup");
     ImGui::InputInt("Context Length (tokens)", &new_context_length);
     ImGui::InputInt("Processing Neurons", &new_num_processing);
-    ImGui::InputInt("Connections per Neuron", &new_num_connections);
+    ImGui::InputInt("Hidden Connections per Neuron", &new_num_connections);
     new_context_length = Clamp(1, new_context_length, 20);
     new_num_processing = Clamp(10, new_num_processing, 10000);
     new_num_connections = Clamp(1, new_num_connections, 1000);
-    
+
     int new_num_inputs = new_context_length * NUM_CHARS;
     ImGui::Text("Input neurons: %d (%d tokens x %d chars)", new_num_inputs, new_context_length, NUM_CHARS);
-    
+
     if(ImGui::Button("Create New Soup"))
     {
         editor->token_window_size = new_context_length;
         editor->num_input_neurons = new_num_inputs;
-        editor->soup = CreateSoup(arena, new_num_inputs, new_num_processing, new_num_connections);
-        soup = editor->soup;
+        editor->num_output_neurons = 33;  // 31 char + 2 next_token
+
+        // Create Soup: Input -> Hidden -> Output (char + next_token)
+        int hidden_connections = new_num_connections;
+        int output_connections = new_num_connections * 5;  // Output much more connected (needs to integrate from hidden + input)
+        editor->soup = CreateSoup(arena, new_num_inputs, new_num_processing, 33,
+                                  hidden_connections, output_connections);
+
         // Reset history
         editor->active_neuron_history.Clear();
         editor->avg_bias_history.Clear();
         editor->firing_rate_history.Clear();
-        // Reset chunk tracking
         editor->chunk_accuracy_history.Clear();
         editor->tokens_per_chunk_history.Clear();
         editor->current_chunk_iteration = 0;
@@ -410,34 +627,32 @@ void EditSoupWindow(EditorScreen* editor)
         editor->current_chunk_accuracy = 0.0f;
         editor->total_chunks_processed = 0;
         editor->current_token_index = 0;
-        // Reset long-term tracking
         editor->longterm_accuracy_history.Clear();
         editor->longterm_chunk_numbers.Clear();
         editor->longterm_sample_counter = 0;
         editor->longterm_accuracy_sum = 0.0f;
         editor->longterm_samples_in_period = 0;
-        // Reset prediction history
         editor->predicted_chars.Clear();
         editor->target_chars.Clear();
         editor->last_predicted_index = -1;
         editor->last_softmax_confidence = 0.0f;
         editor->last_dopamine = 0.0f;
-        
+
         // Set initial input
-        SetInputFromContext(soup, editor->training_text, editor->training_text_length,
-                           editor->current_token_index, editor->token_window_size);
+        SetInputFromContext(editor->soup->inputs.data, editor->training_text, editor->training_text_length,
+                           editor->current_token_index, editor->token_window_size, NUM_CHARS);
     }
     
     ImGui::Separator();
-    
+
     // Edit Soup parameters
     ImGui::Text("Soup Parameters");
-    ImGui::SliderFloat("Target Rate", &soup->target_rate, 0.0f, 1.0f);
-    ImGui::SliderFloat("Bias Learning Rate", &soup->eta_bias, 0.0f, 0.5f);
-    ImGui::SliderFloat("Weight Learning Rate", &soup->eta_weight, 0.0f, 0.5f);
+    ImGui::SliderFloat("Hidden Target Rate", &soup->hidden_target_rate, 0.0f, 0.5f);
+    ImGui::SliderFloat("Bias Learning Rate", &soup->eta_bias, 0.0f, 0.01f);
+    ImGui::SliderFloat("Hebbian Learning (Hidden)", &soup->eta_hidden_hebbian, 0.0f, 0.2f);
+    ImGui::SliderFloat("Perceptron Learning (Output)", &soup->eta_output_perceptron, 0.0f, 1.0f);
     ImGui::SliderFloat("Eligibility Decay", &soup->eligibility_decay, 0.0f, 1.0f);
-    ImGui::InputFloat("Learning Rate (Manual)", &soup->eta_weight);
-    
+
     ImGui::Separator();
     
     // Run controls
@@ -473,8 +688,10 @@ void EditSoupWindow(EditorScreen* editor)
     // Token training controls
     ImGui::Separator();
     ImGui::Text("Token Training");
+    ImGui::Text("Training text length: %d characters", editor->training_text_length);
+    ImGui::Text("Training text: \"%s\"", TRAINING_TEXT);
     ImGui::Text("Context Length: %d tokens (%d input neurons)", editor->token_window_size, editor->num_input_neurons);
-    
+
     if(editor->training_text)
     {
         ImGui::Text("Current Position: %d / %d", editor->current_token_index, editor->training_text_length);
@@ -532,28 +749,48 @@ void EditSoupWindow(EditorScreen* editor)
             }
             context[len] = '\0';
             ImGui::Text("Context: %s", context);
-            
-            if(editor->current_token_index < editor->training_text_length - 1)
-            {
-                ImGui::Text("Target: '%c'", editor->training_text[editor->current_token_index + 1]);
-            }
         }
+
+        // Display current position and next target
+        ImGui::Text("Current index: %d / %d", editor->current_token_index, editor->training_text_length);
+        if(editor->current_token_index < editor->training_text_length)
+        {
+            ImGui::Text("Current char: '%c'", editor->training_text[editor->current_token_index]);
+        }
+
+        int next_idx = editor->current_token_index + 1;
+        if(next_idx >= editor->training_text_length) next_idx = 0;
+        ImGui::Text("Next target: '%c' (index %d)", editor->training_text[next_idx], next_idx);
+
         ImGui::Text("Last softmax prob for target: %.2f%%", editor->last_accuracy * 100.0f);
         ImGui::Text("Last prediction confidence: %.2f%%", editor->last_softmax_confidence * 100.0f);
         
-        // Display prediction history
+        // Display prediction history as text
         if(editor->predicted_chars.size > 0)
         {
             ImGui::Separator();
-            ImGui::Text("Prediction History (Last %d tokens):", (int)editor->predicted_chars.size);
-            
-            // Build predicted string
+
+            int total_count = (int)editor->predicted_chars.size;
+            int display_count = Min(total_count, 50);
+            int start_idx = total_count - display_count;
+
+            // Count correct predictions
+            int correct = 0;
+            for(int i = 0; i < display_count; i++)
+            {
+                char pred = editor->predicted_chars[start_idx + i];
+                char targ = editor->target_chars[start_idx + i];
+                if(pred == targ) correct++;
+            }
+            float hit_rate = (float)correct / (float)display_count * 100.0f;
+
+            ImGui::Text("Prediction History (last %d): %d correct (%.1f%%) - Random: 3.2%%",
+                        display_count, correct, hit_rate);
+
+            // Build strings for predicted and target
             char predicted_str[128] = {0};
             char target_str[128] = {0};
             char match_str[128] = {0};
-            int display_count = Min((int)editor->predicted_chars.size, 50);
-            int start_idx = (int)editor->predicted_chars.size - display_count;
-            
             for(int i = 0; i < display_count && i < 127; i++)
             {
                 predicted_str[i] = editor->predicted_chars[start_idx + i];
@@ -563,19 +800,77 @@ void EditSoupWindow(EditorScreen* editor)
             predicted_str[display_count] = '\0';
             target_str[display_count] = '\0';
             match_str[display_count] = '\0';
-            
-            // Count correct predictions
-            int correct = 0;
-            for(int i = 0; i < display_count; i++)
-            {
-                if(predicted_str[i] == target_str[i]) correct++;
-            }
-            float hit_rate = (float)correct / (float)display_count * 100.0f;
-            
+
             ImGui::Text("Predicted: %s", predicted_str);
             ImGui::Text("Target:    %s", target_str);
-            ImGui::Text("Matches:   %s", match_str);
-            ImGui::Text("Hit rate: %d/%d (%.1f%%)", correct, display_count, hit_rate);
+            ImGui::Text("Match:     %s", match_str);
+            
+            // Debug: Show current output activations
+            if(ImGui::TreeNode("Output Activations (Debug)"))
+            {
+                // Find top 5 character activations
+                struct CharAct { int idx; R32 act; };
+                CharAct top5[5] = {{0, -1e30f}, {0, -1e30f}, {0, -1e30f}, {0, -1e30f}, {0, -1e30f}};
+                
+                for(int i = 0; i < 31; i++)
+                {
+                    R32 act = soup->outputs[i].activation;
+                    // Insert into top5 if larger
+                    for(int j = 0; j < 5; j++)
+                    {
+                        if(act > top5[j].act)
+                        {
+                            // Shift down
+                            for(int k = 4; k > j; k--)
+                                top5[k] = top5[k-1];
+                            top5[j].idx = i;
+                            top5[j].act = act;
+                            break;
+                        }
+                    }
+                }
+                
+                ImGui::Text("Top 5 character activations:");
+                for(int i = 0; i < 5; i++)
+                {
+                    ImGui::Text("  %d. '%c' (idx %d): %.3f", 
+                               i+1, IndexToChar(top5[i].idx), top5[i].idx, top5[i].act);
+                }
+                
+                // Show actuator activations
+                ImGui::Separator();
+                ImGui::Text("Actuator neurons:");
+                ImGui::Text("  next_token[31]: %.3f", soup->outputs[31].activation);
+                ImGui::Text("  not_next[32]:   %.3f", soup->outputs[32].activation);
+                
+                // Show weight statistics
+                R32 min_w = 1e30f, max_w = -1e30f, sum_w = 0.0f;
+                int count_w = 0;
+                for(Neuron& out : soup->outputs)
+                {
+                    for(Synapse& syn : out.connections)
+                    {
+                        if(syn.weight < min_w) min_w = syn.weight;
+                        if(syn.weight > max_w) max_w = syn.weight;
+                        sum_w += syn.weight;
+                        count_w++;
+                    }
+                }
+                ImGui::Separator();
+                ImGui::Text("Output layer weights:");
+                ImGui::Text("  Min: %.3f, Max: %.3f, Avg: %.3f", 
+                           min_w, max_w, count_w > 0 ? sum_w / count_w : 0.0f);
+                
+                // Check if weights have changed from init
+                bool weights_near_init = (max_w < 1.0f && min_w > -1.0f);
+                if(weights_near_init)
+                {
+                    ImGui::TextColored(ImVec4(1, 0.5f, 0, 1), 
+                        "Weights still near initialization range!");
+                }
+                
+                ImGui::TreePop();
+            }
         }
         
         // Immediate per-token reward info
@@ -604,28 +899,29 @@ void EditSoupWindow(EditorScreen* editor)
     }
     
     ImGui::Separator();
-    
-    // Statistics
-    int active_inputs = CountActiveInputs(*soup);
-    int active_count = CountActiveNeurons(*soup);
-    R32 firing_rate = soup->neurons.size > 0 ? (R32)active_count / (R32)soup->neurons.size : 0.0f;
-    
-    R32 avg_bias = 0.0f;
-    for(Neuron& neuron : soup->neurons)
-    {
-        avg_bias += neuron.bias;
-    }
-    if(soup->neurons.size > 0)
-    {
-        avg_bias /= (R32)soup->neurons.size;
-    }
-    
+
+    // Statistics (for both V1 and V2)
+    int active_inputs = 0;
+    int active_count = 0;
+    R32 firing_rate = 0.0f;
+
+    active_inputs = CountActiveInputs(*soup);
+    active_count = CountActiveHidden(*soup);
+    firing_rate = soup->hidden.size > 0 ? (R32)active_count / (R32)soup->hidden.size : 0.0f;
+
     ImGui::Text("Statistics");
     ImGui::Text("Input Neurons: %lld (active: %d)", soup->inputs.size, active_inputs);
-    ImGui::Text("Processing Neurons: %lld (active: %d)", soup->neurons.size, active_count);
+    ImGui::Text("Hidden Neurons: %lld (active: %d)", soup->hidden.size, active_count);
+    ImGui::Text("Output Neurons: %lld (31 char + 2 next_token)", soup->outputs.size);
     ImGui::Text("Firing Rate: %.3f", firing_rate);
-    ImGui::Text("Average Bias: %.3f", avg_bias);
-    ImGui::Text("Last Dopamine: %.3f", editor->last_dopamine);
+
+    // Compute average hidden bias
+    R32 avg_bias = 0.0f;
+    for(Neuron& n : soup->hidden)
+        avg_bias += n.bias;
+    if(soup->hidden.size > 0)
+        avg_bias /= (R32)soup->hidden.size;
+    ImGui::Text("Avg Hidden Bias: %.3f", avg_bias);
     
     // Chunk accuracy graph
     if(editor->chunk_accuracy_history.size > 0)
@@ -731,15 +1027,16 @@ void EditSoupWindow(EditorScreen* editor)
         if(editor->active_neuron_history.size >= max_history)
         {
             editor->active_neuron_history.Shift(-1);
+            editor->active_neuron_history.size--;
             editor->avg_bias_history.Shift(-1);
+            editor->avg_bias_history.size--;
             editor->firing_rate_history.Shift(-1);
+            editor->firing_rate_history.size--;
         }
-        else
-        {
-            editor->active_neuron_history.PushBack((R32)active_count);
-            editor->avg_bias_history.PushBack(avg_bias);
-            editor->firing_rate_history.PushBack(firing_rate);
-        }
+        // Always push the new values
+        editor->active_neuron_history.PushBack((R32)active_count);
+        editor->avg_bias_history.PushBack(avg_bias);
+        editor->firing_rate_history.PushBack(firing_rate);
         
         // Update last values
         if(editor->active_neuron_history.size > 0)
@@ -772,7 +1069,7 @@ void EditSoupWindow(EditorScreen* editor)
         x_axis.Fill();
         x_axis.ApplyIndexed([](int i, R32& val) {val = (R32)i;});
         
-        ImPlot::SetNextAxesLimits(0, (int)editor->active_neuron_history.size, 0, (R32)soup->neurons.size, ImPlotCond_Always);
+        ImPlot::SetNextAxesLimits(0, (int)editor->active_neuron_history.size, 0, (R32)soup->hidden.size, ImPlotCond_Always);
         Vec2 plot_size = V2(-1, 150);
         if(ImPlot::BeginPlot("Active Neurons Over Time", ImVec2(plot_size.x, plot_size.y), plot_flags))
         {
@@ -798,7 +1095,7 @@ void EditSoupWindow(EditorScreen* editor)
             ImPlot::PopStyleColor();
             
             // Draw target rate line
-            R32 target_line[2] = {soup->target_rate, soup->target_rate};
+            R32 target_line[2] = {soup->hidden_target_rate, soup->hidden_target_rate};
             R32 target_x[2] = {0.0f, (R32)editor->firing_rate_history.size};
             Vec4 color2 = V4(1.0f, 0.3f, 0.3f, 0.5f);
             ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(color2.x, color2.y, color2.z, color2.w));
@@ -829,16 +1126,16 @@ void EditSoupWindow(EditorScreen* editor)
     }
     
     // Neuron states visualization (sample of neurons)
-    const int sample_size = Min(100, (int)soup->neurons.size);
+    const int sample_size = Min(100, (int)soup->hidden.size);
     if(sample_size > 0)
     {
         DynamicArray<R32> neuron_states(sample_size);
         DynamicArray<R32> neuron_indices(sample_size);
-        
+
         for(int i = 0; i < sample_size; i++)
         {
-            int idx = (int)((I64)i * soup->neurons.size / sample_size);
-            neuron_states.PushBack((R32)soup->neurons[idx].state);
+            int idx = (int)((I64)i * soup->hidden.size / sample_size);
+            neuron_states.PushBack((R32)soup->hidden[idx].state);
             neuron_indices.PushBack((R32)i);
         }
         
@@ -879,7 +1176,10 @@ UpdateEditorScreen(EditorScreen* editor, Window* window)
     ImGui::EndMainMenuBar();
 
     // EditCreatureWindowHidden is not called - moved to separate function
-    
+
+    // Simple test window (minimal learning test)
+    EditSimpleTestWindow(editor);
+
     // Soup editor window
     EditSoupWindow(editor);
 
@@ -992,9 +1292,11 @@ InitEditorScreen(EditorScreen* editor)
     editor->last_softmax_confidence = 0.0f;
     editor->last_dopamine = 0.0f;
     
-    // Create soup with separate input layer
-    // CreateSoup(arena, num_inputs, num_processing, num_connections)
-    editor->soup = CreateSoup(arena, editor->num_input_neurons, 1000, 10);
+    // Create soup: Input -> Hidden -> Output (33 = 31 char + 2 next_token)
+    int hidden_connections = 100;  // Each hidden neuron sees ~32% of 310 inputs
+    int output_connections = 500;  // Each output neuron sees ~38% of 1310 sources (inputs + hidden)
+    editor->soup = CreateSoup(arena, editor->num_input_neurons, 1000, 33,
+                             hidden_connections, output_connections);
     
     // Initialize chunk tracking (for visualization)
     editor->chunk_size = 100;
@@ -1012,10 +1314,11 @@ InitEditorScreen(EditorScreen* editor)
     editor->longterm_accuracy_sum = 0.0f;
     editor->longterm_samples_in_period = 0;
     
-    // Set initial input using the separate input layer
+    // Set initial input
     if(editor->soup && editor->training_text)
     {
-        SetInputFromContext(editor->soup, editor->training_text, editor->training_text_length,
-                           editor->current_token_index, editor->token_window_size);
+        SetInputFromContext(editor->soup->inputs.data, editor->training_text, editor->training_text_length,
+                           editor->current_token_index, editor->token_window_size, NUM_CHARS);
     }
 }
+
